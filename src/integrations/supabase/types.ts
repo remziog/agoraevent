@@ -147,6 +147,45 @@ export type Database = {
           },
         ]
       }
+      oauth_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          provider: string
+          provider_user_id: string | null
+          refresh_token: string | null
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          provider: string
+          provider_user_id?: string | null
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          provider?: string
+          provider_user_id?: string | null
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           category: string
@@ -287,6 +326,7 @@ export type Database = {
       social_integrations: {
         Row: {
           connected_at: string
+          handle: string | null
           id: string
           provider: string
           tags: string[]
@@ -294,6 +334,7 @@ export type Database = {
         }
         Insert: {
           connected_at?: string
+          handle?: string | null
           id?: string
           provider: string
           tags?: string[]
@@ -301,6 +342,7 @@ export type Database = {
         }
         Update: {
           connected_at?: string
+          handle?: string | null
           id?: string
           provider?: string
           tags?: string[]
