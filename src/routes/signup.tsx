@@ -6,7 +6,7 @@ import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AuthShell, GoogleButton, Divider } from "./login";
+import { AuthShell, GoogleButton, AppleButton, EmailToggleButton, Divider } from "./login";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -28,6 +28,7 @@ function SignupPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,12 +50,12 @@ function SignupPage() {
     navigate({ to: "/onboarding" });
   }
 
-  async function onGoogle() {
-    const result = await lovable.auth.signInWithOAuth("google", {
+  async function onOAuth(provider: "google" | "apple") {
+    const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      toast.error(result.error.message ?? "Google sign-in failed");
+      toast.error(result.error.message ?? `${provider} sign-in failed`);
       return;
     }
     if (result.redirected) return;
@@ -63,25 +64,37 @@ function SignupPage() {
 
   return (
     <AuthShell title="Join Agora" subtitle="Find the room you've been missing.">
-      <GoogleButton onClick={onGoogle} label="Sign up with Google" />
-      <Divider />
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Your name</Label>
-          <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Creating…" : "Create account"}
-        </Button>
-      </form>
+      <div className="space-y-3">
+        <GoogleButton onClick={() => onOAuth("google")} label="Continue with Google" />
+        <AppleButton onClick={() => onOAuth("apple")} label="Continue with Apple" />
+        {!showEmail && (
+          <EmailToggleButton onClick={() => setShowEmail(true)} label="Sign up with email" />
+        )}
+      </div>
+
+      {showEmail && (
+        <>
+          <Divider />
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Your name</Label>
+              <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Creating…" : "Create account"}
+            </Button>
+          </form>
+        </>
+      )}
+
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already with us?{" "}
         <Link to="/login" className="text-foreground underline underline-offset-4">
