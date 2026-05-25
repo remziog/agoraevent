@@ -34,6 +34,14 @@ function Discover() {
   });
 
   const events = results?.events ?? upcoming.data?.events ?? [];
+  const allRsvps = (myRsvps.data?.rsvps ?? []) as any[];
+  const now = Date.now();
+  const goingUpcoming = allRsvps
+    .filter((r) => r.events?.starts_at && new Date(r.events.starts_at).getTime() >= now)
+    .sort((a, b) => +new Date(a.events.starts_at) - +new Date(b.events.starts_at));
+  const goingPast = allRsvps.filter(
+    (r) => r.events?.starts_at && new Date(r.events.starts_at).getTime() < now,
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,11 +79,56 @@ function Discover() {
           </div>
         )}
 
+        {goingUpcoming.length > 0 && (
+          <section className="mt-10">
+            <div className="flex items-baseline justify-between">
+              <h2 className="font-display text-2xl">You're going</h2>
+              <span className="text-xs text-muted-foreground">{goingUpcoming.length} upcoming</span>
+            </div>
+            <div className="mt-3 -mx-6 flex gap-3 overflow-x-auto px-6 pb-2">
+              {goingUpcoming.map((r) => {
+                const d = new Date(r.events.starts_at);
+                return (
+                  <Link
+                    key={r.event_id}
+                    to="/app/event/$id"
+                    params={{ id: r.event_id }}
+                    className="group min-w-[240px] max-w-[260px] shrink-0 rounded-xl border bg-card p-4 transition hover:border-primary/50"
+                  >
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-display text-2xl leading-none">{d.getDate()}</span>
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                        {d.toLocaleString([], { month: "short" })}
+                      </span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    <h3 className="mt-2 line-clamp-2 font-medium group-hover:text-primary">
+                      {r.events?.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {r.events?.organizations?.name ?? "—"} · {r.events?.city ?? ""}
+                    </p>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <h2 className="mt-12 font-display text-2xl">
           {results ? "Best matches" : "Upcoming near you"}
         </h2>
         <div className="mt-4 space-y-3">
-          {events.length === 0 && (
+          {upcoming.isLoading && !results && (
+            <>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-28 animate-pulse rounded-xl border bg-card/40" />
+              ))}
+            </>
+          )}
+          {!upcoming.isLoading && events.length === 0 && (
             <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
               No events yet. Be the first — or check back tonight.
             </p>
@@ -109,22 +162,24 @@ function Discover() {
           ))}
         </div>
 
-        {(myRsvps.data?.rsvps?.length ?? 0) > 0 && (
-          <>
-            <h2 className="mt-12 font-display text-2xl">You're going to</h2>
+        {goingPast.length > 0 && (
+          <details className="group mt-12">
+            <summary className="cursor-pointer font-display text-lg text-muted-foreground hover:text-foreground">
+              Past · {goingPast.length}
+            </summary>
             <ul className="mt-3 space-y-2 text-sm">
-              {myRsvps.data!.rsvps.map((r: any) => (
-                <li key={r.event_id} className="rounded-lg border bg-card p-3">
-                  <Link to="/app/event/$id" params={{ id: r.event_id }}>
-                    {r.events?.title} —{" "}
-                    <span className="text-muted-foreground">
-                      {r.events?.starts_at && new Date(r.events.starts_at).toLocaleString()}
+              {goingPast.map((r) => (
+                <li key={r.event_id} className="rounded-lg border bg-card/50 p-3 text-muted-foreground">
+                  <Link to="/app/event/$id" params={{ id: r.event_id }} className="hover:text-foreground">
+                    {r.events?.title}
+                    <span className="ml-2 text-xs">
+                      {r.events?.starts_at && new Date(r.events.starts_at).toLocaleDateString()}
                     </span>
                   </Link>
                 </li>
               ))}
             </ul>
-          </>
+          </details>
         )}
       </main>
     </div>
