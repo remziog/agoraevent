@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createOrganization, listMyOrganizations, createEvent, listOrgEvents, listLeads, listCustomers, upsertCustomer } from "@/lib/orgs.functions";
+import { createOrganization, listMyOrganizations, createEvent, listOrgEvents, listLeads, listCustomers, upsertCustomer, exportLeadsCsv } from "@/lib/orgs.functions";
 import { getDemandInsightsAdmin } from "@/lib/insights.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -177,7 +177,20 @@ function OrgPanel({ org }: { org: any }) {
             </div>
           ) : <p className="text-sm text-muted-foreground">Loading…</p>}
 
-          <h3 className="mt-6 text-sm font-medium uppercase tracking-wider text-muted-foreground">Leads (RSVPs)</h3>
+          <div className="mt-6 flex items-center justify-between">
+            <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Leads (RSVPs)</h3>
+            <Button size="sm" variant="outline" onClick={async () => {
+              try {
+                const exportFn = useServerFn(exportLeadsCsv);
+                const res = await exportFn({ data: { org_id: org.id } });
+                const blob = new Blob([res.csv], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url; a.download = res.filename; a.click();
+                URL.revokeObjectURL(url);
+              } catch (e) { toast.error((e as Error).message); }
+            }}>Export CSV</Button>
+          </div>
           <ul className="mt-2 space-y-2 text-sm">
             {(leadsQ.data?.leads ?? []).slice(0, 10).map((l: any) => (
               <li key={l.id} className="flex items-center justify-between rounded-lg border bg-background p-3">
