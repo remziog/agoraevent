@@ -58,6 +58,33 @@ export type Database = {
           },
         ]
       }
+      event_memories: {
+        Row: {
+          caption: string | null
+          created_at: string
+          event_id: string
+          id: string
+          photo_url: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          photo_url: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          photo_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           capacity: number | null
@@ -311,6 +338,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_badges: {
+        Row: {
+          badge_code: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_code: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_code?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -329,6 +377,36 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          current_streak: number
+          last_event_at: string | null
+          level: number
+          longest_streak: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          current_streak?: number
+          last_event_at?: string | null
+          level?: number
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          current_streak?: number
+          last_event_at?: string | null
+          level?: number
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
         }
         Relationships: []
       }

@@ -23,7 +23,10 @@ import { Route as AuthenticatedBizInsightsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedBizEventsRouteImport } from './routes/_authenticated/biz.events'
 import { Route as AuthenticatedBizCustomersRouteImport } from './routes/_authenticated/biz.customers'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppMemoriesRouteImport } from './routes/_authenticated/app.memories'
+import { Route as AuthenticatedAppMapRouteImport } from './routes/_authenticated/app.map'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
+import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
 import { Route as AuthenticatedAppEventIdRouteImport } from './routes/_authenticated/app.event.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -97,10 +100,27 @@ const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   path: '/app/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAppMemoriesRoute =
+  AuthenticatedAppMemoriesRouteImport.update({
+    id: '/app/memories',
+    path: '/app/memories',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppMapRoute = AuthenticatedAppMapRouteImport.update({
+  id: '/app/map',
+  path: '/app/map',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAppIntegrationsRoute =
   AuthenticatedAppIntegrationsRouteImport.update({
     id: '/app/integrations',
     path: '/app/integrations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppCalendarRoute =
+  AuthenticatedAppCalendarRouteImport.update({
+    id: '/app/calendar',
+    path: '/app/calendar',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAppEventIdRoute = AuthenticatedAppEventIdRouteImport.update({
@@ -116,7 +136,10 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/app/map': typeof AuthenticatedAppMapRoute
+  '/app/memories': typeof AuthenticatedAppMemoriesRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/biz/customers': typeof AuthenticatedBizCustomersRoute
   '/biz/events': typeof AuthenticatedBizEventsRoute
@@ -133,7 +156,10 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/app/map': typeof AuthenticatedAppMapRoute
+  '/app/memories': typeof AuthenticatedAppMemoriesRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/biz/customers': typeof AuthenticatedBizCustomersRoute
   '/biz/events': typeof AuthenticatedBizEventsRoute
@@ -152,7 +178,10 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/_authenticated/app/map': typeof AuthenticatedAppMapRoute
+  '/_authenticated/app/memories': typeof AuthenticatedAppMemoriesRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/biz/customers': typeof AuthenticatedBizCustomersRoute
   '/_authenticated/biz/events': typeof AuthenticatedBizEventsRoute
@@ -171,7 +200,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/onboarding'
+    | '/app/calendar'
     | '/app/integrations'
+    | '/app/map'
+    | '/app/memories'
     | '/app/profile'
     | '/biz/customers'
     | '/biz/events'
@@ -188,7 +220,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/onboarding'
+    | '/app/calendar'
     | '/app/integrations'
+    | '/app/map'
+    | '/app/memories'
     | '/app/profile'
     | '/biz/customers'
     | '/biz/events'
@@ -206,7 +241,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_authenticated/onboarding'
+    | '/_authenticated/app/calendar'
     | '/_authenticated/app/integrations'
+    | '/_authenticated/app/map'
+    | '/_authenticated/app/memories'
     | '/_authenticated/app/profile'
     | '/_authenticated/biz/customers'
     | '/_authenticated/biz/events'
@@ -326,11 +364,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/memories': {
+      id: '/_authenticated/app/memories'
+      path: '/app/memories'
+      fullPath: '/app/memories'
+      preLoaderRoute: typeof AuthenticatedAppMemoriesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/map': {
+      id: '/_authenticated/app/map'
+      path: '/app/map'
+      fullPath: '/app/map'
+      preLoaderRoute: typeof AuthenticatedAppMapRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/integrations': {
       id: '/_authenticated/app/integrations'
       path: '/app/integrations'
       fullPath: '/app/integrations'
       preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/calendar': {
+      id: '/_authenticated/app/calendar'
+      path: '/app/calendar'
+      fullPath: '/app/calendar'
+      preLoaderRoute: typeof AuthenticatedAppCalendarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/app/event/$id': {
@@ -345,7 +404,10 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
+  AuthenticatedAppMapRoute: typeof AuthenticatedAppMapRoute
+  AuthenticatedAppMemoriesRoute: typeof AuthenticatedAppMemoriesRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedBizCustomersRoute: typeof AuthenticatedBizCustomersRoute
   AuthenticatedBizEventsRoute: typeof AuthenticatedBizEventsRoute
@@ -358,7 +420,10 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
+  AuthenticatedAppMapRoute: AuthenticatedAppMapRoute,
+  AuthenticatedAppMemoriesRoute: AuthenticatedAppMemoriesRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedBizCustomersRoute: AuthenticatedBizCustomersRoute,
   AuthenticatedBizEventsRoute: AuthenticatedBizEventsRoute,
@@ -384,13 +449,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

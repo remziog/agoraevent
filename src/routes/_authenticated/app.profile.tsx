@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
+import { Flame, Sparkles, Trophy } from "lucide-react";
 import { getMyProfile, updateTaste } from "@/lib/profile.functions";
+import { getMyStats, BADGES } from "@/lib/gamification.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +50,9 @@ function TagInput({ label, value, onChange }: { label: string; value: string[]; 
 function ProfilePage() {
   const get = useServerFn(getMyProfile);
   const save = useServerFn(updateTaste);
+  const fetchStats = useServerFn(getMyStats);
   const q = useQuery({ queryKey: ["me"], queryFn: () => get() });
+  const stats = useQuery({ queryKey: ["my-stats"], queryFn: () => fetchStats() });
 
   const [music, setMusic] = useState<string[]>([]);
   const [sports, setSports] = useState<string[]>([]);
@@ -82,8 +86,90 @@ function ProfilePage() {
     <div className="min-h-screen bg-background">
       <AppHeader variant="member" />
       <main className="mx-auto max-w-2xl px-6 py-10">
+        {/* Gamification panel */}
+        {stats.data && (
+          <section className="mb-10 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-primary">Level</p>
+                <p className="mt-1 font-display text-5xl">{stats.data.progress.level}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {stats.data.stats.xp} XP total
+                </p>
+              </div>
+              <div className="flex gap-4 text-center">
+                <div>
+                  <Flame className="mx-auto h-5 w-5 text-orange-400" />
+                  <p className="mt-1 font-display text-2xl">{stats.data.stats.current_streak}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Streak
+                  </p>
+                </div>
+                <div>
+                  <Trophy className="mx-auto h-5 w-5 text-yellow-400" />
+                  <p className="mt-1 font-display text-2xl">{stats.data.badges.length}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Badges
+                  </p>
+                </div>
+                <div>
+                  <Sparkles className="mx-auto h-5 w-5 text-primary" />
+                  <p className="mt-1 font-display text-2xl">{stats.data.stats.longest_streak}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Best
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* XP bar */}
+            <div className="mt-5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>L{stats.data.progress.level}</span>
+                <span className="tabular-nums">
+                  {stats.data.progress.xpInLevel} / {stats.data.progress.xpToNext} XP
+                </span>
+                <span>L{stats.data.progress.level + 1}</span>
+              </div>
+              <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-primary/60 transition-all"
+                  style={{
+                    width: `${Math.min(100, Math.round((stats.data.progress.xpInLevel / stats.data.progress.xpToNext) * 100))}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Badges */}
+            <div className="mt-6">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Badges</p>
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {Object.entries(BADGES).map(([code, b]) => {
+                  const earned = stats.data!.badges.some((x: any) => x.badge_code === code);
+                  return (
+                    <div
+                      key={code}
+                      className={`rounded-xl border p-3 text-center transition ${
+                        earned
+                          ? "border-primary/50 bg-primary/10"
+                          : "border-dashed opacity-40 grayscale"
+                      }`}
+                      title={b.description}
+                    >
+                      <div className="text-2xl">{b.icon}</div>
+                      <p className="mt-1 text-[10px] font-medium leading-tight">{b.name}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
         <h1 className="font-display text-3xl">Your taste</h1>
         <p className="mt-2 text-muted-foreground">The more honest, the better the matches.</p>
+
 
         {q.isLoading ? (
           <div className="mt-8 space-y-6">
