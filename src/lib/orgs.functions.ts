@@ -88,6 +88,34 @@ export const listLeads = createServerFn({ method: "POST" })
     return { leads: rows ?? [] };
   });
 
+export const exportLeadsCsv = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ org_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: org } = await context.supabase
+      .from("organizations").select("owner_id").eq("id", data.org_id).maybeSingle();
+    if (!org || org.owner_id !== context.userId) throw new Error("Not authorized");
+    const { data: rows, error } = await context.supabase
+      .from("rsvps")
+      .select("created_at, status, events!inner(title, starts_at, org_id), profiles:user_id(display_name, city)")
+      .eq("events.org_id", data.org_id)
+      .order("created_at", { ascending: false })
+      .limit(2000);
+    if (error) throw new Error(error.message);
+    const esc = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = ["created_at", "status", "event_title", "event_starts_at", "member_name", "member_city"];
+    const lines = [header.join(",")];
+    for (const r of rows ?? []) {
+      const ev = (r as any).events;
+      const pr = (r as any).profiles;
+      lines.push([r.created_at, r.status, ev?.title, ev?.starts_at, pr?.display_name, pr?.city].map(esc).join(","));
+    }
+    return { csv: lines.join("\n"), filename: `leads-${new Date().toISOString().slice(0,10)}.csv` };
+  });
+
 const CustomerInput = z.object({
   org_id: z.string().uuid(),
   name: z.string().min(1).max(120),
