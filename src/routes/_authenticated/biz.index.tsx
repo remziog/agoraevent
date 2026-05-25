@@ -93,6 +93,7 @@ function OrgPanel({ org }: { org: any }) {
   const custFn = useServerFn(listCustomers);
   const addCust = useServerFn(upsertCustomer);
   const insightsFn = useServerFn(getDemandInsightsAdmin);
+  const exportFn = useServerFn(exportLeadsCsv);
   const qc = useQueryClient();
 
   const evQ = useQuery({ queryKey: ["org-events", org.id], queryFn: () => listEv({ data: { org_id: org.id } }) });
@@ -181,7 +182,6 @@ function OrgPanel({ org }: { org: any }) {
             <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Leads (RSVPs)</h3>
             <Button size="sm" variant="outline" onClick={async () => {
               try {
-                const exportFn = useServerFn(exportLeadsCsv);
                 const res = await exportFn({ data: { org_id: org.id } });
                 const blob = new Blob([res.csv], { type: "text/csv" });
                 const url = URL.createObjectURL(blob);
