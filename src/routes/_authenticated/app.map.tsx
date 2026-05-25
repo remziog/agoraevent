@@ -68,19 +68,8 @@ function MapView() {
     }
   }, [navigate]);
 
-  // Auto-open Google Maps directions for the top match once
-  const launchedRef = useRef(false);
-  useEffect(() => {
-    if (launchedRef.current) return;
-    if (!data || data.events.length === 0) return;
-    const top = data.events[0];
-    launchedRef.current = true;
-    try {
-      (window.top ?? window).location.href = mapsHref(top);
-    } catch {
-      window.location.href = mapsHref(top);
-    }
-  }, [data]);
+  // (Auto-launch removed — user opens Google Maps via the "Take me there" button.)
+
 
   // Load Google Maps JS
   useEffect(() => {
