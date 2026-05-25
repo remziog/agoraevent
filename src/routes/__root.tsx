@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Agora — Meet your people in real life" },
-      { name: "description", content: "Agora helps you find nearby events that match your taste — music, sport, film, and more. Humans were never meant to be alone." },
+      { name: "description", content: "Agora helps you find nearby events that match your taste — music, sport, film, and more. The modern gathering place." },
       { name: "author", content: "Agora" },
       { property: "og:title", content: "Agora — Meet your people in real life" },
       { property: "og:description", content: "Find events nearby that match your taste. A modern gathering place." },

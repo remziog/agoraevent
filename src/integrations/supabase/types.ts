@@ -130,7 +130,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
-          owner_id: string
+          owner_id: string | null
         }
         Insert: {
           category: string
@@ -141,7 +141,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
-          owner_id: string
+          owner_id?: string | null
         }
         Update: {
           category?: string
@@ -152,7 +152,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
-          owner_id?: string
+          owner_id?: string | null
         }
         Relationships: []
       }

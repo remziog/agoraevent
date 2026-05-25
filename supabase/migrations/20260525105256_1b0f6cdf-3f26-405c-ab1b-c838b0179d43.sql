@@ -1,0 +1,1 @@
+ALTER TABLE public.organizations ALTER COLUMN owner_id DROP NOT NULL;
