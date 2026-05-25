@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarded")
+      .eq("id", auth.user.id)
+      .maybeSingle();
+
+    throw redirect({ to: profile?.onboarded ? "/app" : "/onboarding" });
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Agora" },
@@ -38,8 +50,18 @@ function LoginPage() {
       toast.error(error.message);
       return;
     }
+
+    const { data: auth } = await supabase.auth.getUser();
+    const { data: profile } = auth.user
+      ? await supabase
+          .from("profiles")
+          .select("onboarded")
+          .eq("id", auth.user.id)
+          .maybeSingle()
+      : { data: null };
+
     toast.success("Welcome back");
-    navigate({ to: "/app" });
+    navigate({ to: profile?.onboarded ? "/app" : "/onboarding" });
   }
 
   async function onGoogle() {
@@ -51,7 +73,17 @@ function LoginPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/app" });
+
+    const { data: auth } = await supabase.auth.getUser();
+    const { data: profile } = auth.user
+      ? await supabase
+          .from("profiles")
+          .select("onboarded")
+          .eq("id", auth.user.id)
+          .maybeSingle()
+      : { data: null };
+
+    navigate({ to: profile?.onboarded ? "/app" : "/onboarding" });
   }
 
   return (
