@@ -75,7 +75,11 @@ function MapView() {
     if (!data || data.events.length === 0) return;
     const top = data.events[0];
     launchedRef.current = true;
-    window.open(mapsHref(top), "_blank", "noopener,noreferrer");
+    try {
+      (window.top ?? window).location.href = mapsHref(top);
+    } catch {
+      window.location.href = mapsHref(top);
+    }
   }, [data]);
 
   // Load Google Maps JS
