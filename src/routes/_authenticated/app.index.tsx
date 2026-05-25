@@ -414,15 +414,18 @@ function RecommendationCard({ rec }: { rec: any }) {
             day: "numeric",
           })}
         </span>
-        <a
-          href={mapsHref(e)}
-          target="_top"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-background px-3 py-1.5 text-xs text-foreground transition hover:bg-primary hover:text-primary-foreground"
-        >
-          <Navigation className="h-3 w-3" />
-          Take me there
-        </a>
+        <LocationPreviewDialog
+          place={e}
+          trigger={
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-background px-3 py-1.5 text-xs text-foreground transition hover:bg-primary hover:text-primary-foreground"
+            >
+              <Navigation className="h-3 w-3" />
+              Take me there
+            </button>
+          }
+        />
       </div>
     </div>
   );
