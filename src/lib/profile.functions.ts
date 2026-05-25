@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const ProfileInput = z.object({
   display_name: z.string().min(1).max(80),
@@ -24,7 +25,10 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         onboarded: true,
       });
     if (pErr) throw new Error(pErr.message);
-    const { error: rErr } = await supabase
+    // Role assignment runs through the service-role client because RLS only
+    // permits self-assignment of the default `member` role. Elevated roles
+    // (e.g. organizer) must be granted server-side after server-side checks.
+    const { error: rErr } = await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: userId, role: data.role }, { onConflict: "user_id,role" });
     if (rErr) throw new Error(rErr.message);
