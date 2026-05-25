@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
+import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
 
 function mapsHref(e: {
   latitude?: number | null;
