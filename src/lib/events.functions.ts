@@ -147,6 +147,12 @@ export const rsvpEvent = createServerFn({ method: "POST" })
         .from("rsvps")
         .upsert({ event_id: data.event_id, user_id: context.userId, status: "going" });
       if (error) throw new Error(error.message);
+      const { data: ev } = await context.supabase
+        .from("events")
+        .select("starts_at")
+        .eq("id", data.event_id)
+        .maybeSingle();
+      await awardXp(context.userId, 25, ev?.starts_at ? new Date(ev.starts_at) : undefined);
     } else {
       const { error } = await context.supabase
         .from("rsvps")
