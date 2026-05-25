@@ -3,7 +3,7 @@ import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { listMyOrganizations } from "@/lib/orgs.functions";
-import { getDemandInsightsAdmin } from "@/lib/insights.functions";
+import { getDemandInsightsAdmin, getRecentRequestsAdmin } from "@/lib/insights.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { BizSubnav } from "@/components/BizSubnav";
 
@@ -17,11 +17,13 @@ export const Route = createFileRoute("/_authenticated/biz/insights")({
 function InsightsPage() {
   const { org } = Route.useSearch();
   const insightsFn = useServerFn(getDemandInsightsAdmin);
+  const requestsFn = useServerFn(getRecentRequestsAdmin);
   const listOrgs = useServerFn(listMyOrganizations);
 
   const orgsQ = useQuery({ queryKey: ["orgs"], queryFn: () => listOrgs() });
   const orgRow = orgsQ.data?.organizations.find((o: any) => o.id === org);
   const q = useQuery({ queryKey: ["org-insights", org], queryFn: () => insightsFn({ data: { org_id: org } }) });
+  const reqQ = useQuery({ queryKey: ["org-requests", org], queryFn: () => requestsFn({ data: { org_id: org } }) });
 
   const max = q.data?.top[0]?.count ?? 1;
 
@@ -64,6 +66,41 @@ function InsightsPage() {
             </ul>
           </section>
         </div>
+
+        <section className="mt-8 rounded-xl border bg-card p-6">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-xl">Recent requests</h2>
+            <span className="text-xs text-muted-foreground">
+              Anonymous · {reqQ.data?.requests.length ?? 0} latest
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            What people in {orgRow?.city ?? "your city"} typed into the compass. Use these to
+            shape your next event.
+          </p>
+          {reqQ.isLoading && <p className="mt-4 text-sm text-muted-foreground">Loading…</p>}
+          {!reqQ.isLoading && (reqQ.data?.requests.length ?? 0) === 0 && (
+            <p className="mt-4 rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No requests yet in your city.
+            </p>
+          )}
+          <ul className="mt-4 space-y-3">
+            {reqQ.data?.requests.map((r) => (
+              <li key={r.id} className="rounded-lg border bg-background/40 p-4">
+                <p className="text-sm">"{r.text}"</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{new Date(r.created_at).toLocaleString()}</span>
+                  {r.city && <span>· {r.city}</span>}
+                  {r.tags.slice(0, 6).map((t) => (
+                    <span key={t} className="rounded-full border px-2 py-0.5">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       </main>
     </div>
   );
