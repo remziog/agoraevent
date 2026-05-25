@@ -43,3 +43,44 @@ export const getDemandInsightsAdmin = createServerFn({ method: "POST" })
       .map(([bundle]) => bundle);
     return { top, total: prompts?.length ?? 0, samples };
   });
+
+// Returns recent anonymized prompt texts so organizers can see what people in
+// their city are actually asking for. No user_id is ever returned.
+export const getRecentRequestsAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ org_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: org, error: oErr } = await context.supabase
+      .from("organizations")
+      .select("city, owner_id")
+      .eq("id", data.org_id)
+      .maybeSingle();
+    if (oErr) throw new Error(oErr.message);
+    if (!org || org.owner_id !== context.userId) throw new Error("Not authorized");
+
+    let q = supabaseAdmin
+      .from("prompts")
+      .select("id, text, tags, city, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (org.city) q = q.eq("city", org.city);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+
+    // Strip anything that looks like an email/phone to keep requests anonymous.
+    const scrub = (s: string) =>
+      s
+        .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[redacted]")
+        .replace(/\+?\d[\d\s().-]{7,}\d/g, "[redacted]")
+        .slice(0, 280);
+
+    return {
+      requests: (rows ?? []).map((r) => ({
+        id: r.id,
+        text: scrub(r.text),
+        tags: (r.tags ?? []) as string[],
+        city: r.city,
+        created_at: r.created_at,
+      })),
+    };
+  });
