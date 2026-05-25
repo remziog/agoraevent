@@ -16,6 +16,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedBizIndexRouteImport } from './routes/_authenticated/biz.index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedBizLeadsRouteImport } from './routes/_authenticated/biz.leads'
+import { Route as AuthenticatedBizInsightsRouteImport } from './routes/_authenticated/biz.insights'
+import { Route as AuthenticatedBizEventsRouteImport } from './routes/_authenticated/biz.events'
+import { Route as AuthenticatedBizCustomersRouteImport } from './routes/_authenticated/biz.customers'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
 import { Route as AuthenticatedAppEventIdRouteImport } from './routes/_authenticated/app.event.$id'
@@ -54,6 +58,28 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/app/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBizLeadsRoute = AuthenticatedBizLeadsRouteImport.update({
+  id: '/biz/leads',
+  path: '/biz/leads',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedBizInsightsRoute =
+  AuthenticatedBizInsightsRouteImport.update({
+    id: '/biz/insights',
+    path: '/biz/insights',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBizEventsRoute = AuthenticatedBizEventsRouteImport.update({
+  id: '/biz/events',
+  path: '/biz/events',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedBizCustomersRoute =
+  AuthenticatedBizCustomersRouteImport.update({
+    id: '/biz/customers',
+    path: '/biz/customers',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   id: '/app/profile',
   path: '/app/profile',
@@ -78,6 +104,10 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/biz/customers': typeof AuthenticatedBizCustomersRoute
+  '/biz/events': typeof AuthenticatedBizEventsRoute
+  '/biz/insights': typeof AuthenticatedBizInsightsRoute
+  '/biz/leads': typeof AuthenticatedBizLeadsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/biz/': typeof AuthenticatedBizIndexRoute
   '/app/event/$id': typeof AuthenticatedAppEventIdRoute
@@ -89,6 +119,10 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/biz/customers': typeof AuthenticatedBizCustomersRoute
+  '/biz/events': typeof AuthenticatedBizEventsRoute
+  '/biz/insights': typeof AuthenticatedBizInsightsRoute
+  '/biz/leads': typeof AuthenticatedBizLeadsRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/biz': typeof AuthenticatedBizIndexRoute
   '/app/event/$id': typeof AuthenticatedAppEventIdRoute
@@ -102,6 +136,10 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/biz/customers': typeof AuthenticatedBizCustomersRoute
+  '/_authenticated/biz/events': typeof AuthenticatedBizEventsRoute
+  '/_authenticated/biz/insights': typeof AuthenticatedBizInsightsRoute
+  '/_authenticated/biz/leads': typeof AuthenticatedBizLeadsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/biz/': typeof AuthenticatedBizIndexRoute
   '/_authenticated/app/event/$id': typeof AuthenticatedAppEventIdRoute
@@ -115,6 +153,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/app/integrations'
     | '/app/profile'
+    | '/biz/customers'
+    | '/biz/events'
+    | '/biz/insights'
+    | '/biz/leads'
     | '/app/'
     | '/biz/'
     | '/app/event/$id'
@@ -126,6 +168,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/app/integrations'
     | '/app/profile'
+    | '/biz/customers'
+    | '/biz/events'
+    | '/biz/insights'
+    | '/biz/leads'
     | '/app'
     | '/biz'
     | '/app/event/$id'
@@ -138,6 +184,10 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/profile'
+    | '/_authenticated/biz/customers'
+    | '/_authenticated/biz/events'
+    | '/_authenticated/biz/insights'
+    | '/_authenticated/biz/leads'
     | '/_authenticated/app/'
     | '/_authenticated/biz/'
     | '/_authenticated/app/event/$id'
@@ -201,6 +251,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/biz/leads': {
+      id: '/_authenticated/biz/leads'
+      path: '/biz/leads'
+      fullPath: '/biz/leads'
+      preLoaderRoute: typeof AuthenticatedBizLeadsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/biz/insights': {
+      id: '/_authenticated/biz/insights'
+      path: '/biz/insights'
+      fullPath: '/biz/insights'
+      preLoaderRoute: typeof AuthenticatedBizInsightsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/biz/events': {
+      id: '/_authenticated/biz/events'
+      path: '/biz/events'
+      fullPath: '/biz/events'
+      preLoaderRoute: typeof AuthenticatedBizEventsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/biz/customers': {
+      id: '/_authenticated/biz/customers'
+      path: '/biz/customers'
+      fullPath: '/biz/customers'
+      preLoaderRoute: typeof AuthenticatedBizCustomersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/profile': {
       id: '/_authenticated/app/profile'
       path: '/app/profile'
@@ -229,6 +307,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedBizCustomersRoute: typeof AuthenticatedBizCustomersRoute
+  AuthenticatedBizEventsRoute: typeof AuthenticatedBizEventsRoute
+  AuthenticatedBizInsightsRoute: typeof AuthenticatedBizInsightsRoute
+  AuthenticatedBizLeadsRoute: typeof AuthenticatedBizLeadsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedBizIndexRoute: typeof AuthenticatedBizIndexRoute
   AuthenticatedAppEventIdRoute: typeof AuthenticatedAppEventIdRoute
@@ -238,6 +320,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedBizCustomersRoute: AuthenticatedBizCustomersRoute,
+  AuthenticatedBizEventsRoute: AuthenticatedBizEventsRoute,
+  AuthenticatedBizInsightsRoute: AuthenticatedBizInsightsRoute,
+  AuthenticatedBizLeadsRoute: AuthenticatedBizLeadsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedBizIndexRoute: AuthenticatedBizIndexRoute,
   AuthenticatedAppEventIdRoute: AuthenticatedAppEventIdRoute,
@@ -256,3 +342,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
