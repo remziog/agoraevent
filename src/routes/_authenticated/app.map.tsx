@@ -68,15 +68,8 @@ function MapView() {
     }
   }, [navigate]);
 
-  // Auto-open Google Maps directions for the top match once
-  const launchedRef = useRef(false);
-  useEffect(() => {
-    if (launchedRef.current) return;
-    if (!data || data.events.length === 0) return;
-    const top = data.events[0];
-    launchedRef.current = true;
-    window.open(mapsHref(top), "_blank", "noopener,noreferrer");
-  }, [data]);
+  // (Auto-launch removed — user opens Google Maps via the "Take me there" button.)
+
 
   // Load Google Maps JS
   useEffect(() => {
@@ -226,7 +219,7 @@ function MapView() {
                         <Button asChild size="sm" className="gap-1.5">
                           <a
                             href={mapsHref(selected)}
-                            target="_blank"
+                            target="_top"
                             rel="noopener noreferrer"
                           >
                             <Navigation className="h-3.5 w-3.5" />

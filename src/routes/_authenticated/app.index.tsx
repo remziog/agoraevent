@@ -416,7 +416,7 @@ function RecommendationCard({ rec }: { rec: any }) {
         </span>
         <a
           href={mapsHref(e)}
-          target="_blank"
+          target="_top"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-background px-3 py-1.5 text-xs text-foreground transition hover:bg-primary hover:text-primary-foreground"
         >
