@@ -118,35 +118,3 @@ export const listCustomers = createServerFn({ method: "POST" })
     return { customers: rows ?? [] };
   });
 
-export const getDemandInsights = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ org_id: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { data: org, error: oErr } = await context.supabase
-      .from("organizations")
-      .select("city, owner_id")
-      .eq("id", data.org_id)
-      .maybeSingle();
-    if (oErr) throw new Error(oErr.message);
-    if (!org || org.owner_id !== context.userId) {
-      throw new Error("Not authorized");
-    }
-    const { data: prompts } = await context.supabase
-      .from("prompts")
-      .select("tags, created_at, city")
-      .gte("created_at", new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString())
-      .limit(500);
-
-    const counts = new Map<string, number>();
-    (prompts ?? []).forEach((p) => {
-      if (org.city && p.city && p.city !== org.city) return;
-      (p.tags ?? []).forEach((t: string) => {
-        counts.set(t, (counts.get(t) ?? 0) + 1);
-      });
-    });
-    const top = [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
-      .map(([tag, count]) => ({ tag, count }));
-    return { top, total: prompts?.length ?? 0 };
-  });
