@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Compass, Sparkles, MapPin, Calendar as CalendarIcon } from "lucide-react";
+import { Compass, Sparkles, MapPin, Calendar as CalendarIcon, Shuffle } from "lucide-react";
 import { searchEvents, listUpcomingEvents } from "@/lib/events.functions";
 import { getMyStats } from "@/lib/gamification.functions";
 import { AppHeader } from "@/components/AppHeader";
