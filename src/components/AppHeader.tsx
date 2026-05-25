@@ -19,12 +19,9 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
           { to: "/app/integrations", label: "Integrations" },
         ]
       : [
-          { to: "/biz", label: "Overview" },
-          { to: "/biz/events", label: "Events" },
-          { to: "/biz/leads", label: "Leads" },
-          { to: "/biz/customers", label: "Customers" },
-          { to: "/biz/insights", label: "Insights" },
+          { to: "/biz", label: "Dashboard" },
         ];
+
   return (
     <header className="border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
