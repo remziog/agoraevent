@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useRef } from "react";
 import { Camera, Trash2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { listMyMemories, deleteMemory } from "@/lib/memories.functions";
