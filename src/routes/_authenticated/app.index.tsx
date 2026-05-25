@@ -86,6 +86,24 @@ function Discover() {
               className="h-12 text-base"
             />
             <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={() => {
+                let next = prompt;
+                while (next === prompt && SUGGESTIONS.length > 1) {
+                  next = SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)];
+                }
+                setPrompt(next);
+              }}
+              disabled={mutate.isPending}
+              className="gap-2"
+              aria-label="Try another vibe"
+            >
+              <Shuffle className="h-4 w-4" />
+              Try another vibe
+            </Button>
+            <Button
               type="submit"
               size="lg"
               disabled={mutate.isPending || !prompt.trim()}
