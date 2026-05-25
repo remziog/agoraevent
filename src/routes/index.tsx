@@ -3,6 +3,28 @@ import { Logo, LogoMark } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Agora — Meet your people in real life" },
+      { name: "description", content: "Tell Agora the kind of night you want. We find the room — nearby events that match your taste in music, sport, film, and conversation." },
+      { property: "og:title", content: "Agora — Meet your people in real life" },
+      { property: "og:description", content: "Tell Agora the kind of night you want. We find the room." },
+      { property: "og:url", content: "/" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Agora — Meet your people in real life" },
+      { name: "twitter:description", content: "Tell Agora the kind of night you want. We find the room." },
+    ],
+    links: [{ rel: "canonical", href: "/" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "Agora",
+        description: "Find nearby events that match your taste.",
+      }),
+    }],
+  }),
   component: Landing,
 });
 
