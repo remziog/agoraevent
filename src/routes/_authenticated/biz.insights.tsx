@@ -17,11 +17,13 @@ export const Route = createFileRoute("/_authenticated/biz/insights")({
 function InsightsPage() {
   const { org } = Route.useSearch();
   const insightsFn = useServerFn(getDemandInsightsAdmin);
+  const requestsFn = useServerFn(getRecentRequestsAdmin);
   const listOrgs = useServerFn(listMyOrganizations);
 
   const orgsQ = useQuery({ queryKey: ["orgs"], queryFn: () => listOrgs() });
   const orgRow = orgsQ.data?.organizations.find((o: any) => o.id === org);
   const q = useQuery({ queryKey: ["org-insights", org], queryFn: () => insightsFn({ data: { org_id: org } }) });
+  const reqQ = useQuery({ queryKey: ["org-requests", org], queryFn: () => requestsFn({ data: { org_id: org } }) });
 
   const max = q.data?.top[0]?.count ?? 1;
 
