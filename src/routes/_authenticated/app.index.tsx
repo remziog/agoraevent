@@ -236,7 +236,7 @@ function CompassFace({
   );
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[640px]">
+    <div className="relative mx-auto aspect-square w-full max-w-[760px]">
       {/* Outer ring (subtly rotating bezel) */}
       <div
         className="absolute inset-0 rounded-full border border-primary/30 bg-[radial-gradient(circle_at_30%_20%,_color-mix(in_oklab,_var(--primary)_18%,_transparent),_transparent_55%),radial-gradient(circle_at_70%_80%,_color-mix(in_oklab,_var(--primary)_10%,_transparent),_transparent_55%)] shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_45%,transparent),inset_0_0_60px_color-mix(in_oklab,var(--primary)_8%,transparent)]"
