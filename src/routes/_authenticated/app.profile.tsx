@@ -50,7 +50,9 @@ function TagInput({ label, value, onChange }: { label: string; value: string[]; 
 function ProfilePage() {
   const get = useServerFn(getMyProfile);
   const save = useServerFn(updateTaste);
+  const fetchStats = useServerFn(getMyStats);
   const q = useQuery({ queryKey: ["me"], queryFn: () => get() });
+  const stats = useQuery({ queryKey: ["my-stats"], queryFn: () => fetchStats() });
 
   const [music, setMusic] = useState<string[]>([]);
   const [sports, setSports] = useState<string[]>([]);
