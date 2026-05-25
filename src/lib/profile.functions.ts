@@ -25,7 +25,10 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         onboarded: true,
       });
     if (pErr) throw new Error(pErr.message);
-    const { error: rErr } = await supabase
+    // Role assignment runs through the service-role client because RLS only
+    // permits self-assignment of the default `member` role. Elevated roles
+    // (e.g. organizer) must be granted server-side after server-side checks.
+    const { error: rErr } = await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: userId, role: data.role }, { onConflict: "user_id,role" });
     if (rErr) throw new Error(rErr.message);
