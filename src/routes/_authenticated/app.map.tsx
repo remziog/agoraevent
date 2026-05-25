@@ -68,6 +68,16 @@ function MapView() {
     }
   }, [navigate]);
 
+  // Auto-open Google Maps directions for the top match once
+  const launchedRef = useRef(false);
+  useEffect(() => {
+    if (launchedRef.current) return;
+    if (!data || data.events.length === 0) return;
+    const top = data.events[0];
+    launchedRef.current = true;
+    window.open(mapsHref(top), "_blank", "noopener,noreferrer");
+  }, [data]);
+
   // Load Google Maps JS
   useEffect(() => {
     if (window.google?.maps) {
