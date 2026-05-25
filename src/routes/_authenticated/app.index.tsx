@@ -20,6 +20,7 @@ import { getMyStats } from "@/lib/gamification.functions";
 import { getRecommendations } from "@/lib/recommendations.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { CompassLoader } from "@/components/CompassLoader";
+import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Discover,
