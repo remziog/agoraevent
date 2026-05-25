@@ -55,8 +55,18 @@ function ResetPasswordPage() {
       toast.error(error.message);
       return;
     }
+
+    const { data: auth } = await supabase.auth.getUser();
+    const { data: profile } = auth.user
+      ? await supabase
+          .from("profiles")
+          .select("onboarded")
+          .eq("id", auth.user.id)
+          .maybeSingle()
+      : { data: null };
+
     toast.success("Password updated");
-    navigate({ to: "/app" });
+    navigate({ to: profile?.onboarded ? "/app" : "/onboarding" });
   }
 
   return (
