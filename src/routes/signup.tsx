@@ -49,8 +49,22 @@ function SignupPage() {
     navigate({ to: "/onboarding" });
   }
 
+  async function onGoogle() {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      toast.error(result.error.message ?? "Google sign-in failed");
+      return;
+    }
+    if (result.redirected) return;
+    navigate({ to: "/onboarding" });
+  }
+
   return (
     <AuthShell title="Join Agora" subtitle="Find the room you've been missing.">
+      <GoogleButton onClick={onGoogle} label="Sign up with Google" />
+      <Divider />
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Your name</Label>
