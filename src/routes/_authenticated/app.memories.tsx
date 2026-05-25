@@ -108,15 +108,3 @@ function MemoriesPage() {
   );
 }
 
-export function MemoryUploader({
-  eventId,
-  onUploaded,
-}: {
-  eventId: string;
-  onUploaded: () => void;
-}) {
-  const [uploading, setUploading] = useState(false);
-  const [caption, setCaption] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
-  return null; // placeholder so this file compiles standalone
-}
