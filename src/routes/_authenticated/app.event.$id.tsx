@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getEvent, rsvpEvent } from "@/lib/events.functions";
 import { AppHeader } from "@/components/AppHeader";
+import { MemorySection } from "@/components/MemorySection";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -23,7 +24,8 @@ function EventDetail() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["event", id] });
       qc.invalidateQueries({ queryKey: ["rsvps"] });
-      toast.success("Saved");
+      qc.invalidateQueries({ queryKey: ["my-stats"] });
+      toast.success("Saved · +25 XP");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -70,6 +72,7 @@ function EventDetail() {
             </div>
           </article>
         )}
+        {event && <MemorySection eventId={id} canPost={going} />}
       </main>
     </div>
   );
