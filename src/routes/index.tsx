@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Logo, LogoMark } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import ogImage from "@/assets/og-landing.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -11,8 +12,11 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Tell Agora the kind of night you want. We find the room." },
       { property: "og:url", content: "/" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: ogImage },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Agora — Meet your people in real life" },
       { name: "twitter:description", content: "Tell Agora the kind of night you want. We find the room." },
+      { name: "twitter:image", content: ogImage },
     ],
     links: [{ rel: "canonical", href: "/" }],
     scripts: [{
