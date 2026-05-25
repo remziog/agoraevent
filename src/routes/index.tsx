@@ -25,12 +25,12 @@ function Landing() {
         {/* Hero */}
         <section className="mx-auto max-w-4xl px-6 pb-20 pt-16 text-center">
           <p className="mb-6 text-xs uppercase tracking-[0.28em] text-muted-foreground">
-            Ancient Greek for the gathering place
+            The modern gathering place
           </p>
           <h1 className="font-display text-5xl font-semibold leading-[1.05] sm:text-7xl">
-            Humans were never
+            Find the room
             <br />
-            meant to be alone.
+            you've been missing.
           </h1>
           <p className="mx-auto mt-8 max-w-2xl text-lg text-muted-foreground">
             We work too much. We scroll too much. We meet too little. Agora finds
@@ -39,7 +39,7 @@ function Landing() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg">
-              <Link to="/signup">Find your people</Link>
+              <Link to="/signup">Find your event</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link to="/signup">I host events</Link>
@@ -128,12 +128,12 @@ function Landing() {
               The gathering place, returned.
             </h2>
             <p className="mt-5 text-muted-foreground">
-              In Athens, the agora was where strangers became neighbors. We're
-              just bringing it back.
+              Less scrolling. More showing up. Your next favorite night is
+              probably ten minutes away.
             </p>
             <div className="mt-8">
               <Button asChild size="lg">
-                <Link to="/signup">Create your account</Link>
+                <Link to="/signup">Find your event</Link>
               </Button>
             </div>
           </div>
