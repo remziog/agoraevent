@@ -48,7 +48,8 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
           ))}
         </nav>
 
-        <div className="hidden sm:block">
+        <div className="hidden items-center gap-3 sm:flex">
+          {variant === "member" && <XpChip />}
           <Button size="sm" variant="ghost" onClick={signOut}>
             Sign out
           </Button>
