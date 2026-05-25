@@ -71,7 +71,12 @@ function LoginPage() {
           {loading ? "Signing in…" : "Sign in"}
         </Button>
       </form>
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <div className="mt-4 text-center text-sm">
+        <Link to="/forgot-password" className="text-muted-foreground hover:text-foreground underline underline-offset-4">
+          Forgot password?
+        </Link>
+      </div>
+      <p className="mt-4 text-center text-sm text-muted-foreground">
         New here?{" "}
         <Link to="/signup" className="text-foreground underline underline-offset-4">
           Create an account
