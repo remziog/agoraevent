@@ -11,7 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
+import { Route as AuthenticatedAppEventIdRouteImport } from './routes/_authenticated/app.event.$id'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -23,38 +29,111 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
+  id: '/app/profile',
+  path: '/app/profile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAppIntegrationsRoute =
+  AuthenticatedAppIntegrationsRouteImport.update({
+    id: '/app/integrations',
+    path: '/app/integrations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAppEventIdRoute = AuthenticatedAppEventIdRouteImport.update({
+  id: '/app/event/$id',
+  path: '/app/event/$id',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
+  '/app/event/$id': typeof AuthenticatedAppEventIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app': typeof AuthenticatedAppIndexRoute
+  '/app/event/$id': typeof AuthenticatedAppEventIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/app/event/$id': typeof AuthenticatedAppEventIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/onboarding'
+    | '/app/integrations'
+    | '/app/profile'
+    | '/app/'
+    | '/app/event/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup'
-  id: '__root__' | '/' | '/login' | '/signup'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/onboarding'
+    | '/app/integrations'
+    | '/app/profile'
+    | '/app'
+    | '/app/event/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/login'
+    | '/signup'
+    | '/_authenticated/onboarding'
+    | '/_authenticated/app/integrations'
+    | '/_authenticated/app/profile'
+    | '/_authenticated/app/'
+    | '/_authenticated/app/event/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
 }
@@ -75,6 +154,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -82,11 +168,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/profile': {
+      id: '/_authenticated/app/profile'
+      path: '/app/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/integrations': {
+      id: '/_authenticated/app/integrations'
+      path: '/app/integrations'
+      fullPath: '/app/integrations'
+      preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/event/$id': {
+      id: '/_authenticated/app/event/$id'
+      path: '/app/event/$id'
+      fullPath: '/app/event/$id'
+      preLoaderRoute: typeof AuthenticatedAppEventIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
+  AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppEventIdRoute: typeof AuthenticatedAppEventIdRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
+  AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppEventIdRoute: AuthenticatedAppEventIdRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
 }
