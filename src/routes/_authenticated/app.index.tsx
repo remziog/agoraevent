@@ -236,7 +236,7 @@ function CompassFace({
   );
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[640px]">
+    <div className="relative mx-auto aspect-square w-full max-w-[760px]">
       {/* Outer ring (subtly rotating bezel) */}
       <div
         className="absolute inset-0 rounded-full border border-primary/30 bg-[radial-gradient(circle_at_30%_20%,_color-mix(in_oklab,_var(--primary)_18%,_transparent),_transparent_55%),radial-gradient(circle_at_70%_80%,_color-mix(in_oklab,_var(--primary)_10%,_transparent),_transparent_55%)] shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_45%,transparent),inset_0_0_60px_color-mix(in_oklab,var(--primary)_8%,transparent)]"
@@ -331,18 +331,18 @@ function CompassFace({
         </svg>
       </div>
 
-      {/* Center: chat-style input */}
-      <div className="absolute left-1/2 top-1/2 z-10 w-[68%] -translate-x-1/2 -translate-y-1/2">
-        <div className="flex items-center gap-1.5 justify-center mb-3">
-          <Compass className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[10px] uppercase tracking-[0.3em] text-primary">Compass · AI</span>
+      {/* Center: chat-style input (compact to not cover direction chips) */}
+      <div className="absolute left-1/2 top-1/2 z-10 w-[44%] -translate-x-1/2 -translate-y-1/2">
+        <div className="flex items-center gap-1.5 justify-center mb-2">
+          <Compass className="h-3 w-3 text-primary" />
+          <span className="text-[9px] uppercase tracking-[0.3em] text-primary">AI</span>
         </div>
         <form
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit(prompt);
           }}
-          className="group rounded-3xl border border-border bg-background/95 p-2 shadow-[0_10px_40px_-15px_color-mix(in_oklab,var(--primary)_35%,transparent)] backdrop-blur transition-all focus-within:border-primary/60 focus-within:shadow-[0_15px_50px_-15px_color-mix(in_oklab,var(--primary)_55%,transparent)]"
+          className="group rounded-2xl border border-border bg-background/95 p-1.5 shadow-[0_10px_40px_-15px_color-mix(in_oklab,var(--primary)_35%,transparent)] backdrop-blur transition-all focus-within:border-primary/60 focus-within:shadow-[0_15px_50px_-15px_color-mix(in_oklab,var(--primary)_55%,transparent)]"
         >
           <textarea
             value={prompt}
@@ -353,22 +353,19 @@ function CompassFace({
                 onSubmit(prompt);
               }
             }}
-            placeholder="What kind of night are you looking for?"
-            rows={2}
+            placeholder="Your night?"
+            rows={1}
             disabled={disabled}
-            className="w-full resize-none bg-transparent px-3 py-2 text-sm leading-snug placeholder:text-muted-foreground focus:outline-none"
+            className="w-full resize-none bg-transparent px-2 py-1 text-xs leading-snug placeholder:text-muted-foreground focus:outline-none"
           />
-          <div className="flex items-center justify-between gap-2 px-2 pb-1">
-            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Sparkles className="h-3 w-3" /> Powered by AI
-            </span>
+          <div className="flex items-center justify-end px-1 pb-0.5">
             <button
               type="submit"
               disabled={disabled || !prompt.trim()}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+              className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
               aria-label="Point me there"
             >
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className="h-3 w-3" />
             </button>
           </div>
         </form>
