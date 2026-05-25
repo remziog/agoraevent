@@ -1,8 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
+
+function mapsHref(e: {
+  latitude?: number | null;
+  longitude?: number | null;
+  venue?: string | null;
+  city?: string | null;
+  title: string;
+}) {
+  if (e.latitude && e.longitude) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
+  }
+  const q = encodeURIComponent([e.venue, e.city, e.title].filter(Boolean).join(", "));
+  return `https://www.google.com/maps/dir/?api=1&destination=${q}`;
+}
 
 export const Route = createFileRoute("/_authenticated/app/map")({
   component: MapView,
@@ -53,6 +67,16 @@ function MapView() {
       navigate({ to: "/app" });
     }
   }, [navigate]);
+
+  // Auto-open Google Maps directions for the top match once
+  const launchedRef = useRef(false);
+  useEffect(() => {
+    if (launchedRef.current) return;
+    if (!data || data.events.length === 0) return;
+    const top = data.events[0];
+    launchedRef.current = true;
+    window.open(mapsHref(top), "_blank", "noopener,noreferrer");
+  }, [data]);
 
   // Load Google Maps JS
   useEffect(() => {
@@ -182,11 +206,7 @@ function MapView() {
               ) : (
                 <>
                   {selected && (
-                    <Link
-                      to="/app/event/$id"
-                      params={{ id: selected.id }}
-                      className="mt-3 block rounded-2xl border border-primary/40 bg-card p-4 transition hover:border-primary"
-                    >
+                    <div className="mt-3 rounded-2xl border border-primary/40 bg-card p-4">
                       <p className="text-xs uppercase tracking-widest text-primary">Top match</p>
                       <h3 className="mt-1 font-display text-xl">{selected.title}</h3>
                       <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
@@ -202,7 +222,24 @@ function MapView() {
                           day: "numeric",
                         })}
                       </p>
-                    </Link>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button asChild size="sm" className="gap-1.5">
+                          <a
+                            href={mapsHref(selected)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Navigation className="h-3.5 w-3.5" />
+                            Take me there
+                          </a>
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link to="/app/event/$id" params={{ id: selected.id }}>
+                            Event details
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
                   )}
 
                   {data.events.length > 1 && (
