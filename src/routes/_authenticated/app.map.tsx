@@ -159,56 +159,80 @@ function MapView() {
               </p>
               <p className="line-clamp-1 font-display text-base">"{data.prompt}"</p>
 
-              {selected && (
-                <Link
-                  to="/app/event/$id"
-                  params={{ id: selected.id }}
-                  className="mt-3 block rounded-2xl border border-primary/40 bg-card p-4 transition hover:border-primary"
-                >
-                  <p className="text-xs uppercase tracking-widest text-primary">Top match</p>
-                  <h3 className="mt-1 font-display text-xl">{selected.title}</h3>
-                  <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    {selected.venue ?? selected.organizations?.name} · {selected.city ?? "—"}
+              {data.events.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-dashed border-primary/30 bg-card/60 p-5">
+                  <p className="font-display text-lg">No room matched that vibe — yet.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    The compass came up empty nearby. A few things to try:
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {new Date(selected.starts_at).toLocaleString([], {
-                      weekday: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </Link>
-              )}
-
-              {data.events.length > 1 && (
-                <div className="mt-3 space-y-2">
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Also nearby
-                  </p>
-                  {data.events.slice(1, 6).map((e) => (
-                    <button
-                      key={e.id}
-                      onClick={() => setSelected(e)}
-                      className="block w-full rounded-xl border bg-card/60 p-3 text-left transition hover:border-primary/50"
-                    >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-medium">{e.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(e.starts_at).toLocaleDateString([], {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {e.city ?? "—"} · {e.category}
-                      </p>
-                    </button>
-                  ))}
+                  <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                    <li>• Loosen the mood — try a broader phrase like "live music" or "quiet drinks"</li>
+                    <li>• Swap a tag — describe the feeling, not a specific artist or band</li>
+                    <li>• Stretch the night — try later this week instead of tonight</li>
+                  </ul>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button size="sm" onClick={() => navigate({ to: "/app" })}>
+                      Try another prompt
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/app/calendar">Browse the calendar</Link>
+                    </Button>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {selected && (
+                    <Link
+                      to="/app/event/$id"
+                      params={{ id: selected.id }}
+                      className="mt-3 block rounded-2xl border border-primary/40 bg-card p-4 transition hover:border-primary"
+                    >
+                      <p className="text-xs uppercase tracking-widest text-primary">Top match</p>
+                      <h3 className="mt-1 font-display text-xl">{selected.title}</h3>
+                      <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {selected.venue ?? selected.organizations?.name} · {selected.city ?? "—"}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {new Date(selected.starts_at).toLocaleString([], {
+                          weekday: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </Link>
+                  )}
+
+                  {data.events.length > 1 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Also nearby
+                      </p>
+                      {data.events.slice(1, 6).map((e) => (
+                        <button
+                          key={e.id}
+                          onClick={() => setSelected(e)}
+                          className="block w-full rounded-xl border bg-card/60 p-3 text-left transition hover:border-primary/50"
+                        >
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="font-medium">{e.title}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(e.starts_at).toLocaleDateString([], {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {e.city ?? "—"} · {e.category}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
