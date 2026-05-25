@@ -226,7 +226,7 @@ function MapView() {
                         <Button asChild size="sm" className="gap-1.5">
                           <a
                             href={mapsHref(selected)}
-                            target="_blank"
+                            target="_top"
                             rel="noopener noreferrer"
                           >
                             <Navigation className="h-3.5 w-3.5" />
