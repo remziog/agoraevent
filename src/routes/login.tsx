@@ -8,7 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in — Agora" }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in — Agora" },
+      { name: "description", content: "Sign in to Agora to discover events near you that match your taste." },
+      { property: "og:title", content: "Sign in — Agora" },
+      { property: "og:description", content: "Sign in to Agora to discover events near you that match your taste." },
+      { property: "og:url", content: "/login" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "/login" }],
+  }),
   component: LoginPage,
 });
 
