@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { XpChip } from "@/components/XpChip";
 
 export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
   const navigate = useNavigate();
@@ -21,8 +22,9 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
     variant === "member"
       ? [
           { to: "/app", label: "Discover" },
+          { to: "/app/calendar", label: "Calendar" },
+          { to: "/app/memories", label: "Memories" },
           { to: "/app/profile", label: "Taste" },
-          { to: "/app/integrations", label: "Integrations" },
         ]
       : [{ to: "/biz", label: "Dashboard" }];
 
