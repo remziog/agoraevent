@@ -3,7 +3,7 @@ import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { listMyOrganizations } from "@/lib/orgs.functions";
-import { getDemandInsightsAdmin } from "@/lib/insights.functions";
+import { getDemandInsightsAdmin, getRecentRequestsAdmin } from "@/lib/insights.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { BizSubnav } from "@/components/BizSubnav";
 
