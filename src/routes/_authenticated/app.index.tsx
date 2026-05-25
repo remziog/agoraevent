@@ -29,7 +29,9 @@ function Discover() {
   const list = useServerFn(listUpcomingEvents);
   const fetchStats = useServerFn(getMyStats);
 
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(
+    () => SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)],
+  );
   const upcoming = useQuery({ queryKey: ["events", "upcoming"], queryFn: () => list() });
   const stats = useQuery({ queryKey: ["my-stats"], queryFn: () => fetchStats() });
 
