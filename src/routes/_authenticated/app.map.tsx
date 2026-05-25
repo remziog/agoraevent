@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
+import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
 
 function mapsHref(e: {
   latitude?: number | null;
@@ -216,16 +217,15 @@ function MapView() {
                         })}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <Button asChild size="sm" className="gap-1.5">
-                          <a
-                            href={mapsHref(selected)}
-                            target="_top"
-                            rel="noopener noreferrer"
-                          >
-                            <Navigation className="h-3.5 w-3.5" />
-                            Take me there
-                          </a>
-                        </Button>
+                        <LocationPreviewDialog
+                          place={selected}
+                          trigger={
+                            <Button size="sm" className="gap-1.5">
+                              <Navigation className="h-3.5 w-3.5" />
+                              Take me there
+                            </Button>
+                          }
+                        />
                         <Button asChild size="sm" variant="outline">
                           <Link to="/app/event/$id" params={{ id: selected.id }}>
                             Event details
