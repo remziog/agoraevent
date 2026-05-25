@@ -1,8 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
+
+function mapsHref(e: {
+  latitude?: number | null;
+  longitude?: number | null;
+  venue?: string | null;
+  city?: string | null;
+  title: string;
+}) {
+  if (e.latitude && e.longitude) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
+  }
+  const q = encodeURIComponent([e.venue, e.city, e.title].filter(Boolean).join(", "));
+  return `https://www.google.com/maps/dir/?api=1&destination=${q}`;
+}
 
 export const Route = createFileRoute("/_authenticated/app/map")({
   component: MapView,
