@@ -102,8 +102,16 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [open, setOpen] = useState(false);
   const [depart, setDepart] = useState<string>(() => defaultDepart(place));
   const [preferred, setPreferred] = useState<Provider | null>(() => getPreferredProvider());
+  const [embedFailed, setEmbedFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
   const autoLaunchedRef = useRef(false);
+  const embedLoadedRef = useRef(false);
   const label = [place.venue, place.city].filter(Boolean).join(" · ") || place.title;
+  const addressLine = [place.venue, place.city].filter(Boolean).join(", ") || place.title;
+  const coordsLine =
+    place.latitude != null && place.longitude != null
+      ? `${place.latitude.toFixed(5)}, ${place.longitude.toFixed(5)}`
+      : null;
 
   const gHref = useMemo(() => googleMapsHref(place, depart), [place, depart]);
   const yHref = useMemo(() => yandexMapsHref(place, depart), [place, depart]);
