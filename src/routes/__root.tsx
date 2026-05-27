@@ -85,8 +85,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Agora — Meet your people in real life" },
       { name: "twitter:description", content: "Agora helps you find nearby events that match your taste — music, sport, film, and more. The modern gathering place." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b1032a75-f3cc-4d6a-abf6-7b9373128e68/id-preview-9442f9c8--0d3101bb-9764-405c-8d64-1cd8781cef23.lovable.app-1779710139145.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b1032a75-f3cc-4d6a-abf6-7b9373128e68/id-preview-9442f9c8--0d3101bb-9764-405c-8d64-1cd8781cef23.lovable.app-1779710139145.png" },
       { name: "google-site-verification", content: "i6_-75B6IVIsfqy_dMLk56nDQiW6BqiNYoyTH_9NIQA" },
     ],
     links: [
