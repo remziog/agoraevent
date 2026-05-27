@@ -101,14 +101,37 @@ function defaultDepart(p: Place): string {
 export function LocationPreviewDialog({ place, trigger }: { place: Place; trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [depart, setDepart] = useState<string>(() => defaultDepart(place));
+  const [preferred, setPreferred] = useState<Provider | null>(() => getPreferredProvider());
+  const autoLaunchedRef = useRef(false);
   const label = [place.venue, place.city].filter(Boolean).join(" · ") || place.title;
 
   const gHref = useMemo(() => googleMapsHref(place, depart), [place, depart]);
   const yHref = useMemo(() => yandexMapsHref(place, depart), [place, depart]);
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+  // Auto-open the preferred provider on first open of this dialog instance.
+  useEffect(() => {
+    if (!open || autoLaunchedRef.current) return;
+    const pref = getPreferredProvider();
+    if (!pref) return;
+    autoLaunchedRef.current = true;
+    setOpen(false);
+    openTop(pref === "google" ? gHref : yHref);
+  }, [open, gHref, yHref]);
+
+  const choose = (p: Provider) => {
+    setPreferredProvider(p);
+    setPreferred(p);
+  };
+
+  const forget = () => {
+    try {
+      window.localStorage.removeItem(PROVIDER_KEY);
+    } catch {
+      /* ignore */
+    }
+    setPreferred(null);
+  };
+
       <DialogContent className="max-w-2xl p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5">
           <DialogTitle className="font-display text-xl">{place.title}</DialogTitle>
