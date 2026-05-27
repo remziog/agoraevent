@@ -56,6 +56,15 @@ export const addMemory = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    // Only accept URLs from this project's `memories` storage bucket so a
+    // malicious client can't inject arbitrary external URLs that other users
+    // would then load (IP-tracking / pixel-leak).
+    const base = process.env.SUPABASE_URL ?? "";
+    const prefix = `${base}/storage/v1/object/public/memories/`;
+    const signedPrefix = `${base}/storage/v1/object/sign/memories/`;
+    if (!base || (!data.photo_url.startsWith(prefix) && !data.photo_url.startsWith(signedPrefix))) {
+      throw new Error("Invalid photo URL");
+    }
     const { error } = await context.supabase.from("event_memories").insert({
       event_id: data.event_id,
       user_id: context.userId,
