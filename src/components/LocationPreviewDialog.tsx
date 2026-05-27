@@ -3,7 +3,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navigation, MapPin, Clock } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+
+type Provider = "google" | "yandex";
+const PROVIDER_KEY = "agora:preferredMapProvider";
+
+function getPreferredProvider(): Provider | null {
+  if (typeof window === "undefined") return null;
+  const v = window.localStorage.getItem(PROVIDER_KEY);
+  return v === "google" || v === "yandex" ? v : null;
+}
+
+function setPreferredProvider(p: Provider) {
+  try {
+    window.localStorage.setItem(PROVIDER_KEY, p);
+  } catch {
+    /* ignore */
+  }
+}
+
+function openTop(href: string) {
+  try {
+    if (window.top) window.top.location.href = href;
+    else window.location.href = href;
+  } catch {
+    window.location.href = href;
+  }
+}
 
 type Place = {
   title: string;
@@ -75,10 +101,36 @@ function defaultDepart(p: Place): string {
 export function LocationPreviewDialog({ place, trigger }: { place: Place; trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [depart, setDepart] = useState<string>(() => defaultDepart(place));
+  const [preferred, setPreferred] = useState<Provider | null>(() => getPreferredProvider());
+  const autoLaunchedRef = useRef(false);
   const label = [place.venue, place.city].filter(Boolean).join(" · ") || place.title;
 
   const gHref = useMemo(() => googleMapsHref(place, depart), [place, depart]);
   const yHref = useMemo(() => yandexMapsHref(place, depart), [place, depart]);
+
+  // Auto-open the preferred provider on first open of this dialog instance.
+  useEffect(() => {
+    if (!open || autoLaunchedRef.current) return;
+    const pref = getPreferredProvider();
+    if (!pref) return;
+    autoLaunchedRef.current = true;
+    setOpen(false);
+    openTop(pref === "google" ? gHref : yHref);
+  }, [open, gHref, yHref]);
+
+  const choose = (p: Provider) => {
+    setPreferredProvider(p);
+    setPreferred(p);
+  };
+
+  const forget = () => {
+    try {
+      window.localStorage.removeItem(PROVIDER_KEY);
+    } catch {
+      /* ignore */
+    }
+    setPreferred(null);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -121,19 +173,34 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Button asChild className="gap-2">
+            <Button asChild className="gap-2" onClick={() => choose("google")}>
               <a href={gHref} target="_top" rel="noopener noreferrer">
                 <Navigation className="h-4 w-4" />
                 Open in Google Maps
+                {preferred === "google" && <span className="ml-1 text-[10px] opacity-80">· default</span>}
               </a>
             </Button>
-            <Button asChild variant="outline" className="gap-2">
+            <Button asChild variant="outline" className="gap-2" onClick={() => choose("yandex")}>
               <a href={yHref} target="_top" rel="noopener noreferrer">
                 <Navigation className="h-4 w-4" />
                 Open in Yandex Maps
+                {preferred === "yandex" && <span className="ml-1 text-[10px] opacity-80">· default</span>}
               </a>
             </Button>
           </div>
+
+          {preferred ? (
+            <p className="text-[11px] text-muted-foreground">
+              We'll open <span className="font-medium">{preferred === "google" ? "Google Maps" : "Yandex Maps"}</span> automatically next time.{" "}
+              <button type="button" onClick={forget} className="underline hover:text-foreground">
+                Forget
+              </button>
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              Pick a map once and we'll remember it for next time.
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
