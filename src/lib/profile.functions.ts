@@ -1,3 +1,4 @@
+import { dbError } from "./db-error";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -23,7 +24,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         bio: data.bio ?? null,
         onboarded: true,
       });
-    if (pErr) throw new Error(pErr.message);
+    if (pErr) throw dbError(pErr);
     // Onboarding only ever grants the default `member` role. Elevated roles
     // (e.g. organizer) must be granted by a separate, gated server function
     // after server-side identity/eligibility checks — never trust a
@@ -31,7 +32,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
     const { error: rErr } = await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: userId, role: "member" }, { onConflict: "user_id,role" });
-    if (rErr) throw new Error(rErr.message);
+    if (rErr) throw dbError(rErr);
     return { ok: true };
   });
 
@@ -66,7 +67,7 @@ export const updateTaste = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("taste_profiles")
       .upsert({ user_id: context.userId, ...data });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { ok: true };
   });
 
@@ -85,7 +86,7 @@ export const upsertSocial = createServerFn({ method: "POST" })
         { user_id: context.userId, provider: data.provider, tags: data.tags },
         { onConflict: "user_id,provider" },
       );
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { ok: true };
   });
 
@@ -96,6 +97,6 @@ export const listSocials = createServerFn({ method: "GET" })
       .from("social_integrations")
       .select("*")
       .eq("user_id", context.userId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { socials: data ?? [] };
   });
