@@ -229,6 +229,37 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
         </div>
 
         <div className="space-y-3 p-5">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 rounded-lg border bg-muted/30 px-3 py-2.5 text-xs">
+            {place.venue && (
+              <>
+                <dt className="uppercase tracking-widest text-muted-foreground">Venue</dt>
+                <dd className="font-medium text-foreground">{place.venue}</dd>
+              </>
+            )}
+            <dt className="uppercase tracking-widest text-muted-foreground">Address</dt>
+            <dd className="font-medium text-foreground">
+              {[place.address, place.city].filter(Boolean).join(", ") ||
+                place.city ||
+                "Address not provided"}
+            </dd>
+            {coordsLine && (
+              <>
+                <dt className="uppercase tracking-widest text-muted-foreground">Coords</dt>
+                <dd className="font-mono text-[11px] text-muted-foreground">{coordsLine}</dd>
+              </>
+            )}
+            {place.category && (
+              <>
+                <dt className="uppercase tracking-widest text-muted-foreground">Category</dt>
+                <dd>
+                  <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium capitalize text-primary">
+                    {place.category}
+                  </span>
+                </dd>
+              </>
+            )}
+          </dl>
+
           <div className="space-y-1.5">
             <Label htmlFor="depart-time" className="flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
