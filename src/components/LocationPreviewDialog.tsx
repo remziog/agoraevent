@@ -3,7 +3,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navigation, MapPin, Clock } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+
+type Provider = "google" | "yandex";
+const PROVIDER_KEY = "agora:preferredMapProvider";
+
+function getPreferredProvider(): Provider | null {
+  if (typeof window === "undefined") return null;
+  const v = window.localStorage.getItem(PROVIDER_KEY);
+  return v === "google" || v === "yandex" ? v : null;
+}
+
+function setPreferredProvider(p: Provider) {
+  try {
+    window.localStorage.setItem(PROVIDER_KEY, p);
+  } catch {
+    /* ignore */
+  }
+}
+
+function openTop(href: string) {
+  try {
+    if (window.top) window.top.location.href = href;
+    else window.location.href = href;
+  } catch {
+    window.location.href = href;
+  }
+}
 
 type Place = {
   title: string;
