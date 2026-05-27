@@ -132,6 +132,9 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     setPreferred(null);
   };
 
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-2xl p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5">
           <DialogTitle className="font-display text-xl">{place.title}</DialogTitle>
@@ -170,19 +173,34 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Button asChild className="gap-2">
+            <Button asChild className="gap-2" onClick={() => choose("google")}>
               <a href={gHref} target="_top" rel="noopener noreferrer">
                 <Navigation className="h-4 w-4" />
                 Open in Google Maps
+                {preferred === "google" && <span className="ml-1 text-[10px] opacity-80">· default</span>}
               </a>
             </Button>
-            <Button asChild variant="outline" className="gap-2">
+            <Button asChild variant="outline" className="gap-2" onClick={() => choose("yandex")}>
               <a href={yHref} target="_top" rel="noopener noreferrer">
                 <Navigation className="h-4 w-4" />
                 Open in Yandex Maps
+                {preferred === "yandex" && <span className="ml-1 text-[10px] opacity-80">· default</span>}
               </a>
             </Button>
           </div>
+
+          {preferred ? (
+            <p className="text-[11px] text-muted-foreground">
+              We'll open <span className="font-medium">{preferred === "google" ? "Google Maps" : "Yandex Maps"}</span> automatically next time.{" "}
+              <button type="button" onClick={forget} className="underline hover:text-foreground">
+                Forget
+              </button>
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              Pick a map once and we'll remember it for next time.
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
