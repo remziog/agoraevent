@@ -11,8 +11,11 @@ export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { title: "Set a new password — Agora" },
-      { name: "description", content: "Choose a new password for your Agora account." },
+      { name: "description", content: "Finish resetting your Agora account by choosing a new password — something memorable and secure for signing back in." },
       { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Set a new password — Agora" },
+      { property: "og:description", content: "Finish resetting your Agora account by choosing a new password — something memorable and secure for signing back in." },
+      { property: "og:url", content: "/reset-password" },
     ],
     links: [{ rel: "canonical", href: "/reset-password" }],
   }),
