@@ -38,6 +38,8 @@ type Place = {
   latitude?: number | null;
   longitude?: number | null;
   starts_at?: string | null;
+  address?: string | null;
+  category?: string | null;
 };
 
 function destinationQuery(p: Place) {
