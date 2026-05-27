@@ -96,7 +96,7 @@ function Onboarding() {
       // Organizers skip taste — finalize immediately
       setLoading(true);
       try {
-        await complete({ data: { display_name: name, city, bio: bio || null, role } });
+        await complete({ data: { display_name: name, city, bio: bio || null } });
         toast.success("You're in.");
         navigate({ to: "/biz" });
       } catch (err) {
