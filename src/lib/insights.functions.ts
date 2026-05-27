@@ -1,3 +1,4 @@
+import { dbError } from "./db-error";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -12,7 +13,7 @@ export const getDemandInsightsAdmin = createServerFn({ method: "POST" })
       .select("city, owner_id")
       .eq("id", data.org_id)
       .maybeSingle();
-    if (oErr) throw new Error(oErr.message);
+    if (oErr) throw dbError(oErr);
     if (!org || org.owner_id !== context.userId) throw new Error("Not authorized");
 
     // Aggregate only — never read raw prompt text across users (privacy).
@@ -55,7 +56,7 @@ export const getRecentRequestsAdmin = createServerFn({ method: "POST" })
       .select("city, owner_id")
       .eq("id", data.org_id)
       .maybeSingle();
-    if (oErr) throw new Error(oErr.message);
+    if (oErr) throw dbError(oErr);
     if (!org || org.owner_id !== context.userId) throw new Error("Not authorized");
 
     let q = supabaseAdmin
@@ -65,7 +66,7 @@ export const getRecentRequestsAdmin = createServerFn({ method: "POST" })
       .limit(50);
     if (org.city) q = q.eq("city", org.city);
     const { data: rows, error } = await q;
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
 
     // Privacy: never return raw prompt text across users. Only tags + city +
     // timestamp are exposed to organizers in aggregate.

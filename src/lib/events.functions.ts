@@ -1,3 +1,4 @@
+import { dbError } from "./db-error";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -87,7 +88,7 @@ export const searchEvents = createServerFn({ method: "POST" })
     if (data.city) q = q.eq("city", data.city);
 
     const { data: events, error } = await q;
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
 
     type EventRow = NonNullable<typeof events>[number];
     const scored = (events ?? [])
@@ -113,7 +114,7 @@ export const listUpcomingEvents = createServerFn({ method: "GET" })
       .gte("starts_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
       .limit(50);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { events: data ?? [] };
   });
 
@@ -126,7 +127,7 @@ export const getEvent = createServerFn({ method: "POST" })
       .select("*, organizations(name, category, city, description)")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     const { data: rsvp } = await context.supabase
       .from("rsvps")
       .select("status")
@@ -146,7 +147,7 @@ export const rsvpEvent = createServerFn({ method: "POST" })
       const { error } = await context.supabase
         .from("rsvps")
         .upsert({ event_id: data.event_id, user_id: context.userId, status: "going" });
-      if (error) throw new Error(error.message);
+      if (error) throw dbError(error);
       const { data: ev } = await context.supabase
         .from("events")
         .select("starts_at")
@@ -159,7 +160,7 @@ export const rsvpEvent = createServerFn({ method: "POST" })
         .delete()
         .eq("event_id", data.event_id)
         .eq("user_id", context.userId);
-      if (error) throw new Error(error.message);
+      if (error) throw dbError(error);
     }
     return { ok: true };
   });
@@ -172,6 +173,6 @@ export const listMyRsvps = createServerFn({ method: "GET" })
       .select("event_id, status, events(*, organizations(name, city))")
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { rsvps: data ?? [] };
   });

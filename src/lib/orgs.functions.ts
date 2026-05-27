@@ -1,3 +1,4 @@
+import { dbError } from "./db-error";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -18,7 +19,7 @@ export const createOrganization = createServerFn({ method: "POST" })
       .insert({ ...data, owner_id: context.userId })
       .select()
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { organization: row };
   });
 
@@ -30,7 +31,7 @@ export const listMyOrganizations = createServerFn({ method: "GET" })
       .select("*")
       .eq("owner_id", context.userId)
       .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { organizations: data ?? [] };
   });
 
@@ -57,7 +58,7 @@ export const createEvent = createServerFn({ method: "POST" })
       .insert(data)
       .select()
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { event: row };
   });
 
@@ -70,7 +71,7 @@ export const listOrgEvents = createServerFn({ method: "POST" })
       .select("*, rsvps(count)")
       .eq("org_id", data.org_id)
       .order("starts_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { events: rows ?? [] };
   });
 
@@ -84,7 +85,7 @@ export const listLeads = createServerFn({ method: "POST" })
       .eq("events.org_id", data.org_id)
       .order("created_at", { ascending: false })
       .limit(200);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { leads: rows ?? [] };
   });
 
@@ -101,7 +102,7 @@ export const exportLeadsCsv = createServerFn({ method: "POST" })
       .eq("events.org_id", data.org_id)
       .order("created_at", { ascending: false })
       .limit(2000);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     const esc = (v: unknown) => {
       const s = v == null ? "" : String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -129,7 +130,7 @@ export const upsertCustomer = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => CustomerInput.parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("customers").insert(data);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { ok: true };
   });
 
@@ -142,7 +143,7 @@ export const listCustomers = createServerFn({ method: "POST" })
       .select("*")
       .eq("org_id", data.org_id)
       .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error);
     return { customers: rows ?? [] };
   });
 
