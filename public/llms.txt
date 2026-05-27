@@ -1,0 +1,11 @@
+# Agora
+
+> Agora helps you discover events near you that match your taste, RSVP with friends, and capture memories from the night.
+
+Agora is an invite-friendly events app: a personal compass that turns your music, sports, and culture interests into nearby plans, plus tools for organizers to run their venues and read demand in their city.
+
+## Pages
+
+- [Home](/): What Agora is and how it works.
+- [Log in](/login): Sign in to your account.
+- [Sign up](/signup): Create an account.
