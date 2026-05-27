@@ -87,7 +87,7 @@ function InsightsPage() {
           <ul className="mt-4 space-y-3">
             {reqQ.data?.requests.map((r) => (
               <li key={r.id} className="rounded-lg border bg-background/40 p-4">
-                <p className="text-sm">"{r.text}"</p>
+                <p className="text-sm text-muted-foreground">Tagged request</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span>{new Date(r.created_at).toLocaleString()}</span>
                   {r.city && <span>· {r.city}</span>}
