@@ -96,7 +96,7 @@ function Onboarding() {
       // Organizers skip taste — finalize immediately
       setLoading(true);
       try {
-        await complete({ data: { display_name: name, city, bio: bio || null, role } });
+        await complete({ data: { display_name: name, city, bio: bio || null } });
         toast.success("You're in.");
         navigate({ to: "/biz" });
       } catch (err) {
@@ -112,7 +112,7 @@ function Onboarding() {
   async function submitStep2() {
     setLoading(true);
     try {
-      await complete({ data: { display_name: name, city, bio: bio || null, role } });
+      await complete({ data: { display_name: name, city, bio: bio || null } });
       await saveTaste({
         data: { music, sports, films, interests, free_text: freeText || null },
       });
@@ -135,7 +135,7 @@ function Onboarding() {
   async function skipStep2() {
     setLoading(true);
     try {
-      await complete({ data: { display_name: name, city, bio: bio || null, role } });
+      await complete({ data: { display_name: name, city, bio: bio || null } });
       toast.success("You're in. You can add taste later from your profile.");
       navigate({ to: "/app" });
     } catch (err) {

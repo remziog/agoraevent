@@ -7,7 +7,6 @@ const ProfileInput = z.object({
   display_name: z.string().min(1).max(80),
   city: z.string().min(1).max(120),
   bio: z.string().max(500).optional().nullable(),
-  role: z.enum(["member", "organizer"]),
 });
 
 export const completeOnboarding = createServerFn({ method: "POST" })
@@ -25,12 +24,13 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         onboarded: true,
       });
     if (pErr) throw new Error(pErr.message);
-    // Role assignment runs through the service-role client because RLS only
-    // permits self-assignment of the default `member` role. Elevated roles
-    // (e.g. organizer) must be granted server-side after server-side checks.
+    // Onboarding only ever grants the default `member` role. Elevated roles
+    // (e.g. organizer) must be granted by a separate, gated server function
+    // after server-side identity/eligibility checks — never trust a
+    // client-supplied role value here.
     const { error: rErr } = await supabaseAdmin
       .from("user_roles")
-      .upsert({ user_id: userId, role: data.role }, { onConflict: "user_id,role" });
+      .upsert({ user_id: userId, role: "member" }, { onConflict: "user_id,role" });
     if (rErr) throw new Error(rErr.message);
     return { ok: true };
   });
