@@ -112,7 +112,7 @@ function Onboarding() {
   async function submitStep2() {
     setLoading(true);
     try {
-      await complete({ data: { display_name: name, city, bio: bio || null, role } });
+      await complete({ data: { display_name: name, city, bio: bio || null } });
       await saveTaste({
         data: { music, sports, films, interests, free_text: freeText || null },
       });
