@@ -19,15 +19,29 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: ogImage },
     ],
     links: [{ rel: "canonical", href: "/" }],
-    scripts: [{
-      type: "application/ld+json",
-      children: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        name: "Agora",
-        description: "Find nearby events that match your taste.",
-      }),
-    }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Agora",
+          url: "https://agoraevent.lovable.app/",
+          description: "Find nearby events that match your taste.",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Agora",
+          url: "https://agoraevent.lovable.app/",
+          logo: "https://agoraevent.lovable.app/favicon.ico",
+          description: "Agora helps you find nearby events that match your taste — music, sport, film, and more. The modern gathering place.",
+        }),
+      },
+    ],
   }),
   component: Landing,
 });
