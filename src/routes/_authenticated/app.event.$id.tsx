@@ -72,6 +72,28 @@ function EventDetail() {
             </div>
           </article>
         )}
+        {event && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Event",
+                name: event.title,
+                startDate: event.starts_at,
+                description: event.description ?? undefined,
+                location: {
+                  "@type": "Place",
+                  name: event.venue ?? event.city ?? "TBD",
+                  address: event.city ?? undefined,
+                },
+                organizer: event.organizations?.name
+                  ? { "@type": "Organization", name: event.organizations.name }
+                  : undefined,
+              }),
+            }}
+          />
+        )}
         {event && <MemorySection eventId={id} canPost={going} />}
       </main>
     </div>
