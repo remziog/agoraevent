@@ -260,6 +260,17 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
             </Button>
           </div>
 
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={copyAddress}
+            className="w-full justify-center gap-1.5 text-xs"
+          >
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? "Copied — paste it anywhere" : "Copy location"}
+          </Button>
+
           {preferred ? (
             <p className="text-[11px] text-muted-foreground">
               We'll open <span className="font-medium">{preferred === "google" ? "Google Maps" : "Yandex Maps"}</span> automatically next time.{" "}
