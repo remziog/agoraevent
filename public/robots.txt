@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /biz/
+Disallow: /onboarding
+Disallow: /api/
+
+Sitemap: https://agoraevent.lovable.app/sitemap.xml
