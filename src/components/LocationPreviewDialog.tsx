@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Navigation, MapPin, Clock } from "lucide-react";
+import { Navigation, MapPin, Clock, Copy, Check, ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 type Provider = "google" | "yandex";
@@ -102,8 +102,16 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [open, setOpen] = useState(false);
   const [depart, setDepart] = useState<string>(() => defaultDepart(place));
   const [preferred, setPreferred] = useState<Provider | null>(() => getPreferredProvider());
+  const [embedFailed, setEmbedFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
   const autoLaunchedRef = useRef(false);
+  const embedLoadedRef = useRef(false);
   const label = [place.venue, place.city].filter(Boolean).join(" · ") || place.title;
+  const addressLine = [place.venue, place.city].filter(Boolean).join(", ") || place.title;
+  const coordsLine =
+    place.latitude != null && place.longitude != null
+      ? `${place.latitude.toFixed(5)}, ${place.longitude.toFixed(5)}`
+      : null;
 
   const gHref = useMemo(() => googleMapsHref(place, depart), [place, depart]);
   const yHref = useMemo(() => yandexMapsHref(place, depart), [place, depart]);
@@ -117,6 +125,34 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     setOpen(false);
     openTop(pref === "google" ? gHref : yHref);
   }, [open, gHref, yHref]);
+
+  // Detect when the embedded map fails to load (CSP/X-Frame-Options, blocked
+  // by an extension, or offline). If onLoad doesn't fire within ~4s, fall
+  // back to a static panel that still shows the destination and lets the
+  // user copy the address or jump to a full map provider.
+  useEffect(() => {
+    if (!open) {
+      embedLoadedRef.current = false;
+      setEmbedFailed(false);
+      setCopied(false);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      if (!embedLoadedRef.current) setEmbedFailed(true);
+    }, 4000);
+    return () => window.clearTimeout(t);
+  }, [open, place.title, place.latitude, place.longitude]);
+
+  const copyAddress = async () => {
+    const text = coordsLine ? `${addressLine} (${coordsLine})` : addressLine;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const choose = (p: Provider) => {
     setPreferredProvider(p);
@@ -144,15 +180,50 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
           </p>
         </DialogHeader>
 
-        <div className="mt-3 aspect-video w-full bg-muted">
-          <iframe
-            title={`Map of ${place.title}`}
-            src={embedSrc(place)}
-            className="h-full w-full border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-          />
+        <div className="mt-3 aspect-video w-full bg-muted relative">
+          {!embedFailed ? (
+            <iframe
+              title={`Map of ${place.title}`}
+              src={embedSrc(place)}
+              className="h-full w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              onLoad={() => {
+                embedLoadedRef.current = true;
+              }}
+              onError={() => setEmbedFailed(true)}
+            />
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-muted p-5 text-center">
+              <MapPin className="h-8 w-8 text-muted-foreground" />
+              <div>
+                <p className="font-display text-base">Preview unavailable here</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Your browser blocked the embedded map. The destination is still set —
+                  copy the address or open it in a full map below.
+                </p>
+              </div>
+              <div className="rounded-lg border bg-background/60 px-3 py-2 text-left">
+                <p className="text-sm font-medium">{addressLine}</p>
+                {coordsLine && (
+                  <p className="text-[11px] text-muted-foreground">{coordsLine}</p>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button size="sm" variant="secondary" onClick={copyAddress} className="gap-1.5">
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? "Copied" : "Copy address"}
+                </Button>
+                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                  <a href={gHref} target="_top" rel="noopener noreferrer">
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open full map
+                  </a>
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3 p-5">
