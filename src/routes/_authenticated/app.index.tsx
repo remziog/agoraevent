@@ -23,6 +23,15 @@ import { CompassLoader } from "@/components/CompassLoader";
 import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
 
 export const Route = createFileRoute("/_authenticated/app/")({
+  head: () => ({
+    meta: [
+      { title: "Discover your night — Agora" },
+      { name: "description", content: "Tell the compass what kind of night you want. Agora finds nearby events that match your mood — music, sport, film, and quiet rooms too." },
+      { name: "robots", content: "noindex, nofollow" },
+      { property: "og:title", content: "Discover your night — Agora" },
+      { property: "og:description", content: "Your personal compass for nearby events. Music, sport, film, and the quiet rooms in between." },
+    ],
+  }),
   component: Discover,
 });
 
