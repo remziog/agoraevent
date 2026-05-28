@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/app/event/$id")({
         { name: "robots", content: "noindex, nofollow" },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
-        { property: "og:type", content: "event" },
+        { property: "og:type", content: "website" },
       ],
     };
   },
