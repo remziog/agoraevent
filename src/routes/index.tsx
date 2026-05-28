@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Logo, LogoMark } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SiteFooter } from "@/components/SiteFooter";
 import ogImage from "@/assets/og-landing.jpg";
 
 export const Route = createFileRoute("/")({
@@ -26,7 +29,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "Agora",
-          url: "https://agoraevent.lovable.app/",
+          url: "https://ago-ra.life/",
           description: "Find nearby events that match your taste.",
         }),
       },
@@ -36,8 +39,8 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "Agora",
-          url: "https://agoraevent.lovable.app/",
-          logo: "https://agoraevent.lovable.app/favicon.ico",
+          url: "https://ago-ra.life/",
+          logo: "https://ago-ra.life/favicon.ico",
           description: "Agora helps you find nearby events that match your taste — music, sport, film, and more. The modern gathering place.",
         }),
       },
@@ -47,66 +50,60 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const { t } = useTranslation();
+
+  const pillars = [
+    { t: t("landing.pillar1Title"), d: t("landing.pillar1Desc") },
+    { t: t("landing.pillar2Title"), d: t("landing.pillar2Desc") },
+    { t: t("landing.pillar3Title"), d: t("landing.pillar3Desc") },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 sm:px-6">
         <Logo />
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-2 sm:gap-3">
+          <LanguageSwitcher />
           <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
-            Sign in
+            {t("landing.navSignIn")}
           </Link>
           <Button asChild size="sm">
-            <Link to="/signup">Join Agora</Link>
+            <Link to="/signup">{t("landing.navJoin")}</Link>
           </Button>
         </nav>
       </header>
 
       <main>
         {/* Hero */}
-        <section className="mx-auto max-w-4xl px-6 pb-20 pt-16 text-center">
+        <section className="mx-auto max-w-4xl px-4 pb-20 pt-12 text-center sm:px-6 sm:pt-16">
           <p className="mb-6 text-xs uppercase tracking-[0.28em] text-muted-foreground">
-            The modern gathering place
+            {t("landing.kicker")}
           </p>
-          <h1 className="font-display text-5xl font-semibold leading-[1.05] sm:text-7xl">
-            Find the room
+          <h1 className="font-display text-4xl font-semibold leading-[1.05] sm:text-7xl">
+            {t("landing.heroTitleLine1")}
             <br />
-            you've been missing.
+            {t("landing.heroTitleLine2")}
           </h1>
-          <p className="mx-auto mt-8 max-w-2xl text-lg text-muted-foreground">
-            We work too much. We scroll too much. We meet too little. Agora finds
-            you small, real-world gatherings tonight — picked from your taste in
-            music, sport, film, and the things you actually care about.
+          <p className="mx-auto mt-8 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            {t("landing.heroSub")}
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg">
-              <Link to="/signup">Find your event</Link>
+              <Link to="/signup">{t("landing.ctaFindEvent")}</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/signup">I host events</Link>
+              <Link to="/signup">{t("landing.ctaIHost")}</Link>
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            Free for members. Always.
+            {t("landing.freeNote")}
           </p>
         </section>
 
         {/* Three pillars */}
         <section className="border-y border-border/60 bg-card/40">
-          <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:grid-cols-3">
-            {[
-              {
-                t: "Tell us your night",
-                d: "“Quiet bar with people who like Phoebe Bridgers.” “Sunday long run, 10k pace.” Type it. We'll match it.",
-              },
-              {
-                t: "Real places. Real people.",
-                d: "Coffee roasters, climbing gyms, film clubs, run crews. Local hosts, not algorithms.",
-              },
-              {
-                t: "Show up. That's it.",
-                d: "No swipes. No DMs. RSVP and walk in. The room does the rest.",
-              },
-            ].map((p) => (
+          <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:grid-cols-3 sm:px-6 sm:py-20">
+            {pillars.map((p) => (
               <div key={p.t}>
                 <LogoMark className="mb-4 h-7 w-7 text-primary" />
                 <h3 className="font-display text-2xl">{p.t}</h3>
@@ -117,45 +114,42 @@ function Landing() {
         </section>
 
         {/* For hosts */}
-        <section className="mx-auto max-w-6xl px-6 py-24">
+        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
           <div className="grid gap-12 sm:grid-cols-2 sm:items-center">
             <div>
               <p className="mb-3 text-xs uppercase tracking-[0.28em] text-muted-foreground">
-                For event makers
+                {t("landing.hostsKicker")}
               </p>
-              <h2 className="font-display text-4xl sm:text-5xl">
-                Your room. Filled with the right people.
+              <h2 className="font-display text-3xl sm:text-5xl">
+                {t("landing.hostsTitle")}
               </h2>
               <p className="mt-5 text-muted-foreground">
-                Coffees, gyms, trainers, restaurants, clubs — list a gathering and
-                Agora puts it in front of locals who already want exactly what
-                you're offering. See what your neighborhood is asking for tonight.
-                Turn one-time attendees into a community you own.
+                {t("landing.hostsDesc")}
               </p>
               <div className="mt-7">
                 <Button asChild>
-                  <Link to="/signup">Open a host account</Link>
+                  <Link to="/signup">{t("landing.hostsCta")}</Link>
                 </Button>
               </div>
             </div>
             <div className="rounded-2xl border bg-card p-6 shadow-sm">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Tonight near you, people are asking for
+                {t("landing.demandLabel")}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {["acoustic", "vinyl listening", "5k run", "boardgames", "indie film", "single malt", "techno", "climbing", "pottery", "espresso"].map(
-                  (t) => (
+                  (tag) => (
                     <span
-                      key={t}
+                      key={tag}
                       className="rounded-full border bg-background px-3 py-1 text-sm"
                     >
-                      {t}
+                      {tag}
                     </span>
                   ),
                 )}
               </div>
               <p className="mt-6 text-sm text-muted-foreground">
-                Built-in CRM. Lead lists. Demand signals. One app.
+                {t("landing.hostsFooter")}
               </p>
             </div>
           </div>
@@ -163,27 +157,23 @@ function Landing() {
 
         {/* Closing */}
         <section className="border-t border-border/60 bg-secondary/40">
-          <div className="mx-auto max-w-3xl px-6 py-24 text-center">
-            <h2 className="font-display text-4xl sm:text-5xl">
-              The gathering place, returned.
+          <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24">
+            <h2 className="font-display text-3xl sm:text-5xl">
+              {t("landing.closingTitle")}
             </h2>
             <p className="mt-5 text-muted-foreground">
-              Less scrolling. More showing up. Your next favorite night is
-              probably ten minutes away.
+              {t("landing.closingDesc")}
             </p>
             <div className="mt-8">
               <Button asChild size="lg">
-                <Link to="/signup">Find your event</Link>
+                <Link to="/signup">{t("landing.ctaFindEvent")}</Link>
               </Button>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="mx-auto flex max-w-6xl items-center justify-between px-6 py-10 text-sm text-muted-foreground">
-        <Logo showWordmark className="opacity-70" />
-        <p>© {new Date().getFullYear()} Agora</p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

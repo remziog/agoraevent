@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthShell } from "./login";
@@ -23,18 +24,22 @@ export const Route = createFileRoute("/forgot-password")({
 });
 
 function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setFormError(null);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
     if (error) {
+      setFormError(error.message);
       toast.error(error.message);
       return;
     }
@@ -42,26 +47,34 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <AuthShell title="Forgot your password?" subtitle="We'll send you a link to set a new one.">
+    <AuthShell title={t("forgot.title")} subtitle={t("forgot.subtitle")}>
+      {formError && (
+        <div
+          role="alert"
+          className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          {formError}
+        </div>
+      )}
       {sent ? (
         <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-          Check <span className="text-foreground">{email}</span> for a reset link. It may take a minute to arrive.
+          {t("forgot.sent", { email })}
         </div>
       ) : (
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("common.email")}</Label>
             <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Sending…" : "Send reset link"}
+            {loading ? t("forgot.submitting") : t("forgot.submit")}
           </Button>
         </form>
       )}
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Remembered it?{" "}
+        {t("common.rememberedIt")}{" "}
         <Link to="/login" className="text-foreground underline underline-offset-4">
-          Back to sign in
+          {t("common.backToSignIn")}
         </Link>
       </p>
     </AuthShell>
