@@ -13,6 +13,7 @@ export const Route = createFileRoute("/privacy")({
           "How Agora collects, uses, and protects your information when you use our event discovery service.",
       },
       { property: "og:title", content: "Privacy Policy — Agora" },
+      { property: "og:description", content: "How Agora collects, uses, and protects your information when you use our event discovery service." },
       { property: "og:url", content: "/privacy" },
     ],
     links: [{ rel: "canonical", href: "/privacy" }],

@@ -76,7 +76,7 @@ function MemoriesPage() {
                 <Link to="/app/event/$id" params={{ id: m.event_id }}>
                   <img
                     src={m.photo_url}
-                    alt={m.caption ?? m.events?.title ?? "Memory"}
+                    alt={m.caption ?? (m.events?.title ? `Memory from ${m.events.title}` : "Memory photo from an event you attended")}
                     className="aspect-square w-full object-cover transition group-hover:scale-105"
                     loading="lazy"
                   />

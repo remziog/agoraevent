@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/app/event/$id")({
         { property: "og:description", content: description },
         { property: "og:type", content: "event" },
       ],
-    };
+        { property: "og:type", content: "website" },
   },
   component: EventDetail,
 });

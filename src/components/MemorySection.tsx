@@ -86,7 +86,7 @@ export function MemorySection({ eventId, canPost }: { eventId: string; canPost: 
             >
               <img
                 src={m.photo_url}
-                alt={m.caption ?? "Memory"}
+                alt={m.caption ?? `Memory shared by ${m.profiles?.display_name ?? "an attendee"} from this event`}
                 className="aspect-square w-full object-cover transition group-hover:scale-105"
                 loading="lazy"
               />
@@ -116,7 +116,7 @@ export function MemorySection({ eventId, canPost }: { eventId: string; canPost: 
           >
             <div className="flex items-center justify-between">
               <h3 className="font-display text-xl">Add a memory</h3>
-              <button onClick={() => !busy && setOpen(false)} className="text-muted-foreground">
+              <button onClick={() => !busy && setOpen(false)} className="text-muted-foreground" aria-label="Close add memory dialog">
                 <X className="h-4 w-4" />
               </button>
             </div>
