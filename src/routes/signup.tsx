@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AuthShell, GoogleButton, AppleButton, EmailToggleButton, Divider } from "./login";
+import { AuthShell, GoogleButton, EmailToggleButton, Divider } from "./login";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/signup")({
       { property: "og:title", content: "Join Agora — Find your people" },
       { property: "og:description", content: "Create your account and start finding nearby events that match your taste." },
       { property: "og:url", content: "/signup" },
+      { name: "robots", content: "index, follow" },
     ],
     links: [{ rel: "canonical", href: "/signup" }],
   }),
@@ -24,15 +26,19 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<"google" | null>(null);
   const [showEmail, setShowEmail] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setFormError(null);
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -43,19 +49,25 @@ function SignupPage() {
     });
     setLoading(false);
     if (error) {
+      setFormError(error.message || t("signup.errorGeneric"));
       toast.error(error.message);
       return;
     }
-    toast.success("Account created");
+    toast.success(t("signup.created"));
     navigate({ to: "/onboarding" });
   }
 
-  async function onOAuth(provider: "google" | "apple") {
+  async function onOAuth(provider: "google") {
+    setOauthLoading(provider);
+    setFormError(null);
     const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      toast.error(result.error.message ?? `${provider} sign-in failed`);
+      setOauthLoading(null);
+      const msg = result.error.message ?? `${provider} sign-in failed`;
+      setFormError(msg);
+      toast.error(msg);
       return;
     }
     if (result.redirected) return;
@@ -63,12 +75,24 @@ function SignupPage() {
   }
 
   return (
-    <AuthShell title="Join Agora" subtitle="Find the room you've been missing.">
+    <AuthShell title={t("signup.title")} subtitle={t("signup.subtitle")}>
+      {formError && (
+        <div
+          role="alert"
+          className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          {formError}
+        </div>
+      )}
+
       <div className="space-y-3">
-        <GoogleButton onClick={() => onOAuth("google")} label="Continue with Google" />
-        <AppleButton onClick={() => onOAuth("apple")} label="Continue with Apple" />
+        <GoogleButton
+          onClick={() => onOAuth("google")}
+          label={oauthLoading === "google" ? t("common.loading") : t("signup.continueGoogle")}
+          disabled={oauthLoading !== null || loading}
+        />
         {!showEmail && (
-          <EmailToggleButton onClick={() => setShowEmail(true)} label="Sign up with email" />
+          <EmailToggleButton onClick={() => setShowEmail(true)} label={t("signup.signUpEmail")} />
         )}
       </div>
 
@@ -77,28 +101,28 @@ function SignupPage() {
           <Divider />
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Your name</Label>
+              <Label htmlFor="name">{t("common.name")}</Label>
               <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} autoFocus />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("common.email")}</Label>
               <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("common.password")}</Label>
               <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating…" : "Create account"}
+            <Button type="submit" className="w-full" disabled={loading || oauthLoading !== null}>
+              {loading ? t("signup.submitting") : t("signup.submit")}
             </Button>
           </form>
         </>
       )}
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Already with us?{" "}
+        {t("common.alreadyMember")}{" "}
         <Link to="/login" className="text-foreground underline underline-offset-4">
-          Sign in
+          {t("common.signIn")}
         </Link>
       </p>
     </AuthShell>
