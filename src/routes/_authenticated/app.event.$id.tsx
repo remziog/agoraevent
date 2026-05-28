@@ -38,7 +38,6 @@ export const Route = createFileRoute("/_authenticated/app/event/$id")({
       ],
     };
   },
-  },
   component: EventDetail,
 });
 
