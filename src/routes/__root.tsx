@@ -89,7 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Agora — Meet your people in real life" },
       { name: "twitter:description", content: "Agora helps you find nearby events that match your taste — music, sport, film, and more. The modern gathering place." },
-      { name: "google-site-verification", content: "i6_-75B6IVIsfqy_dMLk56nDQiW6BqiNYoyTH_9NIQA" },
+      { name: "google-site-verification", content: "QPgfYQXEb-1wmo8CS2xJqW_EtjFlrUjZ2tVxEItXnig" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
