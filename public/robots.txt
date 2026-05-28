@@ -5,4 +5,4 @@ Disallow: /biz/
 Disallow: /onboarding
 Disallow: /api/
 
-Sitemap: https://agoraevent.lovable.app/sitemap.xml
+Sitemap: https://ago-ra.life/sitemap.xml

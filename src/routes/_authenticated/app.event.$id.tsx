@@ -8,6 +8,36 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/event/$id")({
+  loader: async ({ params, context }) => {
+    try {
+      const data = await context.queryClient.ensureQueryData({
+        queryKey: ["event", params.id],
+        queryFn: () => getEvent({ data: { id: params.id } }),
+      });
+      return { event: data?.event ?? null };
+    } catch {
+      return { event: null };
+    }
+  },
+  head: ({ loaderData }) => {
+    const ev = loaderData?.event;
+    const title = ev?.title ? `${ev.title} — Agora` : "Event — Agora";
+    const description = ev?.description
+      ? ev.description.slice(0, 180)
+      : ev?.title
+        ? `${ev.title} on Agora — see details, RSVP, and find your people.`
+        : "Event details on Agora — RSVP and meet your people in real life.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { name: "robots", content: "noindex, nofollow" },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "event" },
+      ],
+    };
+  },
   component: EventDetail,
 });
 

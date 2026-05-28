@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-const BASE_URL = "https://agoraevent.lovable.app";
+const BASE_URL = "https://ago-ra.life";
 
 interface SitemapEntry {
   path: string;
@@ -13,13 +13,16 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        // Only public, indexable routes. Authenticated /app/* and /biz/*
-        // surfaces, onboarding, and password-reset flows are intentionally
-        // omitted.
+        // Public, indexable routes only. Authenticated /app/* and /biz/*
+        // surfaces and /onboarding are excluded (also blocked by robots.txt).
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
           { path: "/login", changefreq: "monthly", priority: "0.3" },
           { path: "/signup", changefreq: "monthly", priority: "0.5" },
+          { path: "/forgot-password", changefreq: "yearly", priority: "0.2" },
+          { path: "/reset-password", changefreq: "yearly", priority: "0.2" },
+          { path: "/privacy", changefreq: "yearly", priority: "0.2" },
+          { path: "/terms", changefreq: "yearly", priority: "0.2" },
         ];
 
         const urls = entries.map((e) =>

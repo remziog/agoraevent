@@ -10,7 +10,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/biz/")({ component: BizDashboard });
+export const Route = createFileRoute("/_authenticated/biz/")({
+  head: () => ({
+    meta: [
+      { title: "Host dashboard — Agora for organizers" },
+      { name: "description", content: "Run your organization on Agora: post events, track RSVPs, capture leads, and grow regulars into a community." },
+      { name: "robots", content: "noindex, nofollow" },
+      { property: "og:title", content: "Host dashboard — Agora for organizers" },
+      { property: "og:description", content: "Post events, track RSVPs, and grow your regulars on Agora." },
+    ],
+  }),
+  component: BizDashboard,
+});
 
 function BizDashboard() {
   const listOrgs = useServerFn(listMyOrganizations);
