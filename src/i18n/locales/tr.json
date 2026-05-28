@@ -1,0 +1,101 @@
+{
+  "common": {
+    "signIn": "Giriş yap",
+    "signUp": "Agora'ya katıl",
+    "signOut": "Çıkış yap",
+    "email": "E-posta",
+    "password": "Şifre",
+    "name": "Adın",
+    "loading": "Yükleniyor…",
+    "tryAgain": "Tekrar dene",
+    "goHome": "Ana sayfa",
+    "privacy": "Gizlilik Politikası",
+    "terms": "Kullanım Şartları",
+    "rememberedIt": "Hatırladın mı?",
+    "backToSignIn": "Girişe dön",
+    "forgotPassword": "Şifreni mi unuttun?",
+    "alreadyMember": "Zaten üye misin?",
+    "newHere": "Yeni misin?",
+    "createAccount": "Hesap oluştur",
+    "or": "veya"
+  },
+  "language": {
+    "label": "Dil",
+    "en": "English",
+    "tr": "Türkçe",
+    "de": "Deutsch"
+  },
+  "landing": {
+    "metaTitle": "Agora — Gerçek hayatta insanlarla buluş",
+    "metaDesc": "Nasıl bir akşam istediğini Agora'ya söyle. Müzik, spor, film ve sohbet zevkine uygun yakındaki etkinlikleri sana bulalım.",
+    "navSignIn": "Giriş yap",
+    "navJoin": "Agora'ya katıl",
+    "kicker": "Modern buluşma noktası",
+    "heroTitleLine1": "Aradığın odayı",
+    "heroTitleLine2": "burada bul.",
+    "heroSub": "Çok çalışıyoruz. Çok kaydırıyoruz. Çok az buluşuyoruz. Agora; müzik, spor, film ve gerçekten önemsediğin şeylere göre bu gece için küçük, gerçek buluşmalar buluyor.",
+    "ctaFindEvent": "Etkinliğini bul",
+    "ctaIHost": "Etkinlik düzenliyorum",
+    "freeNote": "Üyeler için ücretsiz. Her zaman.",
+    "pillar1Title": "Akşamını bize anlat",
+    "pillar1Desc": "“Phoebe Bridgers sevenlerle sakin bir bar.” “Pazar uzun koşusu, 10k temposu.” Yaz, eşleştirelim.",
+    "pillar2Title": "Gerçek mekânlar. Gerçek insanlar.",
+    "pillar2Desc": "Kahve dükkânları, tırmanış salonları, film kulüpleri, koşu grupları. Yerel ev sahipleri, algoritma değil.",
+    "pillar3Title": "Sadece gel. Hepsi bu.",
+    "pillar3Desc": "Kaydırma yok. DM yok. RSVP ver ve içeri gir. Gerisini oda halleder.",
+    "hostsKicker": "Etkinlik düzenleyenler için",
+    "hostsTitle": "Odan. Doğru insanlarla dolu.",
+    "hostsTitle_short": "Doğru insanlarla dolu bir oda.",
+    "hostsDesc": "Kafeler, spor salonları, eğitmenler, restoranlar, kulüpler — bir etkinlik ekle, Agora sunduğunu zaten isteyen yerel insanlara göstersin. Mahallenin bu gece neye ihtiyacı olduğunu gör. Tek seferlik katılımcıları kendi topluluğuna dönüştür.",
+    "hostsCta": "Ev sahibi hesabı aç",
+    "demandLabel": "Bu gece yakınında istenenler",
+    "hostsFooter": "Dahili CRM. Lead listeleri. Talep sinyalleri. Tek uygulama.",
+    "closingTitle": "Buluşma noktası geri döndü.",
+    "closingDesc": "Daha az kaydırma. Daha çok katılım. En sevdiğin akşam muhtemelen on dakika ötede."
+  },
+  "login": {
+    "metaTitle": "Giriş yap — Agora",
+    "metaDesc": "Zevkine uygun yakındaki etkinlikleri keşfetmek için Agora'ya giriş yap.",
+    "title": "Tekrar hoş geldin",
+    "subtitle": "İnsanların yakında.",
+    "continueGoogle": "Google ile devam et",
+    "continueEmail": "E-posta ile devam et",
+    "submit": "Giriş yap",
+    "submitting": "Giriş yapılıyor…",
+    "welcomeBack": "Tekrar hoş geldin",
+    "errorGeneric": "Giriş yapılamadı. Lütfen tekrar dene."
+  },
+  "signup": {
+    "metaTitle": "Agora'ya katıl — İnsanlarını bul",
+    "metaDesc": "Agora hesabını oluştur ve müzik, spor, film zevkine uygun yakındaki etkinlikleri bulmaya başla.",
+    "title": "Agora'ya katıl",
+    "subtitle": "Aradığın odayı bul.",
+    "continueGoogle": "Google ile devam et",
+    "signUpEmail": "E-posta ile kayıt ol",
+    "submit": "Hesap oluştur",
+    "submitting": "Oluşturuluyor…",
+    "created": "Hesap oluşturuldu",
+    "errorGeneric": "Hesabın oluşturulamadı. Lütfen tekrar dene."
+  },
+  "forgot": {
+    "title": "Şifreni mi unuttun?",
+    "subtitle": "Yenisini belirlemen için bir bağlantı göndereceğiz.",
+    "submit": "Sıfırlama bağlantısı gönder",
+    "submitting": "Gönderiliyor…",
+    "sent": "{{email}} adresine bir sıfırlama bağlantısı gönderdik. Gelmesi bir dakikayı bulabilir."
+  },
+  "errors": {
+    "pageNotFound": "Sayfa bulunamadı",
+    "pageNotFoundDesc": "Aradığın sayfa mevcut değil veya taşınmış.",
+    "pageFailed": "Bu sayfa yüklenemedi",
+    "pageFailedDesc": "Bizim tarafımızda bir sorun oluştu. Yenileyebilir veya ana sayfaya dönebilirsin."
+  },
+  "legal": {
+    "privacyTitle": "Gizlilik Politikası",
+    "termsTitle": "Kullanım Şartları",
+    "lastUpdated": "Son güncelleme"
+  },
+  "footer": {
+    "tagline": "Modern buluşma noktası."
+  }
+}

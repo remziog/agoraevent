@@ -1,0 +1,100 @@
+{
+  "common": {
+    "signIn": "Anmelden",
+    "signUp": "Agora beitreten",
+    "signOut": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "name": "Dein Name",
+    "loading": "Wird geladen…",
+    "tryAgain": "Erneut versuchen",
+    "goHome": "Zur Startseite",
+    "privacy": "Datenschutz",
+    "terms": "Nutzungsbedingungen",
+    "rememberedIt": "Wieder eingefallen?",
+    "backToSignIn": "Zurück zur Anmeldung",
+    "forgotPassword": "Passwort vergessen?",
+    "alreadyMember": "Schon dabei?",
+    "newHere": "Neu hier?",
+    "createAccount": "Konto erstellen",
+    "or": "oder"
+  },
+  "language": {
+    "label": "Sprache",
+    "en": "English",
+    "tr": "Türkçe",
+    "de": "Deutsch"
+  },
+  "landing": {
+    "metaTitle": "Agora — Triff deine Leute im echten Leben",
+    "metaDesc": "Sag Agora, wie dein Abend aussehen soll. Wir finden den passenden Raum — Events in deiner Nähe, die zu deinem Geschmack in Musik, Sport, Film und Gespräch passen.",
+    "navSignIn": "Anmelden",
+    "navJoin": "Agora beitreten",
+    "kicker": "Der moderne Treffpunkt",
+    "heroTitleLine1": "Finde den Raum,",
+    "heroTitleLine2": "der dir gefehlt hat.",
+    "heroSub": "Wir arbeiten zu viel. Wir scrollen zu viel. Wir treffen uns zu wenig. Agora findet kleine, echte Treffen heute Abend — passend zu deinem Geschmack in Musik, Sport, Film und allem, was dir wirklich wichtig ist.",
+    "ctaFindEvent": "Event finden",
+    "ctaIHost": "Ich veranstalte Events",
+    "freeNote": "Kostenlos für Mitglieder. Immer.",
+    "pillar1Title": "Sag uns, wie dein Abend wird",
+    "pillar1Desc": "„Ruhige Bar mit Leuten, die Phoebe Bridgers mögen.“ „Sonntags langer Lauf, 10-km-Tempo.“ Tipp es ein. Wir matchen.",
+    "pillar2Title": "Echte Orte. Echte Menschen.",
+    "pillar2Desc": "Kaffeeröstereien, Boulderhallen, Filmclubs, Laufgruppen. Lokale Hosts, keine Algorithmen.",
+    "pillar3Title": "Einfach hingehen. Das war's.",
+    "pillar3Desc": "Kein Swipen. Keine DMs. Zusagen und reingehen. Den Rest macht der Raum.",
+    "hostsKicker": "Für Veranstalter",
+    "hostsTitle": "Dein Raum. Mit den richtigen Leuten gefüllt.",
+    "hostsDesc": "Cafés, Studios, Trainer, Restaurants, Clubs — lege ein Event an und Agora zeigt es Menschen in deiner Nähe, die genau das suchen, was du bietest. Sieh, was dein Viertel heute Abend nachfragt. Mach aus einmaligen Gästen eine Community, die dir gehört.",
+    "hostsCta": "Veranstalter-Konto eröffnen",
+    "demandLabel": "Heute Abend bei dir in der Nähe gefragt",
+    "hostsFooter": "Integriertes CRM. Lead-Listen. Nachfragesignale. Eine App.",
+    "closingTitle": "Der Treffpunkt ist zurück.",
+    "closingDesc": "Weniger scrollen. Mehr hingehen. Dein nächster Lieblingsabend ist wahrscheinlich zehn Minuten entfernt."
+  },
+  "login": {
+    "metaTitle": "Anmelden — Agora",
+    "metaDesc": "Melde dich bei Agora an, um Events in deiner Nähe zu entdecken, die zu deinem Geschmack passen.",
+    "title": "Willkommen zurück",
+    "subtitle": "Deine Leute sind in der Nähe.",
+    "continueGoogle": "Mit Google fortfahren",
+    "continueEmail": "Mit E-Mail fortfahren",
+    "submit": "Anmelden",
+    "submitting": "Anmeldung läuft…",
+    "welcomeBack": "Willkommen zurück",
+    "errorGeneric": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
+  },
+  "signup": {
+    "metaTitle": "Agora beitreten — Finde deine Leute",
+    "metaDesc": "Erstelle dein Agora-Konto und finde Events in deiner Nähe, die zu deinem Geschmack in Musik, Sport und Film passen.",
+    "title": "Agora beitreten",
+    "subtitle": "Finde den Raum, der dir gefehlt hat.",
+    "continueGoogle": "Mit Google fortfahren",
+    "signUpEmail": "Mit E-Mail registrieren",
+    "submit": "Konto erstellen",
+    "submitting": "Wird erstellt…",
+    "created": "Konto erstellt",
+    "errorGeneric": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
+  },
+  "forgot": {
+    "title": "Passwort vergessen?",
+    "subtitle": "Wir senden dir einen Link, um ein neues festzulegen.",
+    "submit": "Zurücksetz-Link senden",
+    "submitting": "Wird gesendet…",
+    "sent": "Wir haben einen Link an {{email}} gesendet. Es kann eine Minute dauern."
+  },
+  "errors": {
+    "pageNotFound": "Seite nicht gefunden",
+    "pageNotFoundDesc": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "pageFailed": "Diese Seite konnte nicht geladen werden",
+    "pageFailedDesc": "Bei uns ist etwas schiefgelaufen. Lade die Seite neu oder kehre zur Startseite zurück."
+  },
+  "legal": {
+    "privacyTitle": "Datenschutzerklärung",
+    "termsTitle": "Nutzungsbedingungen",
+    "lastUpdated": "Zuletzt aktualisiert"
+  },
+  "footer": {
+    "tagline": "Der moderne Treffpunkt."
+  }
+}

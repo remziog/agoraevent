@@ -1,0 +1,100 @@
+{
+  "common": {
+    "signIn": "Sign in",
+    "signUp": "Join Agora",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "name": "Your name",
+    "loading": "Loading…",
+    "tryAgain": "Try again",
+    "goHome": "Go home",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "rememberedIt": "Remembered it?",
+    "backToSignIn": "Back to sign in",
+    "forgotPassword": "Forgot password?",
+    "alreadyMember": "Already with us?",
+    "newHere": "New here?",
+    "createAccount": "Create an account",
+    "or": "or"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "tr": "Türkçe",
+    "de": "Deutsch"
+  },
+  "landing": {
+    "metaTitle": "Agora — Meet your people in real life",
+    "metaDesc": "Tell Agora the kind of night you want. We find the room — nearby events that match your taste in music, sport, film, and conversation.",
+    "navSignIn": "Sign in",
+    "navJoin": "Join Agora",
+    "kicker": "The modern gathering place",
+    "heroTitleLine1": "Find the room",
+    "heroTitleLine2": "you've been missing.",
+    "heroSub": "We work too much. We scroll too much. We meet too little. Agora finds you small, real-world gatherings tonight — picked from your taste in music, sport, film, and the things you actually care about.",
+    "ctaFindEvent": "Find your event",
+    "ctaIHost": "I host events",
+    "freeNote": "Free for members. Always.",
+    "pillar1Title": "Tell us your night",
+    "pillar1Desc": "“Quiet bar with people who like Phoebe Bridgers.” “Sunday long run, 10k pace.” Type it. We'll match it.",
+    "pillar2Title": "Real places. Real people.",
+    "pillar2Desc": "Coffee roasters, climbing gyms, film clubs, run crews. Local hosts, not algorithms.",
+    "pillar3Title": "Show up. That's it.",
+    "pillar3Desc": "No swipes. No DMs. RSVP and walk in. The room does the rest.",
+    "hostsKicker": "For event makers",
+    "hostsTitle": "Your room. Filled with the right people.",
+    "hostsDesc": "Coffees, gyms, trainers, restaurants, clubs — list a gathering and Agora puts it in front of locals who already want exactly what you're offering. See what your neighborhood is asking for tonight. Turn one-time attendees into a community you own.",
+    "hostsCta": "Open a host account",
+    "demandLabel": "Tonight near you, people are asking for",
+    "hostsFooter": "Built-in CRM. Lead lists. Demand signals. One app.",
+    "closingTitle": "The gathering place, returned.",
+    "closingDesc": "Less scrolling. More showing up. Your next favorite night is probably ten minutes away."
+  },
+  "login": {
+    "metaTitle": "Sign in — Agora",
+    "metaDesc": "Sign in to Agora to discover events near you that match your taste.",
+    "title": "Welcome back",
+    "subtitle": "Your people are nearby.",
+    "continueGoogle": "Continue with Google",
+    "continueEmail": "Continue with email",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "welcomeBack": "Welcome back",
+    "errorGeneric": "We couldn't sign you in. Please try again."
+  },
+  "signup": {
+    "metaTitle": "Join Agora — Find your people",
+    "metaDesc": "Create your Agora account and start finding nearby events that match your taste in music, sport, and film.",
+    "title": "Join Agora",
+    "subtitle": "Find the room you've been missing.",
+    "continueGoogle": "Continue with Google",
+    "signUpEmail": "Sign up with email",
+    "submit": "Create account",
+    "submitting": "Creating…",
+    "created": "Account created",
+    "errorGeneric": "We couldn't create your account. Please try again."
+  },
+  "forgot": {
+    "title": "Forgot your password?",
+    "subtitle": "We'll send you a link to set a new one.",
+    "submit": "Send reset link",
+    "submitting": "Sending…",
+    "sent": "Check {{email}} for a reset link. It may take a minute to arrive."
+  },
+  "errors": {
+    "pageNotFound": "Page not found",
+    "pageNotFoundDesc": "The page you're looking for doesn't exist or has been moved.",
+    "pageFailed": "This page didn't load",
+    "pageFailedDesc": "Something went wrong on our end. You can try refreshing or head back home."
+  },
+  "legal": {
+    "privacyTitle": "Privacy Policy",
+    "termsTitle": "Terms of Service",
+    "lastUpdated": "Last updated"
+  },
+  "footer": {
+    "tagline": "The modern gathering place."
+  }
+}
