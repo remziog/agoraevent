@@ -95,6 +95,7 @@ function Discover() {
       {mutate.isPending && <CompassLoader message="Reading your night…" />}
 
       <main className="mx-auto max-w-5xl px-6 py-8">
+        <h1 className="sr-only">Discover your night</h1>
         {/* Compass */}
         <CompassFace
           needleAngle={needle}
