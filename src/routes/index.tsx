@@ -106,7 +106,7 @@ function Landing() {
             {pillars.map((p) => (
               <div key={p.t}>
                 <LogoMark className="mb-4 h-7 w-7 text-primary" />
-                <h3 className="font-display text-2xl">{p.t}</h3>
+                <h2 className="font-display text-2xl">{p.t}</h2>
                 <p className="mt-2 text-sm text-muted-foreground">{p.d}</p>
               </div>
             ))}
