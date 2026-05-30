@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agora.lovable.app/schemas/qa/evidence-validation-report-v1.json",
+  "title": "QA Evidence Validation Report",
+  "description": "Machine-readable report produced by scripts/qa/collect-getting-there-evidence.py --report-json. See docs/qa/getting-there-evidence-report-json.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "base_ref", "summary", "sessions"],
+  "properties": {
+    "schema_version": {
+      "description": "Stable integer version. Breaking changes bump this.",
+      "type": "integer",
+      "const": 1
+    },
+    "generated_at": {
+      "description": "UTC ISO-8601 timestamp, seconds precision.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:[+-][0-9]{2}:[0-9]{2}|Z)$"
+    },
+    "base_ref": {
+      "description": "The --base-ref value used for git diffs, or null when not provided.",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessions", "passing", "failing", "total_errors", "total_warnings", "result"],
+      "properties": {
+        "sessions":       { "type": "integer", "minimum": 0 },
+        "passing":        { "type": "integer", "minimum": 0 },
+        "failing":        { "type": "integer", "minimum": 0 },
+        "total_errors":   { "type": "integer", "minimum": 0 },
+        "total_warnings": { "type": "integer", "minimum": 0 },
+        "result":         { "type": "string", "enum": ["PASS", "FAIL"] }
+      }
+    },
+    "sessions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/session" }
+    }
+  },
+  "$defs": {
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "name", "status", "exit_code", "errors", "warnings"],
+      "properties": {
+        "path": {
+          "description": "Repo-relative POSIX path to the session folder.",
+          "type": "string",
+          "pattern": "^docs/qa/evidence/[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7}(?:-r[0-9]+)?$"
+        },
+        "name": {
+          "description": "Session folder basename.",
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7}(?:-r[0-9]+)?$"
+        },
+        "status":    { "type": "string", "enum": ["PASS", "FAIL"] },
+        "exit_code": { "type": "integer", "minimum": 0 },
+        "errors":    { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "warnings":  { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "diff": {
+          "description": "Present only when base_ref is set. May be null if git diff failed.",
+          "type": ["string", "null"]
+        }
+      },
+      "allOf": [
+        {
+          "description": "status must agree with exit_code.",
+          "if":   { "properties": { "exit_code": { "const": 0 } } },
+          "then": { "properties": { "status": { "const": "PASS" } } },
+          "else": { "properties": { "status": { "const": "FAIL" } } }
+        }
+      ]
+    }
+  }
+}
