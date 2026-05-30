@@ -231,7 +231,17 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       setSuggestLoading(false);
       return;
     }
-    if (!isOnline) return;
+    // Offline: skip the network entirely and surface the local fallback so
+    // the input still feels alive instead of going silent.
+    if (!isOnline) {
+      const local = localFallback(q);
+      setSuggestions(local);
+      setSuggestSource("fallback");
+      setSuggestOpen(local.length > 0);
+      setSuggestLoading(false);
+      setActiveIndex(-1);
+      return;
+    }
 
     // Show the "waiting to search" state immediately, but DON'T call the API
     // until the debounce timer fires uninterrupted.
@@ -245,15 +255,29 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
           signal: controller.signal,
         });
         if (cancelled) return;
-        setSuggestions(next);
-        setSuggestOpen(next.length > 0);
+        if (next.length === 0) {
+          // No remote matches — offer local landmarks rather than an empty list.
+          const local = localFallback(q);
+          setSuggestions(local);
+          setSuggestSource(local.length > 0 ? "fallback" : "places");
+          setSuggestOpen(local.length > 0);
+        } else {
+          setSuggestions(next);
+          setSuggestSource("places");
+          setSuggestOpen(true);
+        }
         setActiveIndex(-1);
       } catch (err) {
-        // Ignore aborts — they're the expected outcome when the user keeps
-        // typing. Only clear results on real failures.
+        // Ignore aborts triggered by the user continuing to type — a newer
+        // request is already in flight (or about to be).
         if (cancelled || (err as { name?: string } | null)?.name === "AbortError") return;
-        setSuggestions([]);
-        setSuggestOpen(false);
+        // Real failure (network, gateway, quota): fall back to local matches
+        // so the user still gets something useful instead of an empty list.
+        const local = localFallback(q);
+        setSuggestions(local);
+        setSuggestSource("fallback");
+        setSuggestOpen(local.length > 0);
+        setActiveIndex(-1);
       } finally {
         if (!cancelled) setSuggestLoading(false);
       }
@@ -266,7 +290,7 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       window.clearTimeout(handle);
       controller.abort();
     };
-  }, [manualOrigin, showManual, isOnline, fetchSuggestions]);
+  }, [manualOrigin, showManual, isOnline, fetchSuggestions, localFallback]);
 
   const pickSuggestion = useCallback((s: Suggestion) => {
     skipNextFetchRef.current = true;
