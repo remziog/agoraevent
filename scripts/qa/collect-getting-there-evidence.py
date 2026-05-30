@@ -524,9 +524,6 @@ def main() -> int:
     parser.add_argument("--base-ref", default=None,
                         help="With --report or --report-json, include `git diff` output "
                              "vs this ref (e.g. 'origin/main') for each session.")
-    parser.add_argument("--base-ref", default=None,
-                        help="With --report, include `git diff` output vs this ref "
-                             "(e.g. 'origin/main') for each session.")
     args = parser.parse_args()
 
     # --validate and --verify-only operate on existing folders and never rotate.
