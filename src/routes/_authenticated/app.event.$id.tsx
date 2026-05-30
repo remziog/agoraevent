@@ -141,10 +141,11 @@ function EventDetail() {
                 organizer: event.organizations?.name
                   ? { "@type": "Organization", name: event.organizations.name }
                   : undefined,
-              }),
+              }).replace(/<\/(script)/gi, "<\\/$1").replace(/<!--/g, "<\\!--"),
             }}
           />
         )}
+
         {event && <MemorySection eventId={id} canPost={going} />}
       </main>
     </div>
