@@ -301,13 +301,14 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       setSuggestLoading(false);
       return;
     }
-    // Offline: skip the network entirely and surface the local fallback so
-    // the input still feels alive instead of going silent.
+    // Offline: try the recently-cached Places responses first, then fall
+    // back to the curated landmark list so the input still feels alive.
     if (!isOnline) {
-      const local = localFallback(q);
-      setSuggestions(local);
-      setSuggestSource("fallback");
-      setSuggestOpen(local.length > 0);
+      const cached = lookupPlacesCache(q);
+      const list = cached.length > 0 ? cached : localFallback(q);
+      setSuggestions(list);
+      setSuggestSource(list === cached ? "cache" : "fallback");
+      setSuggestOpen(list.length > 0);
       setSuggestLoading(false);
       setActiveIndex(-1);
       return;
@@ -326,26 +327,31 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
         });
         if (cancelled) return;
         if (next.length === 0) {
-          // No remote matches — offer local landmarks rather than an empty list.
-          const local = localFallback(q);
+          // No remote matches — try cache, then local landmarks.
+          const cached = lookupPlacesCache(q);
+          const local = cached.length > 0 ? cached : localFallback(q);
           setSuggestions(local);
-          setSuggestSource(local.length > 0 ? "fallback" : "places");
+          setSuggestSource(local.length === 0 ? "places" : cached.length > 0 ? "cache" : "fallback");
           setSuggestOpen(local.length > 0);
         } else {
           setSuggestions(next);
           setSuggestSource("places");
           setSuggestOpen(true);
+          // Persist the successful result so we can serve it later when
+          // offline or when Places is unavailable.
+          savePlacesCacheEntry(q, next);
         }
         setActiveIndex(-1);
       } catch (err) {
         // Ignore aborts triggered by the user continuing to type — a newer
         // request is already in flight (or about to be).
         if (cancelled || (err as { name?: string } | null)?.name === "AbortError") return;
-        // Real failure (network, gateway, quota): fall back to local matches
-        // so the user still gets something useful instead of an empty list.
-        const local = localFallback(q);
+        // Real failure (network, gateway, quota): prefer cached Places
+        // results for this query (or a prefix of it), then landmarks.
+        const cached = lookupPlacesCache(q);
+        const local = cached.length > 0 ? cached : localFallback(q);
         setSuggestions(local);
-        setSuggestSource("fallback");
+        setSuggestSource(local.length === 0 ? "fallback" : cached.length > 0 ? "cache" : "fallback");
         setSuggestOpen(local.length > 0);
         setActiveIndex(-1);
       } finally {
