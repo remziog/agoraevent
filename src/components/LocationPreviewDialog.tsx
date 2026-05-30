@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Navigation, MapPin, Clock, Copy, Check, ExternalLink, LocateFixed, Loader2 } from "lucide-react";
+import { Navigation, MapPin, Clock, Copy, Check, ExternalLink, LocateFixed, Loader2, WifiOff, Pencil } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 type Coords = { lat: number; lng: number };
@@ -56,7 +56,12 @@ function toUnixSeconds(local: string): number | null {
   return Number.isFinite(t) ? Math.floor(t / 1000) : null;
 }
 
-function googleMapsHref(p: Place, departISO: string, origin: Coords | null) {
+function googleMapsHref(
+  p: Place,
+  departISO: string,
+  origin: Coords | null,
+  manualOrigin: string,
+) {
   const params = new URLSearchParams({
     api: "1",
     destination: destinationQuery(p),
@@ -65,7 +70,9 @@ function googleMapsHref(p: Place, departISO: string, origin: Coords | null) {
     // (and the closest equivalent in the web client).
     dir_action: "navigate",
   });
-  if (origin) params.set("origin", `${origin.lat},${origin.lng}`);
+  const manual = manualOrigin.trim();
+  if (manual) params.set("origin", manual);
+  else if (origin) params.set("origin", `${origin.lat},${origin.lng}`);
   // Google Maps web URL doesn't officially honor departure_time, but we
   // include it so deep-linking into the Google Maps app can pick it up.
   const unix = toUnixSeconds(departISO);
@@ -73,13 +80,23 @@ function googleMapsHref(p: Place, departISO: string, origin: Coords | null) {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
-function yandexMapsHref(p: Place, departISO: string, origin: Coords | null) {
+function yandexMapsHref(
+  p: Place,
+  departISO: string,
+  origin: Coords | null,
+  manualOrigin: string,
+) {
   const destPart =
     p.latitude != null && p.longitude != null
       ? `${p.latitude},${p.longitude}`
       : "";
   const params = new URLSearchParams({ rtt: "auto" });
-  if (destPart) {
+  const manual = manualOrigin.trim();
+  if (manual && destPart) {
+    // Yandex's rtext is lat,lng-only. With a typed address we have to fall
+    // back to a text search prefilled "from <address> to <destination>".
+    params.set("text", `${manual} → ${[p.venue, p.city, p.title].filter(Boolean).join(", ")}`);
+  } else if (destPart) {
     // Yandex rtext format: "fromLat,fromLng~toLat,toLng". A leading "~"
     // (no origin) means "from my location" once the user grants permission
     // in Yandex Maps itself.
@@ -118,6 +135,23 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState<Coords | null>(null);
   const [geoState, setGeoState] = useState<"idle" | "locating" | "denied" | "unavailable" | "ready">("idle");
+  const [manualOrigin, setManualOrigin] = useState("");
+  const [showManual, setShowManual] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
   const autoLaunchedRef = useRef(false);
   const embedLoadedRef = useRef(false);
   const label = [place.venue, place.city].filter(Boolean).join(" · ") || place.title;
@@ -151,8 +185,8 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     if (open && geoState === "idle") requestLocation();
   }, [open, geoState, requestLocation]);
 
-  const gHref = useMemo(() => googleMapsHref(place, depart, origin), [place, depart, origin]);
-  const yHref = useMemo(() => yandexMapsHref(place, depart, origin), [place, depart, origin]);
+  const gHref = useMemo(() => googleMapsHref(place, depart, origin, manualOrigin), [place, depart, origin, manualOrigin]);
+  const yHref = useMemo(() => yandexMapsHref(place, depart, origin, manualOrigin), [place, depart, origin, manualOrigin]);
 
   // Auto-open the preferred provider on first open of this dialog instance.
   // Wait until the geolocation request has settled (granted, denied, or
@@ -163,10 +197,15 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     const pref = getPreferredProvider();
     if (!pref) return;
     if (geoState === "idle" || geoState === "locating") return;
+    // Don't launch a map provider while offline — the deep link would just
+    // load an error page. We keep the dialog open and let the offline banner
+    // explain what to do. As soon as the connection returns the user can tap
+    // the button again.
+    if (!isOnline) return;
     autoLaunchedRef.current = true;
     setOpen(false);
     openTop(pref === "google" ? gHref : yHref);
-  }, [open, gHref, yHref, geoState]);
+  }, [open, gHref, yHref, geoState, isOnline]);
 
   // Detect when the embedded map fails to load (CSP/X-Frame-Options, blocked
   // by an extension, or offline). If onLoad doesn't fire within ~4s, fall
@@ -316,51 +355,110 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
             </p>
           </div>
 
-          <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs">
-            <div className="flex items-center gap-2">
-              {geoState === "locating" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-              ) : (
-                <LocateFixed className={`h-3.5 w-3.5 ${geoState === "ready" ? "text-primary" : "text-muted-foreground"}`} />
-              )}
-              <span className="text-muted-foreground">
-                {geoState === "ready" && origin
-                  ? `Starting from your location (${origin.lat.toFixed(3)}, ${origin.lng.toFixed(3)})`
-                  : geoState === "locating"
-                    ? "Finding your location…"
-                    : geoState === "denied"
-                      ? "Location blocked — directions will start from the map's default."
-                      : geoState === "unavailable"
-                        ? "Location unavailable — directions will start from the map's default."
-                        : "Use your current location for turn-by-turn"}
-              </span>
+          <div className="space-y-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {geoState === "locating" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                ) : (
+                  <LocateFixed className={`h-3.5 w-3.5 ${geoState === "ready" || manualOrigin.trim() ? "text-primary" : "text-muted-foreground"}`} />
+                )}
+                <span className="text-muted-foreground">
+                  {manualOrigin.trim()
+                    ? `Starting from "${manualOrigin.trim()}"`
+                    : geoState === "ready" && origin
+                      ? `Starting from your location (${origin.lat.toFixed(3)}, ${origin.lng.toFixed(3)})`
+                      : geoState === "locating"
+                        ? "Finding your location…"
+                        : geoState === "denied"
+                          ? "Location blocked — enter a starting address or open the map without one."
+                          : geoState === "unavailable"
+                            ? "Location unavailable — enter a starting address below."
+                            : "Use your current location for turn-by-turn"}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                {geoState !== "ready" && geoState !== "locating" && !manualOrigin.trim() && (
+                  <Button type="button" size="sm" variant="ghost" className="h-7 gap-1.5 px-2" onClick={requestLocation}>
+                    <LocateFixed className="h-3.5 w-3.5" />
+                    {geoState === "denied" ? "Retry" : "Use my location"}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 gap-1.5 px-2"
+                  onClick={() => setShowManual((v) => !v)}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  {showManual ? "Hide" : "Enter address"}
+                </Button>
+              </div>
             </div>
-            {geoState !== "ready" && geoState !== "locating" && (
-              <Button type="button" size="sm" variant="ghost" className="h-7 gap-1.5 px-2" onClick={requestLocation}>
-                <LocateFixed className="h-3.5 w-3.5" />
-                {geoState === "denied" ? "Retry" : "Use my location"}
-              </Button>
+            {showManual && (
+              <div className="space-y-1.5">
+                <Input
+                  type="text"
+                  inputMode="text"
+                  autoComplete="street-address"
+                  placeholder="Starting address, e.g. Taksim Square, Istanbul"
+                  value={manualOrigin}
+                  onChange={(e) => setManualOrigin(e.target.value)}
+                  className="h-8 text-xs"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Used as the origin when location services aren't available. Yandex
+                  Maps will open a search prefilled with the route — confirm it inside the app.
+                </p>
+              </div>
             )}
           </div>
 
-
+          {!isOnline && (
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              <WifiOff className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium">You're offline</p>
+                <p className="text-destructive/80">
+                  We can't open a map provider right now. Copy the address below and we'll
+                  reopen directions automatically once you're back online.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Button asChild className="gap-2" onClick={() => choose("google")}>
-              <a href={gHref} target="_top" rel="noopener noreferrer">
-                <Navigation className="h-4 w-4" />
-                Open in Google Maps
-                {preferred === "google" && <span className="ml-1 text-[10px] opacity-80">· default</span>}
-              </a>
+            <Button asChild={isOnline} className="gap-2" disabled={!isOnline} onClick={() => isOnline && choose("google")}>
+              {isOnline ? (
+                <a href={gHref} target="_top" rel="noopener noreferrer">
+                  <Navigation className="h-4 w-4" />
+                  Open in Google Maps
+                  {preferred === "google" && <span className="ml-1 text-[10px] opacity-80">· default</span>}
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-2">
+                  <Navigation className="h-4 w-4" />
+                  Open in Google Maps
+                </span>
+              )}
             </Button>
-            <Button asChild variant="outline" className="gap-2" onClick={() => choose("yandex")}>
-              <a href={yHref} target="_top" rel="noopener noreferrer">
-                <Navigation className="h-4 w-4" />
-                Open in Yandex Maps
-                {preferred === "yandex" && <span className="ml-1 text-[10px] opacity-80">· default</span>}
-              </a>
+            <Button asChild={isOnline} variant="outline" className="gap-2" disabled={!isOnline} onClick={() => isOnline && choose("yandex")}>
+              {isOnline ? (
+                <a href={yHref} target="_top" rel="noopener noreferrer">
+                  <Navigation className="h-4 w-4" />
+                  Open in Yandex Maps
+                  {preferred === "yandex" && <span className="ml-1 text-[10px] opacity-80">· default</span>}
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-2">
+                  <Navigation className="h-4 w-4" />
+                  Open in Yandex Maps
+                </span>
+              )}
             </Button>
           </div>
+
 
           <Button
             type="button"
