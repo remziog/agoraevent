@@ -10,6 +10,18 @@ version.
 
 > Current `schema_version`: **1**
 
+A machine-readable [JSON Schema](./getting-there-evidence-report.schema.json)
+(`docs/qa/getting-there-evidence-report.schema.json`, Draft 2020-12) is the
+source of truth. CI validates every generated report against it via
+`check-jsonschema`, so schema regressions fail the build. Validate locally with:
+
+```bash
+pip install check-jsonschema
+check-jsonschema \
+  --schemafile docs/qa/getting-there-evidence-report.schema.json \
+  .qa-report/evidence-validation-report.json
+```
+
 ## Generating a report
 
 ```bash
