@@ -9,6 +9,7 @@ type Coords = { lat: number; lng: number };
 
 type Provider = "google" | "yandex";
 const PROVIDER_KEY = "agora:preferredMapProvider";
+const MANUAL_ORIGIN_KEY = "agora:manualStartingAddress";
 
 function getPreferredProvider(): Provider | null {
   if (typeof window === "undefined") return null;
@@ -19,6 +20,25 @@ function getPreferredProvider(): Provider | null {
 function setPreferredProvider(p: Provider) {
   try {
     window.localStorage.setItem(PROVIDER_KEY, p);
+  } catch {
+    /* ignore */
+  }
+}
+
+function getRememberedManualOrigin(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(MANUAL_ORIGIN_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function rememberManualOrigin(value: string) {
+  try {
+    const trimmed = value.trim();
+    if (trimmed) window.localStorage.setItem(MANUAL_ORIGIN_KEY, trimmed);
+    else window.localStorage.removeItem(MANUAL_ORIGIN_KEY);
   } catch {
     /* ignore */
   }
