@@ -116,6 +116,8 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [preferred, setPreferred] = useState<Provider | null>(() => getPreferredProvider());
   const [embedFailed, setEmbedFailed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [origin, setOrigin] = useState<Coords | null>(null);
+  const [geoState, setGeoState] = useState<"idle" | "locating" | "denied" | "unavailable" | "ready">("idle");
   const autoLaunchedRef = useRef(false);
   const embedLoadedRef = useRef(false);
   const label = [place.venue, place.city].filter(Boolean).join(" · ") || place.title;
@@ -125,8 +127,32 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       ? `${place.latitude.toFixed(5)}, ${place.longitude.toFixed(5)}`
       : null;
 
-  const gHref = useMemo(() => googleMapsHref(place, depart), [place, depart]);
-  const yHref = useMemo(() => yandexMapsHref(place, depart), [place, depart]);
+  const requestLocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoState("unavailable");
+      return;
+    }
+    setGeoState("locating");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoState("ready");
+      },
+      (err) => {
+        setGeoState(err.code === err.PERMISSION_DENIED ? "denied" : "unavailable");
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
+    );
+  }, []);
+
+  // Try to grab the user's location as soon as the dialog opens so the
+  // "Take me there" buttons launch turn-by-turn from where they are.
+  useEffect(() => {
+    if (open && geoState === "idle") requestLocation();
+  }, [open, geoState, requestLocation]);
+
+  const gHref = useMemo(() => googleMapsHref(place, depart, origin), [place, depart, origin]);
+  const yHref = useMemo(() => yandexMapsHref(place, depart, origin), [place, depart, origin]);
 
   // Auto-open the preferred provider on first open of this dialog instance.
   useEffect(() => {
