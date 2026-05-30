@@ -133,9 +133,9 @@ function ConcertLanding() {
     timeZone: "Europe/Istanbul",
   });
   const where = [event.venue, event.city].filter(Boolean).join(", ");
-  const tipTag = event.tags.find((t) => t.startsWith("tip:"));
+  const tipTag = event.tags.find((t: string) => t.startsWith("tip:"));
   const tip = tipTag ? tipTag.slice("tip:".length) : null;
-  const performers = event.tags.filter((t) => ["kanye-west", "travis-scott"].includes(t));
+  const performers = event.tags.filter((t: string) => ["kanye-west", "travis-scott"].includes(t));
 
   return (
     <div className="min-h-screen bg-background">
@@ -159,7 +159,7 @@ function ConcertLanding() {
 
           {performers.length > 0 && (
             <p className="mt-2 text-sm text-muted-foreground">
-              Performing: {performers.map((p) => p.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")).join(", ")}
+              Performing: {performers.map((p: string) => p.split("-").map((w: string) => w[0].toUpperCase() + w.slice(1)).join(" ")).join(", ")}
             </p>
           )}
 
