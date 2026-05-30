@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getEvent, rsvpEvent } from "@/lib/events.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { MemorySection } from "@/components/MemorySection";
+import { GettingThere } from "@/components/GettingThere";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -85,9 +86,13 @@ function EventDetail() {
             {event.description && <p className="mt-6 whitespace-pre-wrap text-base">{event.description}</p>}
             {event.tags?.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-2">
-                {event.tags.map((t: string) => (
-                  <span key={t} className="rounded-full border px-3 py-1 text-xs">{t}</span>
-                ))}
+                {event.tags
+                  .filter((t: string) => !t.startsWith("mapsurl:") && !t.startsWith("tip:"))
+                  .map((t: string) => (
+                    <span key={t} className="rounded-full border px-3 py-1 text-xs">
+                      {t}
+                    </span>
+                  ))}
               </div>
             )}
             <div className="mt-8">
