@@ -2,8 +2,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Navigation, MapPin, Clock, Copy, Check, ExternalLink, LocateFixed, Loader2, WifiOff, Pencil } from "lucide-react";
+import { Navigation, MapPin, Clock, Copy, Check, ExternalLink, LocateFixed, Loader2, WifiOff, Pencil, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { autocompletePlaces } from "@/lib/places.functions";
 
 type Coords = { lat: number; lng: number };
 
@@ -161,6 +163,22 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
 
+  // Address autocomplete (Google Places API via gateway).
+  type Suggestion = { placeId: string; primary: string; secondary: string; text: string };
+  const fetchSuggestions = useServerFn(autocompletePlaces);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  // Suppress fetching right after the user picks a suggestion (the resulting
+  // setManualOrigin would otherwise trigger another round-trip).
+  const skipNextFetchRef = useRef(false);
+  // One session token per "typing session" — Places API (New) bills
+  // autocomplete + details under a single token.
+  const sessionTokenRef = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+  );
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const on = () => setIsOnline(true);
@@ -171,6 +189,60 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       window.removeEventListener("online", on);
       window.removeEventListener("offline", off);
     };
+  }, []);
+
+  // Debounced autocomplete fetch as the user types in the manual address box.
+  useEffect(() => {
+    if (!showManual) return;
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
+      return;
+    }
+    const q = manualOrigin.trim();
+    if (q.length < 2) {
+      setSuggestions([]);
+      setSuggestOpen(false);
+      return;
+    }
+    if (!isOnline) return;
+    let cancelled = false;
+    setSuggestLoading(true);
+    const handle = window.setTimeout(async () => {
+      try {
+        const { suggestions: next } = await fetchSuggestions({
+          data: { input: q, sessionToken: sessionTokenRef.current },
+        });
+        if (cancelled) return;
+        setSuggestions(next);
+        setSuggestOpen(next.length > 0);
+        setActiveIndex(-1);
+      } catch {
+        if (!cancelled) {
+          setSuggestions([]);
+          setSuggestOpen(false);
+        }
+      } finally {
+        if (!cancelled) setSuggestLoading(false);
+      }
+    }, 220);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [manualOrigin, showManual, isOnline, fetchSuggestions]);
+
+  const pickSuggestion = useCallback((s: Suggestion) => {
+    skipNextFetchRef.current = true;
+    setManualOrigin(s.text);
+    rememberManualOrigin(s.text);
+    setSuggestOpen(false);
+    setSuggestions([]);
+    setActiveIndex(-1);
+    // Start a fresh session token for the next typing session.
+    sessionTokenRef.current =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random()}`;
   }, []);
   const autoLaunchedRef = useRef(false);
   const embedLoadedRef = useRef(false);
@@ -422,16 +494,48 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
             </div>
             {showManual && (
               <div className="space-y-1.5">
-                <div className="flex items-center gap-1.5">
+                <div className="relative flex items-center gap-1.5">
                   <Input
                     type="text"
                     inputMode="text"
-                    autoComplete="street-address"
+                    autoComplete="off"
                     placeholder="Starting address, e.g. Taksim Square, Istanbul"
                     value={manualOrigin}
-                    onChange={(e) => setManualOrigin(e.target.value)}
-                    onBlur={() => rememberManualOrigin(manualOrigin)}
+                    onChange={(e) => {
+                      setManualOrigin(e.target.value);
+                      setSuggestOpen(true);
+                    }}
+                    onFocus={() => {
+                      if (suggestions.length > 0) setSuggestOpen(true);
+                    }}
+                    onBlur={() => {
+                      // Delay so a click on a suggestion can register first.
+                      window.setTimeout(() => setSuggestOpen(false), 150);
+                      rememberManualOrigin(manualOrigin);
+                    }}
+                    onKeyDown={(e) => {
+                      if (!suggestOpen || suggestions.length === 0) return;
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setActiveIndex((i) => (i + 1) % suggestions.length);
+                      } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+                      } else if (e.key === "Enter" && activeIndex >= 0) {
+                        e.preventDefault();
+                        pickSuggestion(suggestions[activeIndex]);
+                      } else if (e.key === "Escape") {
+                        setSuggestOpen(false);
+                      }
+                    }}
                     className="h-8 text-xs"
+                    role="combobox"
+                    aria-expanded={suggestOpen}
+                    aria-autocomplete="list"
+                    aria-controls="manual-origin-suggestions"
+                    aria-activedescendant={
+                      activeIndex >= 0 ? `manual-origin-suggestion-${activeIndex}` : undefined
+                    }
                   />
                   {manualOrigin.trim() && (
                     <Button
@@ -442,16 +546,57 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
                       onClick={() => {
                         setManualOrigin("");
                         rememberManualOrigin("");
+                        setSuggestions([]);
+                        setSuggestOpen(false);
                       }}
                     >
                       Forget
                     </Button>
                   )}
+                  {suggestOpen && (suggestions.length > 0 || suggestLoading) && (
+                    <ul
+                      id="manual-origin-suggestions"
+                      role="listbox"
+                      className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border bg-popover py-1 text-xs shadow-lg"
+                    >
+                      {suggestLoading && suggestions.length === 0 && (
+                        <li className="flex items-center gap-2 px-3 py-2 text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Searching addresses…
+                        </li>
+                      )}
+                      {suggestions.map((s, i) => (
+                        <li
+                          key={s.placeId}
+                          id={`manual-origin-suggestion-${i}`}
+                          role="option"
+                          aria-selected={i === activeIndex}
+                          className={`flex cursor-pointer items-start gap-2 px-3 py-1.5 ${
+                            i === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-accent/60"
+                          }`}
+                          onMouseDown={(e) => {
+                            // Prevent the input's onBlur from firing before the click.
+                            e.preventDefault();
+                            pickSuggestion(s);
+                          }}
+                          onMouseEnter={() => setActiveIndex(i)}
+                        >
+                          <Search className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium">{s.primary}</p>
+                            {s.secondary && (
+                              <p className="truncate text-[10px] text-muted-foreground">{s.secondary}</p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Saved on this device for next time. Used as the origin when location
-                  services aren't available — Yandex Maps will open a search prefilled
-                  with the route.
+                  Saved on this device for next time. Suggestions are biased toward Istanbul.
+                  Used as the origin when location services aren't available — Yandex Maps will
+                  open a search prefilled with the route.
                 </p>
               </div>
             )}
