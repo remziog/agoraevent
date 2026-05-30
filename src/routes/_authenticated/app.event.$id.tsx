@@ -50,6 +50,7 @@ function EventDetail() {
   const get = useServerFn(getEvent);
   const rsvp = useServerFn(rsvpEvent);
   const qc = useQueryClient();
+  const { i18n } = useTranslation();
 
   const q = useQuery({ queryKey: ["event", id], queryFn: () => get({ data: { id } }) });
   const mutate = useMutation({
