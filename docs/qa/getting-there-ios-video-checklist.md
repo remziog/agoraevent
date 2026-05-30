@@ -13,6 +13,107 @@ One-page shot list for recording a single ~95s screen capture on iOS Safari that
 
 ---
 
+## iOS Simulator reset (use this for repeatable takes)
+
+The Simulator is the most reliable way to reproduce granted vs denied flows back-to-back because you can script a clean state in seconds. Run on a Mac with Xcode 15+ installed. All commands assume the **Booted** simulator; substitute a UDID from `xcrun simctl list devices` if you run multiple.
+
+### One-time setup
+
+1. Open **Xcode → Open Developer Tool → Simulator**.
+2. **File → New Simulator** → pick **iPhone 15** on **iOS 17.x** (or latest). Boot it.
+3. Install Google Maps from the App Store inside the Simulator (optional — the flow also works against `maps.google.com` in Safari without it).
+4. Sign into the preview once and bookmark the event detail URL on the Home Screen for fast re-launch.
+
+### Full reset before recording (≈10s)
+
+Run these in a Terminal tab on the host Mac. They reset Location Services, Safari permissions, and cached site data without rebooting the Simulator.
+
+```bash
+# 1. Reset all privacy permissions for Safari (clears the "Don't Allow" cache).
+xcrun simctl privacy booted reset location com.apple.mobilesafari
+xcrun simctl privacy booted reset all     com.apple.mobilesafari
+
+# 2. Clear Safari history, cookies, and website data.
+xcrun simctl spawn booted defaults write com.apple.mobilesafari \
+  HistoryAgeInDaysLimit -int 0
+# (Equivalent of Settings → Safari → Clear History and Website Data.)
+
+# 3. Verify Location Services is ON system-wide (re-enable if a prior test disabled it).
+xcrun simctl privacy booted grant location-always com.apple.mobilesafari
+xcrun simctl privacy booted revoke location com.apple.mobilesafari
+# The revoke leaves the *site* prompt fresh while keeping system Location Services on.
+```
+
+If you prefer the GUI for any step:
+
+- **Reset location prompt only**: Simulator menu → **Device → Erase All Content and Settings…** is overkill; instead use **Features → Location → None**, then **Custom Location…** to seed coordinates (see below).
+- **Reset Safari site data**: inside the Simulator open Settings → Safari → **Clear History and Website Data**.
+- **Reset system Location Services**: Settings → Privacy & Security → Location Services → toggle **Off then On**.
+
+### Seed a deterministic GPS fix (required for granted flow)
+
+The Simulator has no real GPS — without a seed, `getCurrentPosition` either hangs or returns Cupertino. Pick one:
+
+- **Menu**: Simulator → **Features → Location → Custom Location…** → enter Istanbul coords (e.g. `41.0086, 28.9802` for Sultanahmet) → **OK**.
+- **CLI** (preferred for scripts):
+
+  ```bash
+  xcrun simctl location booted set 41.0086,28.9802
+  ```
+
+- **Clear the seed** (to test the "location unavailable" code path):
+
+  ```bash
+  xcrun simctl location booted clear
+  ```
+
+### Full pre-record sequence (copy/paste)
+
+```bash
+# Reset permissions + clear seed
+xcrun simctl privacy  booted reset location com.apple.mobilesafari
+xcrun simctl privacy  booted reset all      com.apple.mobilesafari
+xcrun simctl location booted clear
+
+# Seed Istanbul GPS
+xcrun simctl location booted set 41.0086,28.9802
+
+# Open Safari to the event detail page (replace <id>)
+xcrun simctl openurl booted \
+  "https://id-preview--0d3101bb-9764-405c-8d64-1cd8781cef23.lovable.app/app/event/<id>"
+```
+
+Then in the Simulator: close any old Safari tabs (tabs icon → swipe up), confirm Location Services is **On** under Settings → Privacy & Security, and start recording with **File → New Screen Recording** (⌘R).
+
+### Between takes (granted → denied or denied → granted)
+
+Run only this — no need to reboot:
+
+```bash
+xcrun simctl privacy booted reset location com.apple.mobilesafari
+```
+
+Then close + reopen the Safari tab so the per-tab decision cache clears.
+
+### Sanity checks before pressing Record
+
+- [ ] Status bar shows the Simulator clock (for video timestamps).
+- [ ] `xcrun simctl location booted set …` ran without error.
+- [ ] Settings → Privacy & Security → Location Services is **On**.
+- [ ] Settings → Safari → no entry for the preview host under **Advanced → Website Data** (cleared).
+- [ ] Old preview tab is closed in Safari.
+- [ ] Google Maps app installed (or you've decided to verify against `maps.google.com` instead).
+
+### Known Simulator gotchas
+
+- "Allow While Using App" on the Simulator behaves like Allow Once — it does not persist across `simctl privacy reset`.
+- The Simulator's "Open in Google Maps?" banner only appears if the Maps app is installed; otherwise Safari opens a new tab to `maps.google.com` — URL assertions still apply.
+- `simctl location set` is **sticky** across reboots until you `clear` it. Always clear before starting a fresh denied-flow test that should fall through to "no coords".
+- If `getCurrentPosition` hangs, you forgot to seed the location — seed it and tap **Use my location** again.
+
+---
+
+
 ## Part 1 — GRANTED flow (0:00 – 0:45)
 
 | Time | Tap / Action | Expected UI state |
