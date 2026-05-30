@@ -31,6 +31,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install schema validator
+        run: pip install --quiet 'jsonschema>=4.18'
+
       - name: Resolve diff base
         id: base
         run: |
