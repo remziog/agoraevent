@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-30T08:51:05+00:00",
+  "base_ref": null,
+  "summary": {"sessions":1,"passing":1,"failing":0,"total_errors":0,"total_warnings":4,"result":"PASS"},
+  "sessions": [
+    {
+      "path": "docs/qa/evidence/2026-05-30-a1b2c3d",
+      "name": "2026-05-30-a1b2c3d",
+      "status": "PASS",
+      "exit_code": 0,
+      "errors": [],
+      "warnings": [
+        "ios\u200bsafari/granted: notes.md is empty",
+        "\u2060leading word joiner before real text",
+        "ZWNJ between letters: te\u200cst label",
+        "BOM-prefixed message: \ufeffphysical-android/denied: missing screenshot"
+      ]
+    }
+  ]
+}
