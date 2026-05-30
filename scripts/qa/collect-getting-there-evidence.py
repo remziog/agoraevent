@@ -404,23 +404,7 @@ def main() -> int:
     print(f"\nNext: fill in {session_dir.relative_to(REPO_ROOT)}/README.md")
     return code
 
-    print(f"Collecting for: {', '.join(f'{p}/{f}' for p, f in targets)}\n")
 
-    quit_early = False
-    for platform, flow in targets:
-        if quit_early:
-            break
-        print(f"\n--- {platform} / {flow} ---")
-        for art in FLOW_ARTIFACTS[flow]:
-            dest = session_dir / platform / flow / art.filename
-            result = prompt_file(dest, art, platform, flow)
-            if result == "quit":
-                quit_early = True
-                break
-
-    missing, _ = verify_session(session_dir)
-    print(f"\nNext: fill in {session_dir.relative_to(REPO_ROOT)}/README.md")
-    return 1 if missing else 0
 
 
 if __name__ == "__main__":
