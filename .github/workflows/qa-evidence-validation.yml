@@ -1,0 +1,50 @@
+name: QA Evidence Validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/qa/evidence/**'
+      - 'scripts/qa/collect-getting-there-evidence.py'
+      - '.github/workflows/qa-evidence-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/qa/evidence/**'
+      - 'scripts/qa/collect-getting-there-evidence.py'
+  workflow_dispatch:
+
+jobs:
+  validate-evidence:
+    name: Validate "Getting There" evidence sessions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Show script help
+        run: python scripts/qa/collect-getting-there-evidence.py --help
+
+      - name: Validate all evidence sessions
+        run: python scripts/qa/collect-getting-there-evidence.py --validate --all
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### QA Evidence Validation" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "All evidence sessions under \`docs/qa/evidence/\` passed strict validation." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "One or more evidence sessions failed validation. See the **Validate all evidence sessions** step above for the per-file error list." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Reproduce locally:" >> "$GITHUB_STEP_SUMMARY"
+            echo '```bash' >> "$GITHUB_STEP_SUMMARY"
+            echo "python scripts/qa/collect-getting-there-evidence.py --validate --all" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
