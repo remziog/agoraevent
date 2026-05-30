@@ -316,6 +316,35 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
             </p>
           </div>
 
+          <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs">
+            <div className="flex items-center gap-2">
+              {geoState === "locating" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              ) : (
+                <LocateFixed className={`h-3.5 w-3.5 ${geoState === "ready" ? "text-primary" : "text-muted-foreground"}`} />
+              )}
+              <span className="text-muted-foreground">
+                {geoState === "ready" && origin
+                  ? `Starting from your location (${origin.lat.toFixed(3)}, ${origin.lng.toFixed(3)})`
+                  : geoState === "locating"
+                    ? "Finding your location…"
+                    : geoState === "denied"
+                      ? "Location blocked — directions will start from the map's default."
+                      : geoState === "unavailable"
+                        ? "Location unavailable — directions will start from the map's default."
+                        : "Use your current location for turn-by-turn"}
+              </span>
+            </div>
+            {geoState !== "ready" && geoState !== "locating" && (
+              <Button type="button" size="sm" variant="ghost" className="h-7 gap-1.5 px-2" onClick={requestLocation}>
+                <LocateFixed className="h-3.5 w-3.5" />
+                {geoState === "denied" ? "Retry" : "Use my location"}
+              </Button>
+            )}
+          </div>
+
+
+
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Button asChild className="gap-2" onClick={() => choose("google")}>
               <a href={gHref} target="_top" rel="noopener noreferrer">
