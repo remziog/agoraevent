@@ -7,6 +7,8 @@ import { MemorySection } from "@/components/MemorySection";
 import { GettingThere } from "@/components/GettingThere";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { getOfflineSummary } from "@/lib/concert-weekend";
 
 export const Route = createFileRoute("/_authenticated/app/event/$id")({
   loader: async ({ params, context }) => {
