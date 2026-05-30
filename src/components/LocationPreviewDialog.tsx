@@ -6,6 +6,7 @@ import { Navigation, MapPin, Clock, Copy, Check, ExternalLink, LocateFixed, Load
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { autocompletePlaces } from "@/lib/places.functions";
+import { ISTANBUL_LANDMARKS } from "@/lib/istanbul-landmarks";
 
 type Coords = { lat: number; lng: number };
 
