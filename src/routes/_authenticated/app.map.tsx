@@ -299,6 +299,12 @@ function MapView() {
             </>
           )}
         </div>
+
+        <LandmarkDetailsDrawer
+          landmark={activeLandmark}
+          open={landmarkOpen}
+          onOpenChange={setLandmarkOpen}
+        />
       </div>
     </div>
   );
