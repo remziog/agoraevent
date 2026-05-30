@@ -243,7 +243,7 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [activeIndex, setActiveIndex] = useState(-1);
   // Tracks whether the current suggestion list came from the offline
   // fallback so we can show an inline notice ("offline — showing landmarks").
-  const [suggestSource, setSuggestSource] = useState<"places" | "fallback">("places");
+  const [suggestSource, setSuggestSource] = useState<"places" | "fallback" | "cache">("places");
   // Suppress fetching right after the user picks a suggestion (the resulting
   // setManualOrigin would otherwise trigger another round-trip).
   const skipNextFetchRef = useRef(false);
