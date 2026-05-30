@@ -55,6 +55,20 @@ function MapView() {
   } | null>(null);
   const [selected, setSelected] = useState<EventRow | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [landmarkOpen, setLandmarkOpen] = useState(false);
+  const [activeLandmark, setActiveLandmark] = useState<Landmark | null>(null);
+  const landmarkById = useMemo(
+    () => new Map(ISTANBUL_LANDMARKS.map((l) => [l.id, l])),
+    [],
+  );
+
+  function openIfLandmark(e: EventRow) {
+    const lm = landmarkById.get(e.id);
+    if (lm) {
+      setActiveLandmark(lm);
+      setLandmarkOpen(true);
+    }
+  }
 
   useEffect(() => {
     const raw = sessionStorage.getItem("agora:lastSearch");
