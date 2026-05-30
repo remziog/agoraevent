@@ -213,30 +213,35 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     // Show the "waiting to search" state immediately, but DON'T call the API
     // until the debounce timer fires uninterrupted.
     let cancelled = false;
+    const controller = new AbortController();
     setSuggestLoading(true);
     const handle = window.setTimeout(async () => {
       try {
         const { suggestions: next } = await fetchSuggestions({
           data: { input: q, sessionToken: sessionTokenRef.current },
+          signal: controller.signal,
         });
         if (cancelled) return;
         setSuggestions(next);
         setSuggestOpen(next.length > 0);
         setActiveIndex(-1);
-      } catch {
-        if (!cancelled) {
-          setSuggestions([]);
-          setSuggestOpen(false);
-        }
+      } catch (err) {
+        // Ignore aborts — they're the expected outcome when the user keeps
+        // typing. Only clear results on real failures.
+        if (cancelled || (err as { name?: string } | null)?.name === "AbortError") return;
+        setSuggestions([]);
+        setSuggestOpen(false);
       } finally {
         if (!cancelled) setSuggestLoading(false);
       }
     }, DEBOUNCE_MS);
     return () => {
-      // Cleanup runs on every keystroke before the timer fires, so the
-      // pending fetch is aborted before it ever hits the network.
+      // Cleanup runs on every keystroke. Cancel the pending timer AND abort
+      // any request that already fired so the in-flight fetch is canceled
+      // end-to-end (browser fetch + server function).
       cancelled = true;
       window.clearTimeout(handle);
+      controller.abort();
     };
   }, [manualOrigin, showManual, isOnline, fetchSuggestions]);
 
