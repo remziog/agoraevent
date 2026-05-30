@@ -163,6 +163,22 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
 
+  // Address autocomplete (Google Places API via gateway).
+  type Suggestion = { placeId: string; primary: string; secondary: string; text: string };
+  const fetchSuggestions = useServerFn(autocompletePlaces);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  // Suppress fetching right after the user picks a suggestion (the resulting
+  // setManualOrigin would otherwise trigger another round-trip).
+  const skipNextFetchRef = useRef(false);
+  // One session token per "typing session" — Places API (New) bills
+  // autocomplete + details under a single token.
+  const sessionTokenRef = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+  );
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const on = () => setIsOnline(true);
@@ -173,6 +189,60 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       window.removeEventListener("online", on);
       window.removeEventListener("offline", off);
     };
+  }, []);
+
+  // Debounced autocomplete fetch as the user types in the manual address box.
+  useEffect(() => {
+    if (!showManual) return;
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
+      return;
+    }
+    const q = manualOrigin.trim();
+    if (q.length < 2) {
+      setSuggestions([]);
+      setSuggestOpen(false);
+      return;
+    }
+    if (!isOnline) return;
+    let cancelled = false;
+    setSuggestLoading(true);
+    const handle = window.setTimeout(async () => {
+      try {
+        const { suggestions: next } = await fetchSuggestions({
+          data: { input: q, sessionToken: sessionTokenRef.current },
+        });
+        if (cancelled) return;
+        setSuggestions(next);
+        setSuggestOpen(next.length > 0);
+        setActiveIndex(-1);
+      } catch {
+        if (!cancelled) {
+          setSuggestions([]);
+          setSuggestOpen(false);
+        }
+      } finally {
+        if (!cancelled) setSuggestLoading(false);
+      }
+    }, 220);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [manualOrigin, showManual, isOnline, fetchSuggestions]);
+
+  const pickSuggestion = useCallback((s: Suggestion) => {
+    skipNextFetchRef.current = true;
+    setManualOrigin(s.text);
+    rememberManualOrigin(s.text);
+    setSuggestOpen(false);
+    setSuggestions([]);
+    setActiveIndex(-1);
+    // Start a fresh session token for the next typing session.
+    sessionTokenRef.current =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random()}`;
   }, []);
   const autoLaunchedRef = useRef(false);
   const embedLoadedRef = useRef(false);
