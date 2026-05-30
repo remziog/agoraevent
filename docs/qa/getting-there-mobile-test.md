@@ -154,3 +154,55 @@ After any change to `GettingThere.tsx` or related i18n keys:
 
 - Headless Chromium in the Lovable browser tool cannot trigger real OS geolocation prompts, so these tests must run on a physical device.
 - iOS Safari may cache "Don't Allow" for the session — fully close the tab between Test A and Test B if the prompt does not re-appear.
+
+---
+
+## Cross-platform final verification (run before recording the video)
+
+Goal: prove that the granted and denied geolocation behaviors are **byte-for-byte equivalent** across iOS Safari, Android Emulator, and a physical Android device before you commit to a take. Run all three columns of the matrix in one sitting — discrepancies almost always trace to a reset step that was skipped on one platform.
+
+Preconditions:
+- iOS Simulator reset performed per `getting-there-ios-video-checklist.md` → "iOS Simulator reset".
+- Android Emulator reset performed per `getting-there-android-video-checklist.md` → "Android Emulator reset".
+- Physical Android device reset performed per the "Physical Android device reset" section.
+- Same preview URL, same signed-in user, same event detail page (e.g. Hagia Sophia) loaded on all three.
+- GPS seeded to the **same coordinates** on all three (`41.0086, 28.9802` Sultanahmet) — Simulator/Emulator via CLI, physical device via mock-location app.
+
+### Verification matrix
+
+For each row, perform the action on **all three platforms in sequence** and tick only when the observed behavior matches across the row. Any unticked row blocks recording.
+
+| # | Action | Expected on iOS Safari | Expected on Android Emulator | Expected on physical Android | All match? |
+|---|--------|------------------------|------------------------------|------------------------------|------------|
+| 1 | Load event detail page, scroll to **Getting there**. | Section visible, primary button enabled, denied note hidden. | Same. | Same. | [ ] |
+| 2 | Tap **Use my location** (first time, fresh state). | iOS sheet: Allow Once / Allow While Using / Don't Allow. | Chrome prompt: Allow / Block. | Chrome prompt: Allow / Block. | [ ] |
+| 3 | Grant permission. | Maps directions open, `origin=41.0086,28.9802`, `travelmode=transit`. | Same `origin` + `travelmode`. | Same `origin` + `travelmode`. | [ ] |
+| 4 | Return to browser. Tap **Metro/Tram**. | Maps opens, `travelmode=transit`, same origin. | Same. | Same. | [ ] |
+| 5 | Tap **Taxi**. | `travelmode=driving`, same origin. | Same. | Same. | [ ] |
+| 6 | Tap **Walking**. | `travelmode=walking`, same origin. | Same. | Same. | [ ] |
+| 7 | Confirm denied note never appeared during granted flow. | Hidden. | Hidden. | Hidden. | [ ] |
+| 8 | Apply between-takes reset for the platform; reload page. | Fresh state, no cached prompt. | Same. | Same. | [ ] |
+| 9 | Tap **Use my location**. | Sheet appears. | Prompt appears. | Prompt appears. | [ ] |
+| 10 | Deny permission. | Within ~1s: spinner stops, denied note visible, **no new tab**. | Same timing, same note, no new tab. | Same. | [ ] |
+| 11 | Tap **Open directions in Google Maps**. | Maps opens, `destination=…`, `travelmode=transit`, **no `origin=`**. | Same. | Same. | [ ] |
+| 12 | Tap **Metro/Tram** / **Taxi** / **Walking** in turn. | Each opens Maps with matching `travelmode` and **no `origin=`**. | Same. | Same. | [ ] |
+| 13 | Re-tap **Use my location** without resetting. | No re-prompt; denied note stays visible. | No re-prompt; denied note stays. | No re-prompt; denied note stays. | [ ] |
+| 14 | Open browser console / remote inspector. | Zero JS errors, zero unhandled rejections during the flow. | Same. | Same (use `chrome://inspect` from host). | [ ] |
+
+### Discrepancy triage
+
+If a row fails on one platform only, **do not record** — investigate first:
+
+- **Row 3 origin missing on one platform** → GPS not seeded on that platform. iOS: re-run `xcrun simctl location booted set …`. Android Emulator: re-run `geo fix`. Physical: confirm mock-location app is still running and Developer options → **Select mock location app** still points to it.
+- **Row 10 denied note delayed >2s on one platform** → not a reset issue, a real state-update bug in `GettingThere.tsx`. Stop and fix the code, then redo the matrix.
+- **Row 11/12 spurious `origin=` on one platform** → `coords` state leaked from a prior granted run. The platform's reset step was incomplete (didn't close the iOS tab, didn't `pm clear` Chrome, didn't reload the page).
+- **Row 13 re-prompts on one platform** → permission decision wasn't actually cached. iOS: you're in a Private tab (expected) — switch to a normal tab. Android: a previous `pm clear` ran mid-flow.
+- **Row 14 console error on one platform only** → likely a polyfill / Web API gap. Capture the stack and link it to the GitHub issue before recording.
+
+### Sign-off
+
+When every row in the matrix is ticked across all three columns, the flow is verified consistent and you can proceed to record the platform-specific videos using:
+- `docs/qa/getting-there-ios-video-checklist.md`
+- `docs/qa/getting-there-android-video-checklist.md`
+
+Date / tester / commit SHA / matrix-pass evidence (screenshot of this section ticked) should be archived in the QA folder alongside the recorded videos.
