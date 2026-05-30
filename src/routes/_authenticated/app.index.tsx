@@ -18,6 +18,7 @@ import {
 import { searchEvents, listUpcomingEvents } from "@/lib/events.functions";
 import { getMyStats } from "@/lib/gamification.functions";
 import { getRecommendations } from "@/lib/recommendations.functions";
+import { ISTANBUL_LANDMARKS } from "@/lib/istanbul-landmarks";
 import { AppHeader } from "@/components/AppHeader";
 import { CompassLoader } from "@/components/CompassLoader";
 import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
