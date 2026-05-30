@@ -6,6 +6,7 @@ import { Navigation, MapPin, Clock, Copy, Check, ExternalLink, LocateFixed, Load
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { autocompletePlaces } from "@/lib/places.functions";
+import { ISTANBUL_LANDMARKS } from "@/lib/istanbul-landmarks";
 
 type Coords = { lat: number; lng: number };
 
@@ -170,6 +171,9 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  // Tracks whether the current suggestion list came from the offline
+  // fallback so we can show an inline notice ("offline — showing landmarks").
+  const [suggestSource, setSuggestSource] = useState<"places" | "fallback">("places");
   // Suppress fetching right after the user picks a suggestion (the resulting
   // setManualOrigin would otherwise trigger another round-trip).
   const skipNextFetchRef = useRef(false);
@@ -178,6 +182,25 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const sessionTokenRef = useRef<string>(
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
   );
+
+  // Offline-safe suggestion source: filter our curated Istanbul landmark list
+  // by the query. Used when navigator is offline, the serverFn fails, or the
+  // request aborts mid-flight without a successful retry.
+  const localFallback = useCallback((q: string): Suggestion[] => {
+    const needle = q.trim().toLowerCase();
+    if (needle.length < 2) return [];
+    const tokens = needle.split(/\s+/).filter(Boolean);
+    const matches = ISTANBUL_LANDMARKS.filter((lm) => {
+      const hay = `${lm.title} ${lm.venue} ${lm.city} ${lm.tags.join(" ")}`.toLowerCase();
+      return tokens.every((t) => hay.includes(t));
+    }).slice(0, 6);
+    return matches.map((lm) => ({
+      placeId: `local-${lm.id}`,
+      primary: lm.title,
+      secondary: `${lm.venue}, ${lm.city}`,
+      text: `${lm.title}, ${lm.venue}, ${lm.city}`,
+    }));
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -208,7 +231,17 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       setSuggestLoading(false);
       return;
     }
-    if (!isOnline) return;
+    // Offline: skip the network entirely and surface the local fallback so
+    // the input still feels alive instead of going silent.
+    if (!isOnline) {
+      const local = localFallback(q);
+      setSuggestions(local);
+      setSuggestSource("fallback");
+      setSuggestOpen(local.length > 0);
+      setSuggestLoading(false);
+      setActiveIndex(-1);
+      return;
+    }
 
     // Show the "waiting to search" state immediately, but DON'T call the API
     // until the debounce timer fires uninterrupted.
@@ -222,15 +255,29 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
           signal: controller.signal,
         });
         if (cancelled) return;
-        setSuggestions(next);
-        setSuggestOpen(next.length > 0);
+        if (next.length === 0) {
+          // No remote matches — offer local landmarks rather than an empty list.
+          const local = localFallback(q);
+          setSuggestions(local);
+          setSuggestSource(local.length > 0 ? "fallback" : "places");
+          setSuggestOpen(local.length > 0);
+        } else {
+          setSuggestions(next);
+          setSuggestSource("places");
+          setSuggestOpen(true);
+        }
         setActiveIndex(-1);
       } catch (err) {
-        // Ignore aborts — they're the expected outcome when the user keeps
-        // typing. Only clear results on real failures.
+        // Ignore aborts triggered by the user continuing to type — a newer
+        // request is already in flight (or about to be).
         if (cancelled || (err as { name?: string } | null)?.name === "AbortError") return;
-        setSuggestions([]);
-        setSuggestOpen(false);
+        // Real failure (network, gateway, quota): fall back to local matches
+        // so the user still gets something useful instead of an empty list.
+        const local = localFallback(q);
+        setSuggestions(local);
+        setSuggestSource("fallback");
+        setSuggestOpen(local.length > 0);
+        setActiveIndex(-1);
       } finally {
         if (!cancelled) setSuggestLoading(false);
       }
@@ -243,7 +290,7 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       window.clearTimeout(handle);
       controller.abort();
     };
-  }, [manualOrigin, showManual, isOnline, fetchSuggestions]);
+  }, [manualOrigin, showManual, isOnline, fetchSuggestions, localFallback]);
 
   const pickSuggestion = useCallback((s: Suggestion) => {
     skipNextFetchRef.current = true;
@@ -573,6 +620,12 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
                       role="listbox"
                       className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border bg-popover py-1 text-xs shadow-lg"
                     >
+                      {suggestSource === "fallback" && suggestions.length > 0 && (
+                        <li className="flex items-center gap-2 border-b px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                          <WifiOff className="h-3 w-3" />
+                          {isOnline ? "Search unavailable — showing local landmarks" : "Offline — showing local landmarks"}
+                        </li>
+                      )}
                       {suggestLoading && suggestions.length === 0 && (
                         <li className="flex items-center gap-2 px-3 py-2 text-muted-foreground">
                           <Loader2 className="h-3 w-3 animate-spin" />
