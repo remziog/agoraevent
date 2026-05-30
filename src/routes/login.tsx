@@ -29,10 +29,10 @@ export const Route = createFileRoute("/login")({
       { name: "description", content: "Sign in to Agora to discover events near you that match your taste." },
       { property: "og:title", content: "Sign in — Agora" },
       { property: "og:description", content: "Sign in to Agora to discover events near you that match your taste." },
-      { property: "og:url", content: "/login" },
-      { name: "robots", content: "noindex" },
+      { property: "og:url", content: "https://ago-ra.life/login" },
+      { name: "robots", content: "noindex, follow" },
     ],
-    links: [{ rel: "canonical", href: "/login" }],
+    links: [{ rel: "canonical", href: "https://ago-ra.life/login" }],
   }),
   component: LoginPage,
 });

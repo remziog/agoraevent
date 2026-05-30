@@ -12,12 +12,12 @@ export const Route = createFileRoute("/reset-password")({
     meta: [
       { title: "Set a new password — Agora" },
       { name: "description", content: "Finish resetting your Agora account by choosing a new password — something memorable and secure for signing back in." },
-      { name: "robots", content: "noindex" },
+      { name: "robots", content: "noindex, follow" },
       { property: "og:title", content: "Set a new password — Agora" },
       { property: "og:description", content: "Finish resetting your Agora account by choosing a new password — something memorable and secure for signing back in." },
-      { property: "og:url", content: "/reset-password" },
+      { property: "og:url", content: "https://ago-ra.life/reset-password" },
     ],
-    links: [{ rel: "canonical", href: "/reset-password" }],
+    links: [{ rel: "canonical", href: "https://ago-ra.life/reset-password" }],
   }),
   component: ResetPasswordPage,
 });

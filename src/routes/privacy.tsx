@@ -14,9 +14,9 @@ export const Route = createFileRoute("/privacy")({
       },
       { property: "og:title", content: "Privacy Policy — Agora" },
       { property: "og:description", content: "How Agora collects, uses, and protects your information when you use our event discovery service." },
-      { property: "og:url", content: "/privacy" },
+      { property: "og:url", content: "https://ago-ra.life/privacy" },
     ],
-    links: [{ rel: "canonical", href: "/privacy" }],
+    links: [{ rel: "canonical", href: "https://ago-ra.life/privacy" }],
   }),
   component: PrivacyPage,
 });

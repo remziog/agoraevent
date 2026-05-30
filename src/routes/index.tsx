@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Tell Agora the kind of night you want. We find the room — nearby events that match your taste in music, sport, film, and conversation." },
       { property: "og:title", content: "Agora — Meet your people in real life" },
       { property: "og:description", content: "Tell Agora the kind of night you want. We find the room." },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: "https://ago-ra.life/" },
       { property: "og:type", content: "website" },
       { property: "og:image", content: ogImage },
       { name: "twitter:card", content: "summary_large_image" },
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:description", content: "Tell Agora the kind of night you want. We find the room." },
       { name: "twitter:image", content: ogImage },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: "https://ago-ra.life/" }],
     scripts: [
       {
         type: "application/ld+json",

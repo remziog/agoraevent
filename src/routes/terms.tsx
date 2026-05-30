@@ -14,9 +14,9 @@ export const Route = createFileRoute("/terms")({
       },
       { property: "og:title", content: "Terms of Service — Agora" },
       { property: "og:description", content: "The terms that govern your use of Agora — what you can expect from us and what we expect from you." },
-      { property: "og:url", content: "/terms" },
+      { property: "og:url", content: "https://ago-ra.life/terms" },
     ],
-    links: [{ rel: "canonical", href: "/terms" }],
+    links: [{ rel: "canonical", href: "https://ago-ra.life/terms" }],
   }),
   component: TermsPage,
 });
