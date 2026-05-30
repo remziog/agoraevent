@@ -438,39 +438,51 @@ def main() -> int:
     parser.add_argument("--all", action="store_true",
                         help="With --validate or --verify-only, validate every session "
                              "folder under docs/qa/evidence/ instead of a single one.")
+    parser.add_argument("--report", default=None,
+                        help="With --validate, also write a Markdown validation report "
+                             "covering all validated sessions to this path.")
+    parser.add_argument("--base-ref", default=None,
+                        help="With --report, include `git diff` output vs this ref "
+                             "(e.g. 'origin/main') for each session.")
     args = parser.parse_args()
 
     # --validate and --verify-only operate on existing folders and never rotate.
     if args.validate or args.verify_only:
+        results: list[tuple[Path, int, list[str], list[str]]] = []
+
         if args.all:
-            if not EVIDENCE_ROOT.is_dir():
-                print(f"No evidence root at {EVIDENCE_ROOT.relative_to(REPO_ROOT)} — nothing to validate.")
+            if not EVIDENCE_ROOT.is_dir() or not any(EVIDENCE_ROOT.iterdir() if EVIDENCE_ROOT.is_dir() else []):
+                print(f"No session folders under {EVIDENCE_ROOT.relative_to(REPO_ROOT)} — nothing to validate.")
+                if args.report and args.validate:
+                    write_report(Path(args.report), [], args.base_ref)
                 return 0
             sessions = sorted(p for p in EVIDENCE_ROOT.iterdir() if p.is_dir())
-            if not sessions:
-                print(f"No session folders under {EVIDENCE_ROOT.relative_to(REPO_ROOT)} — nothing to validate.")
-                return 0
-            overall = 0
-            for s in sessions:
-                print(f"\n############ {s.relative_to(REPO_ROOT)} ############")
-                if args.validate:
-                    rc = validate_session(s)
-                else:
-                    missing, _ = verify_session(s)
-                    rc = 1 if missing else 0
-                overall = overall or rc
-            print(f"\n{'PASS' if overall == 0 else 'FAIL'}: validated {len(sessions)} session(s).")
-            return overall
+        else:
+            session_dir = EVIDENCE_ROOT / f"{args.date}-{args.sha}"
+            if not session_dir.is_dir():
+                print(f"error: session folder does not exist: {session_dir.relative_to(REPO_ROOT)}")
+                return 2
+            sessions = [session_dir]
 
-        session_dir = EVIDENCE_ROOT / f"{args.date}-{args.sha}"
-        if not session_dir.is_dir():
-            print(f"error: session folder does not exist: {session_dir.relative_to(REPO_ROOT)}")
-            return 2
-        print(f"Session folder: {session_dir.relative_to(REPO_ROOT)}")
-        if args.validate:
-            return validate_session(session_dir)
-        missing, _ = verify_session(session_dir)
-        return 1 if missing else 0
+        overall = 0
+        for s in sessions:
+            print(f"\n############ {s.relative_to(REPO_ROOT)} ############")
+            if args.validate:
+                rc, errs, warns = validate_session(s)
+                results.append((s, rc, errs, warns))
+            else:
+                missing, _ = verify_session(s)
+                rc = 1 if missing else 0
+            overall = overall or rc
+
+        if len(sessions) > 1:
+            print(f"\n{'PASS' if overall == 0 else 'FAIL'}: validated {len(sessions)} session(s).")
+
+        if args.report and args.validate:
+            write_report(Path(args.report), results, args.base_ref)
+
+        return overall
+
 
     session_dir = ensure_session_dir(args.date, args.sha)
     write_readme(session_dir, args.tester, args.sha, args.event)
