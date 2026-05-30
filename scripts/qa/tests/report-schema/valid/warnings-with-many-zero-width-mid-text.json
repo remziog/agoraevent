@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-30T08:51:05+00:00",
+  "base_ref": null,
+  "summary": {"sessions":1,"passing":1,"failing":0,"total_errors":0,"total_warnings":3,"result":"PASS"},
+  "sessions": [
+    {
+      "path": "docs/qa/evidence/2026-05-30-a1b2c3d",
+      "name": "2026-05-30-a1b2c3d",
+      "status": "PASS",
+      "exit_code": 0,
+      "errors": [],
+      "warnings": [
+        "ios\u200bsafari\u200c/\u200dgranted\u2060:\ufeff notes.md is empty",
+        "android-emulator\u200b/\u200bdenied\u200b:\u200b screenshot \u2060missing\u2060 step\u2060 2",
+        "physical\u200c-\u200candroid\u200c/\u200cgranted: \ufeffmap \u200bopened\u200b ok"
+      ]
+    }
+  ]
+}

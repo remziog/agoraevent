@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-30T08:51:05+00:00",
+  "base_ref": null,
+  "summary": {"sessions":1,"passing":1,"failing":0,"total_errors":0,"total_warnings":2,"result":"PASS"},
+  "sessions": [
+    {
+      "path": "docs/qa/evidence/2026-05-30-a1b2c3d",
+      "name": "2026-05-30-a1b2c3d",
+      "status": "PASS",
+      "exit_code": 0,
+      "errors": [],
+      "warnings": [
+        "\u200b\u200c\u200d\u2060\ufeff android-emulator/granted:\u200b\n\u200b  step 1 ok\n\u200c  step 2 ok\n\u200d  step 3 \u2060ok\u2060\n\ufeff  step 4 ok \u200b",
+        "summary:\n  - ios\u200b: pass\n  - android\u200c: pass\n  - physical\u200d: pass\n\u2060(end)\ufeff"
+      ]
+    }
+  ]
+}

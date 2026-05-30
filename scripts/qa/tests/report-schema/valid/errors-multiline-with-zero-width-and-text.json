@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-30T08:51:05+00:00",
+  "base_ref": null,
+  "summary": {"sessions":1,"passing":0,"failing":1,"total_errors":3,"total_warnings":1,"result":"FAIL"},
+  "sessions": [
+    {
+      "path": "docs/qa/evidence/2026-05-30-deadbee",
+      "name": "2026-05-30-deadbee",
+      "status": "FAIL",
+      "exit_code": 1,
+      "errors": [
+        "ios-safari/granted:\u200b\n  missing 10-permission-prompt.png\n  expected\u200b at:\u2060 docs/qa/evidence/.../granted/",
+        "android-emulator/denied:\n\u200b  20-map-opened.png is\u200c not a valid PNG\n\u200b  (bad magic bytes)\u2060",
+        "\ufeffphysical-android/granted:\n  notes.md\u200b mentions wrong\u200c device\n  line 3: \"\u200bSimulator\u200b\" should be \"Pixel\u00a06\""
+      ],
+      "warnings": [
+        "ios-safari/granted:\u200b\n  notes.md\u200b is empty\n  (\u2060non-blocking\u2060)"
+      ]
+    }
+  ]
+}
