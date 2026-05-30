@@ -390,8 +390,7 @@ def main() -> int:
     write_readme(session_dir, args.tester, args.sha, args.event)
     print(f"Session folder: {session_dir.relative_to(REPO_ROOT)}")
 
-        missing, _ = verify_session(session_dir)
-        return 1 if missing else 0
+
 
     targets = parse_only(args.only)
     print(f"Collecting for: {', '.join(f'{p}/{f}' for p, f in targets)}\n")
