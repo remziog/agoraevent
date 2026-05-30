@@ -185,8 +185,8 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     if (open && geoState === "idle") requestLocation();
   }, [open, geoState, requestLocation]);
 
-  const gHref = useMemo(() => googleMapsHref(place, depart, origin), [place, depart, origin]);
-  const yHref = useMemo(() => yandexMapsHref(place, depart, origin), [place, depart, origin]);
+  const gHref = useMemo(() => googleMapsHref(place, depart, origin, manualOrigin), [place, depart, origin, manualOrigin]);
+  const yHref = useMemo(() => yandexMapsHref(place, depart, origin, manualOrigin), [place, depart, origin, manualOrigin]);
 
   // Auto-open the preferred provider on first open of this dialog instance.
   // Wait until the geolocation request has settled (granted, denied, or
