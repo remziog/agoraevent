@@ -258,6 +258,10 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const choose = (p: Provider) => {
     setPreferredProvider(p);
     setPreferred(p);
+    // Persist the typed starting address at the same moment the user actually
+    // launches a directions provider, so we don't wait for an onBlur that may
+    // never fire (e.g. mobile tap straight from input → button).
+    rememberManualOrigin(manualOrigin);
   };
 
   const forget = () => {
