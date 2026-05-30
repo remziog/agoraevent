@@ -50,7 +50,7 @@
   "$defs": {
     "session": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
       "required": ["path", "name", "status", "exit_code", "errors", "warnings"],
       "properties": {
         "path": {
@@ -65,8 +65,8 @@
         },
         "status":    { "type": "string", "enum": ["PASS", "FAIL"] },
         "exit_code": { "type": "integer", "enum": [0, 1, 2] },
-        "errors":    { "type": "array", "items": { "type": "string" } },
-        "warnings":  { "type": "array", "items": { "type": "string" } },
+        "errors":    { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "warnings":  { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "diff": {
           "description": "Present only when base_ref is set. Git diff output scoped to the session folder, or null on diff failure.",
           "type": ["string", "null"]
