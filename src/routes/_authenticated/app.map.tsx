@@ -245,11 +245,21 @@ function MapView() {
                             </Button>
                           }
                         />
-                        <Button asChild size="sm" variant="outline">
-                          <Link to="/app/event/$id" params={{ id: selected.id }}>
-                            Event details
-                          </Link>
-                        </Button>
+                        {landmarkById.has(selected.id) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openIfLandmark(selected)}
+                          >
+                            View details
+                          </Button>
+                        ) : (
+                          <Button asChild size="sm" variant="outline">
+                            <Link to="/app/event/$id" params={{ id: selected.id }}>
+                              Event details
+                            </Link>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
