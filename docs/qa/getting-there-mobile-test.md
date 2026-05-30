@@ -15,6 +15,70 @@ Reset permissions before each run so the prompt actually appears:
 
 ---
 
+## iOS Safari — Tap-by-tap Permission Tests
+
+Mirrors the Android Chrome flow, but accounts for iOS's two-layer permission model (system Location Services + per-site Safari prompt) and Safari's per-tab caching of "Don't Allow".
+
+### iOS reset (do this between every run)
+
+1. Settings → Privacy & Security → Location Services → **On**.
+2. Same screen → scroll to **Safari Websites** → **Ask Next Time Or When I Share**.
+3. Open Safari → tap the **tabs** icon (bottom-right) → swipe up to **close the preview tab**. (Safari caches a denied decision for the tab's lifetime.)
+4. Open a fresh tab → paste the preview URL → tap **Go**.
+
+### iOS Test A — GRANTED
+
+1. Sign in. Navigate to an event detail page (e.g. Hagia Sophia).
+2. Scroll to **Getting there**.
+3. Tap **Use my location**.
+4. iOS shows the native sheet: **"…would like to use your current location"** with **Allow Once / Allow While Using / Don't Allow**. Tap **Allow Once**.
+5. Within ~1s the system app-switch banner appears: **"Open in Google Maps?"** (or Safari opens a new tab to `maps.google.com` if the app isn't installed). Tap **Open**.
+6. UI checks back in Safari (swipe up from the home indicator → return to Safari):
+   - Spinner on the button has stopped.
+   - The **deniedNote** is **not** visible.
+   - The three mode cards (Metro/Tram, Taxi, Walking) are tappable.
+7. In Google Maps, confirm the **directions** view loaded (not a place card) with **Your location** as the starting point.
+8. Back in Safari, long-press the **Use my location** button → **Copy Link**. Paste into Notes and verify the URL contains:
+   - `google.com/maps/dir/?api=1`
+   - `destination=…`
+   - `origin=<lat>,<lng>` ← required
+   - `travelmode=transit`
+9. Tap each mode card in turn. After each, swipe back to Safari and confirm the previous tap opened directions with the correct `travelmode` (`transit` / `driving` / `walking`) and the same `origin`.
+
+Pass: directions opened with live origin on all four buttons; no fallback note shown.
+
+### iOS Test B — DENIED
+
+1. Perform the **iOS reset** above (closing the tab is mandatory).
+2. Reopen the event detail page → scroll to **Getting there**.
+3. Tap **Use my location**.
+4. On the iOS permission sheet, tap **Don't Allow**.
+5. UI checks (must all happen within ~1s, no new tab):
+   - Button spinner stops.
+   - The fallback note `gettingThere.deniedNote` becomes visible directly under the button.
+   - No app-switch banner, no new Safari tab.
+   - The static **Open directions in Google Maps** button is visible and enabled.
+   - The three mode cards remain visible and enabled.
+6. Tap **Open directions in Google Maps**. Accept the **"Open in Google Maps?"** banner.
+7. Verify the URL (long-press the button → Copy Link):
+   - `google.com/maps/dir/?api=1`
+   - `destination=…`
+   - `travelmode=transit`
+   - **No `origin=` parameter** — Google Maps prompts "Choose starting point" / uses "Your location" placeholder.
+8. Back in Safari, tap **Metro/Tram**, then **Taxi**, then **Walking**. For each, confirm Maps opens directions with the matching `travelmode` and no `origin`.
+9. Re-tap **Use my location**. iOS should **not** re-prompt (decision is cached for the tab). Confirm the deniedNote stays visible and nothing else changes.
+
+Pass: no crash, fallback note shown immediately, all four buttons open valid directions without an origin.
+
+### iOS-specific gotchas
+
+- If the permission sheet never appears, Location Services is off at the system level — re-check Settings → Privacy & Security → Location Services.
+- If Safari opens `maps.google.com` in a new tab instead of the Google Maps app, that's expected when the app isn't installed; the URL assertions still apply.
+- "Allow While Using" treats the decision as persistent across reloads — only **Allow Once** matches a real first-time grant for repeat testing.
+- Private Browsing tabs clear permission state automatically and are the fastest way to re-test repeatedly.
+
+---
+
 ## Test A — Permission GRANTED
 
 Goal: confirm the primary CTA opens Google Maps **directions** with the user's coordinates as the origin and `travelmode=transit`.
