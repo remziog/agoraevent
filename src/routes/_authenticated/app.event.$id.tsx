@@ -7,6 +7,8 @@ import { MemorySection } from "@/components/MemorySection";
 import { GettingThere } from "@/components/GettingThere";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { getOfflineSummary } from "@/lib/concert-weekend";
 
 export const Route = createFileRoute("/_authenticated/app/event/$id")({
   loader: async ({ params, context }) => {
@@ -48,6 +50,7 @@ function EventDetail() {
   const get = useServerFn(getEvent);
   const rsvp = useServerFn(rsvpEvent);
   const qc = useQueryClient();
+  const { i18n } = useTranslation();
 
   const q = useQuery({ queryKey: ["event", id], queryFn: () => get({ data: { id } }) });
   const mutate = useMutation({
@@ -108,14 +111,15 @@ function EventDetail() {
           </article>
         )}
         {event && (() => {
-          const mapsTag = (event.tags ?? []).find((t: string) => t.startsWith("mapsurl:"));
           const tipTag = (event.tags ?? []).find((t: string) => t.startsWith("tip:"));
-          const destination = [event.venue, event.city].filter(Boolean).join(", ") || event.title;
+          const label = [event.venue, event.city].filter(Boolean).join(", ") || event.title;
+          if (event.latitude == null || event.longitude == null) return null;
           return (
             <GettingThere
-              destinationQuery={destination}
-              destinationUrl={mapsTag ? mapsTag.slice("mapsurl:".length) : undefined}
+              destination={{ lat: event.latitude, lng: event.longitude }}
+              destinationLabel={label}
               tip={tipTag ? tipTag.slice("tip:".length) : undefined}
+              offlineSummary={getOfflineSummary(event.id, i18n.language) ?? undefined}
             />
           );
         })()}
