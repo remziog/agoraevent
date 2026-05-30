@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-30T08:51:05+00:00",
+  "base_ref": null,
+  "summary": {"sessions":0,"passing":0,"failing":0,"total_errors":0,"total_warnings":0,"result":"pass"},
+  "sessions": []
+}
