@@ -417,6 +417,81 @@ def write_report(report_path: Path, results: list[tuple[Path, int, list[str], li
     print(f"\nReport written: {report_path}")
 
 
+def write_report_json(
+    report_path: Path,
+    results: list[tuple[Path, int, list[str], list[str]]],
+    base_ref: str | None,
+) -> None:
+    """Write a machine-readable JSON validation report.
+
+    Schema (stable, intended for CI consumers):
+      {
+        "schema_version": 1,
+        "generated_at": "<iso-8601 UTC>",
+        "base_ref": "<str|null>",
+        "summary": {
+          "sessions": <int>,
+          "passing": <int>,
+          "failing": <int>,
+          "total_errors": <int>,
+          "total_warnings": <int>,
+          "result": "PASS"|"FAIL"
+        },
+        "sessions": [
+          {
+            "path": "<repo-relative posix>",
+            "name": "<folder name>",
+            "status": "PASS"|"FAIL",
+            "exit_code": <int>,
+            "errors": [<str>, ...],
+            "warnings": [<str>, ...],
+            "diff": "<str|null>"   # present only when base_ref is set
+          }, ...
+        ]
+      }
+    """
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    sessions_out: list[dict] = []
+    total_errors = 0
+    total_warnings = 0
+    failing = 0
+    for session_dir, rc, errors, warnings in results:
+        total_errors += len(errors)
+        total_warnings += len(warnings)
+        if rc != 0:
+            failing += 1
+        entry: dict = {
+            "path": session_dir.relative_to(REPO_ROOT).as_posix(),
+            "name": session_dir.name,
+            "status": "PASS" if rc == 0 else "FAIL",
+            "exit_code": rc,
+            "errors": list(errors),
+            "warnings": list(warnings),
+        }
+        if base_ref:
+            entry["diff"] = _git_diff_for_session(session_dir, base_ref)
+        sessions_out.append(entry)
+
+    payload = {
+        "schema_version": 1,
+        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        "base_ref": base_ref,
+        "summary": {
+            "sessions": len(results),
+            "passing": len(results) - failing,
+            "failing": failing,
+            "total_errors": total_errors,
+            "total_warnings": total_warnings,
+            "result": "FAIL" if failing else "PASS",
+        },
+        "sessions": sessions_out,
+    }
+    report_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
+    print(f"JSON report written: {report_path}")
+
+
 
 
 
