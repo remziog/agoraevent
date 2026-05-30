@@ -36,6 +36,41 @@ export const completeOnboarding = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Sign-in-and-go: derive a sensible display name from auth metadata and
+// finish onboarding with no UI questions. City defaults to Istanbul since
+// that's the launch city.
+export const autoCompleteOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId, claims } = context;
+    const meta = (claims?.user_metadata ?? {}) as Record<string, unknown>;
+    const fromMeta =
+      (typeof meta.display_name === "string" && meta.display_name) ||
+      (typeof meta.full_name === "string" && meta.full_name) ||
+      (typeof meta.name === "string" && meta.name) ||
+      "";
+    const emailLocal =
+      typeof claims?.email === "string" ? claims.email.split("@")[0] : "";
+    const displayName = (fromMeta || emailLocal || "Friend")
+      .toString()
+      .slice(0, 80);
+
+    const { error: pErr } = await supabase.from("profiles").upsert({
+      id: userId,
+      display_name: displayName,
+      city: "Istanbul",
+      onboarded: true,
+    });
+    if (pErr) throw dbError(pErr);
+
+    const { error: rErr } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: userId, role: "member" }, { onConflict: "user_id,role" });
+    if (rErr) throw dbError(rErr);
+
+    return { ok: true };
+  });
+
 export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
