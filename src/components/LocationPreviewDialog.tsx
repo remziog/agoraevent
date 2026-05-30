@@ -56,7 +56,12 @@ function toUnixSeconds(local: string): number | null {
   return Number.isFinite(t) ? Math.floor(t / 1000) : null;
 }
 
-function googleMapsHref(p: Place, departISO: string, origin: Coords | null) {
+function googleMapsHref(
+  p: Place,
+  departISO: string,
+  origin: Coords | null,
+  manualOrigin: string,
+) {
   const params = new URLSearchParams({
     api: "1",
     destination: destinationQuery(p),
@@ -65,7 +70,9 @@ function googleMapsHref(p: Place, departISO: string, origin: Coords | null) {
     // (and the closest equivalent in the web client).
     dir_action: "navigate",
   });
-  if (origin) params.set("origin", `${origin.lat},${origin.lng}`);
+  const manual = manualOrigin.trim();
+  if (manual) params.set("origin", manual);
+  else if (origin) params.set("origin", `${origin.lat},${origin.lng}`);
   // Google Maps web URL doesn't officially honor departure_time, but we
   // include it so deep-linking into the Google Maps app can pick it up.
   const unix = toUnixSeconds(departISO);
@@ -73,13 +80,23 @@ function googleMapsHref(p: Place, departISO: string, origin: Coords | null) {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
-function yandexMapsHref(p: Place, departISO: string, origin: Coords | null) {
+function yandexMapsHref(
+  p: Place,
+  departISO: string,
+  origin: Coords | null,
+  manualOrigin: string,
+) {
   const destPart =
     p.latitude != null && p.longitude != null
       ? `${p.latitude},${p.longitude}`
       : "";
   const params = new URLSearchParams({ rtt: "auto" });
-  if (destPart) {
+  const manual = manualOrigin.trim();
+  if (manual && destPart) {
+    // Yandex's rtext is lat,lng-only. With a typed address we have to fall
+    // back to a text search prefilled "from <address> to <destination>".
+    params.set("text", `${manual} → ${[p.venue, p.city, p.title].filter(Boolean).join(", ")}`);
+  } else if (destPart) {
     // Yandex rtext format: "fromLat,fromLng~toLat,toLng". A leading "~"
     // (no origin) means "from my location" once the user grants permission
     // in Yandex Maps itself.
