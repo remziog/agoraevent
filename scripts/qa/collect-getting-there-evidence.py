@@ -506,7 +506,7 @@ def main() -> int:
                 break
 
     # After interactive collection, run strict validation as the final word.
-    code = validate_session(session_dir)
+    code, _, _ = validate_session(session_dir)
     print(f"\nNext: fill in {session_dir.relative_to(REPO_ROOT)}/README.md")
     return code
 
