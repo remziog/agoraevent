@@ -155,14 +155,18 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const yHref = useMemo(() => yandexMapsHref(place, depart, origin), [place, depart, origin]);
 
   // Auto-open the preferred provider on first open of this dialog instance.
+  // Wait until the geolocation request has settled (granted, denied, or
+  // unavailable) so the deep link can include the user's origin when we
+  // have it — otherwise turn-by-turn would launch without a starting point.
   useEffect(() => {
     if (!open || autoLaunchedRef.current) return;
     const pref = getPreferredProvider();
     if (!pref) return;
+    if (geoState === "idle" || geoState === "locating") return;
     autoLaunchedRef.current = true;
     setOpen(false);
     openTop(pref === "google" ? gHref : yHref);
-  }, [open, gHref, yHref]);
+  }, [open, gHref, yHref, geoState]);
 
   // Detect when the embedded map fails to load (CSP/X-Frame-Options, blocked
   // by an extension, or offline). If onLoad doesn't fire within ~4s, fall
