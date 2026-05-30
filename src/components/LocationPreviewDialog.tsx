@@ -171,6 +171,9 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  // Tracks whether the current suggestion list came from the offline
+  // fallback so we can show an inline notice ("offline — showing landmarks").
+  const [suggestSource, setSuggestSource] = useState<"places" | "fallback">("places");
   // Suppress fetching right after the user picks a suggestion (the resulting
   // setManualOrigin would otherwise trigger another round-trip).
   const skipNextFetchRef = useRef(false);
@@ -179,6 +182,25 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const sessionTokenRef = useRef<string>(
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
   );
+
+  // Offline-safe suggestion source: filter our curated Istanbul landmark list
+  // by the query. Used when navigator is offline, the serverFn fails, or the
+  // request aborts mid-flight without a successful retry.
+  const localFallback = useCallback((q: string): Suggestion[] => {
+    const needle = q.trim().toLowerCase();
+    if (needle.length < 2) return [];
+    const tokens = needle.split(/\s+/).filter(Boolean);
+    const matches = ISTANBUL_LANDMARKS.filter((lm) => {
+      const hay = `${lm.title} ${lm.venue} ${lm.city} ${lm.tags.join(" ")}`.toLowerCase();
+      return tokens.every((t) => hay.includes(t));
+    }).slice(0, 6);
+    return matches.map((lm) => ({
+      placeId: `local-${lm.id}`,
+      primary: lm.title,
+      secondary: `${lm.venue}, ${lm.city}`,
+      text: `${lm.title}, ${lm.venue}, ${lm.city}`,
+    }));
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
