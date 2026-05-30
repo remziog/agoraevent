@@ -25,7 +25,7 @@ type Suggestion = {
  */
 export const autocompletePlaces = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => Input.parse(d))
-  .handler(async ({ data, signal }): Promise<{ suggestions: Suggestion[] }> => {
+  .handler(async ({ data }): Promise<{ suggestions: Suggestion[] }> => {
     const lovableKey = process.env.LOVABLE_API_KEY;
     const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
     if (!lovableKey) throw new Error("Missing LOVABLE_API_KEY");
