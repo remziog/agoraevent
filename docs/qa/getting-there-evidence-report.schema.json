@@ -65,8 +65,8 @@
         },
         "status":    { "type": "string", "enum": ["PASS", "FAIL"] },
         "exit_code": { "type": "integer", "enum": [0, 1, 2] },
-        "errors":    { "type": "array", "items": { "type": "string", "minLength": 1, "pattern": "\\S" } },
-        "warnings":  { "type": "array", "items": { "type": "string", "minLength": 1, "pattern": "\\S" } },
+        "errors":    { "type": "array", "items": { "type": "string", "minLength": 1, "pattern": "[^\\s\\u180E\\u200B-\\u200D\\u2060\\uFEFF]" } },
+        "warnings":  { "type": "array", "items": { "type": "string", "minLength": 1, "pattern": "[^\\s\\u180E\\u200B-\\u200D\\u2060\\uFEFF]" } },
         "diff": {
           "description": "Present only when base_ref is set. Git diff output scoped to the session folder, or null on diff failure.",
           "type": ["string", "null"]
