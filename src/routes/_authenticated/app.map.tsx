@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
+import { LandmarkDetailsDrawer } from "@/components/LandmarkDetailsDrawer";
+import { ISTANBUL_LANDMARKS, type Landmark } from "@/lib/istanbul-landmarks";
 
 function mapsHref(e: {
   latitude?: number | null;
