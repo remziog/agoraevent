@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TodayRouteImport } from './routes/today'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
@@ -34,6 +35,11 @@ import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenti
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AuthenticatedAppEventIdRouteImport } from './routes/_authenticated/app.event.$id'
 
+const TodayRoute = TodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/today': typeof TodayRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/today': typeof TodayRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/today': typeof TodayRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/terms'
+    | '/today'
     | '/onboarding'
     | '/concert/$slug'
     | '/app/calendar'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/terms'
+    | '/today'
     | '/onboarding'
     | '/concert/$slug'
     | '/app/calendar'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/terms'
+    | '/today'
     | '/_authenticated/onboarding'
     | '/concert/$slug'
     | '/_authenticated/app/calendar'
@@ -326,12 +338,20 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  TodayRoute: typeof TodayRoute
   ConcertSlugRoute: typeof ConcertSlugRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/today': {
+      id: '/today'
+      path: '/today'
+      fullPath: '/today'
+      preLoaderRoute: typeof TodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -549,6 +569,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  TodayRoute: TodayRoute,
   ConcertSlugRoute: ConcertSlugRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }

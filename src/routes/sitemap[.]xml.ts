@@ -17,6 +17,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         // surfaces and /onboarding are excluded (also blocked by robots.txt).
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
+          { path: "/today", changefreq: "daily", priority: "0.9" },
           { path: "/concert/kanye-west-istanbul-2026", changefreq: "daily", priority: "0.9" },
           { path: "/login", changefreq: "monthly", priority: "0.3" },
           { path: "/signup", changefreq: "monthly", priority: "0.5" },

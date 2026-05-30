@@ -39,3 +39,37 @@ export const getPublicEvent = createServerFn({ method: "GET" })
     if (error || !row) return { event: null as PublicEvent | null };
     return { event: { ...row, slug: data.slug } satisfies PublicEvent };
   });
+
+// Reverse map: event id → public slug (for linking from the /today index)
+const ID_TO_SLUG: Record<string, string> = Object.fromEntries(
+  Object.entries(PUBLIC_EVENT_SLUGS).map(([slug, id]) => [id, slug]),
+);
+
+export const listTodayPublicEvents = createServerFn({ method: "GET" }).handler(async () => {
+  const ids = Object.values(PUBLIC_EVENT_SLUGS);
+  if (ids.length === 0) return { events: [] as PublicEvent[], date: new Date().toISOString().slice(0, 10) };
+
+  // "Today" in Europe/Istanbul (operating market)
+  const istanbulDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "numeric",
+  }).format(new Date());
+  const startUtc = new Date(`${istanbulDate}T00:00:00+03:00`).toISOString();
+  const endUtc = new Date(`${istanbulDate}T23:59:59+03:00`).toISOString();
+
+  const { data: rows, error } = await supabaseAdmin
+    .from("events")
+    .select("id, title, description, starts_at, ends_at, city, venue, latitude, longitude, category, tags")
+    .in("id", ids)
+    .gte("starts_at", startUtc)
+    .lte("starts_at", endUtc)
+    .order("starts_at", { ascending: true });
+
+  if (error || !rows) return { events: [] as PublicEvent[], date: istanbulDate };
+  const events = rows
+    .map((r) => ({ ...r, slug: ID_TO_SLUG[r.id] }))
+    .filter((r): r is PublicEvent => !!r.slug);
+  return { events, date: istanbulDate };
+});
