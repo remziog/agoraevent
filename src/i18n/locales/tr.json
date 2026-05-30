@@ -97,5 +97,16 @@
   },
   "footer": {
     "tagline": "Modern buluşma noktası."
+  },
+  "gettingThere": {
+    "title": "Nasıl gidilir",
+    "openInMaps": "Yol tarifini Google Maps'te aç",
+    "useMyLocation": "Konumumu kullan",
+    "landmarks": "Görülecek yerler",
+    "metro": "Metro / Tramvay",
+    "taxi": "Taksi",
+    "walking": "Yürüyerek",
+    "tipLabel": "İpucu",
+    "deniedNote": "Konum alınamadı. «Yol tarifi» düğmesini kullanın ve başlangıç noktanızı Google Maps'te girin."
   }
 }

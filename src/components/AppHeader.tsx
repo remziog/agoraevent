@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { XpChip } from "@/components/XpChip";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
 
         <div className="hidden items-center gap-3 sm:flex">
           {variant === "member" && <XpChip />}
+          <LanguageSwitcher />
           <Button size="sm" variant="ghost" onClick={signOut}>
             Sign out
           </Button>

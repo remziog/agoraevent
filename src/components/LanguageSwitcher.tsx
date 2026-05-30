@@ -12,12 +12,14 @@ const LABELS: Record<SupportedLang, string> = {
   en: "EN",
   tr: "TR",
   de: "DE",
+  ru: "RU",
 };
 
 const FULL: Record<SupportedLang, string> = {
   en: "English",
   tr: "Türkçe",
   de: "Deutsch",
+  ru: "Русский",
 };
 
 export function LanguageSwitcher({ className }: { className?: string }) {

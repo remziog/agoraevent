@@ -96,5 +96,16 @@
   },
   "footer": {
     "tagline": "Der moderne Treffpunkt."
+  },
+  "gettingThere": {
+    "title": "Anfahrt",
+    "openInMaps": "Route in Google Maps öffnen",
+    "useMyLocation": "Meinen Standort verwenden",
+    "landmarks": "Sehenswürdigkeiten",
+    "metro": "Metro / Tram",
+    "taxi": "Taxi",
+    "walking": "Zu Fuß",
+    "tipLabel": "Tipp",
+    "deniedNote": "Standort nicht verfügbar. Nutze die Schaltfläche „Route öffnen“ und gib deinen Startpunkt in Google Maps ein."
   }
 }
