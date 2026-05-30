@@ -47,6 +47,7 @@ jobs:
           python scripts/qa/collect-getting-there-evidence.py \
             --validate --all \
             --report .qa-report/evidence-validation-report.md \
+            --report-json .qa-report/evidence-validation-report.json \
             --base-ref "${{ steps.base.outputs.ref }}"
 
       - name: Upload validation report on failure

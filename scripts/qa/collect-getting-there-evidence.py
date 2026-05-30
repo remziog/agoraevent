@@ -23,6 +23,7 @@ At any prompt:
 from __future__ import annotations
 
 import argparse
+import json
 import datetime as dt
 import shutil
 import subprocess
@@ -417,6 +418,81 @@ def write_report(report_path: Path, results: list[tuple[Path, int, list[str], li
     print(f"\nReport written: {report_path}")
 
 
+def write_report_json(
+    report_path: Path,
+    results: list[tuple[Path, int, list[str], list[str]]],
+    base_ref: str | None,
+) -> None:
+    """Write a machine-readable JSON validation report.
+
+    Schema (stable, intended for CI consumers):
+      {
+        "schema_version": 1,
+        "generated_at": "<iso-8601 UTC>",
+        "base_ref": "<str|null>",
+        "summary": {
+          "sessions": <int>,
+          "passing": <int>,
+          "failing": <int>,
+          "total_errors": <int>,
+          "total_warnings": <int>,
+          "result": "PASS"|"FAIL"
+        },
+        "sessions": [
+          {
+            "path": "<repo-relative posix>",
+            "name": "<folder name>",
+            "status": "PASS"|"FAIL",
+            "exit_code": <int>,
+            "errors": [<str>, ...],
+            "warnings": [<str>, ...],
+            "diff": "<str|null>"   # present only when base_ref is set
+          }, ...
+        ]
+      }
+    """
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    sessions_out: list[dict] = []
+    total_errors = 0
+    total_warnings = 0
+    failing = 0
+    for session_dir, rc, errors, warnings in results:
+        total_errors += len(errors)
+        total_warnings += len(warnings)
+        if rc != 0:
+            failing += 1
+        entry: dict = {
+            "path": session_dir.relative_to(REPO_ROOT).as_posix(),
+            "name": session_dir.name,
+            "status": "PASS" if rc == 0 else "FAIL",
+            "exit_code": rc,
+            "errors": list(errors),
+            "warnings": list(warnings),
+        }
+        if base_ref:
+            entry["diff"] = _git_diff_for_session(session_dir, base_ref)
+        sessions_out.append(entry)
+
+    payload = {
+        "schema_version": 1,
+        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        "base_ref": base_ref,
+        "summary": {
+            "sessions": len(results),
+            "passing": len(results) - failing,
+            "failing": failing,
+            "total_errors": total_errors,
+            "total_warnings": total_warnings,
+            "result": "FAIL" if failing else "PASS",
+        },
+        "sessions": sessions_out,
+    }
+    report_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
+    print(f"JSON report written: {report_path}")
+
+
 
 
 
@@ -441,9 +517,13 @@ def main() -> int:
     parser.add_argument("--report", default=None,
                         help="With --validate, also write a Markdown validation report "
                              "covering all validated sessions to this path.")
+    parser.add_argument("--report-json", default=None,
+                        help="With --validate, also write a machine-readable JSON "
+                             "validation report (stable schema) to this path. Useful "
+                             "for CI consumers that need to parse results programmatically.")
     parser.add_argument("--base-ref", default=None,
-                        help="With --report, include `git diff` output vs this ref "
-                             "(e.g. 'origin/main') for each session.")
+                        help="With --report or --report-json, include `git diff` output "
+                             "vs this ref (e.g. 'origin/main') for each session.")
     args = parser.parse_args()
 
     # --validate and --verify-only operate on existing folders and never rotate.
@@ -455,6 +535,8 @@ def main() -> int:
                 print(f"No session folders under {EVIDENCE_ROOT.relative_to(REPO_ROOT)} — nothing to validate.")
                 if args.report and args.validate:
                     write_report(Path(args.report), [], args.base_ref)
+                if args.report_json and args.validate:
+                    write_report_json(Path(args.report_json), [], args.base_ref)
                 return 0
             sessions = sorted(p for p in EVIDENCE_ROOT.iterdir() if p.is_dir())
         else:
@@ -480,6 +562,8 @@ def main() -> int:
 
         if args.report and args.validate:
             write_report(Path(args.report), results, args.base_ref)
+        if args.report_json and args.validate:
+            write_report_json(Path(args.report_json), results, args.base_ref)
 
         return overall
 
