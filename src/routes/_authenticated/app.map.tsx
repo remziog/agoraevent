@@ -272,7 +272,10 @@ function MapView() {
                       {data.events.slice(1, 6).map((e) => (
                         <button
                           key={e.id}
-                          onClick={() => setSelected(e)}
+                          onClick={() => {
+                            setSelected(e);
+                            openIfLandmark(e);
+                          }}
                           className="block w-full rounded-xl border bg-card/60 p-3 text-left transition hover:border-primary/50"
                         >
                           <div className="flex items-baseline justify-between gap-2">
