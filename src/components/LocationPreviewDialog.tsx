@@ -620,6 +620,12 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
                       role="listbox"
                       className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border bg-popover py-1 text-xs shadow-lg"
                     >
+                      {suggestSource === "fallback" && suggestions.length > 0 && (
+                        <li className="flex items-center gap-2 border-b px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                          <WifiOff className="h-3 w-3" />
+                          {isOnline ? "Search unavailable — showing local landmarks" : "Offline — showing local landmarks"}
+                        </li>
+                      )}
                       {suggestLoading && suggestions.length === 0 && (
                         <li className="flex items-center gap-2 px-3 py-2 text-muted-foreground">
                           <Loader2 className="h-3 w-3 animate-spin" />
