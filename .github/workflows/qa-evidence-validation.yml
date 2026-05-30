@@ -22,17 +22,41 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          # Full history so the report can diff against the PR base.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Show script help
-        run: python scripts/qa/collect-getting-there-evidence.py --help
+      - name: Resolve diff base
+        id: base
+        run: |
+          if [ -n "${{ github.base_ref }}" ]; then
+            echo "ref=origin/${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=HEAD~1" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Validate all evidence sessions
-        run: python scripts/qa/collect-getting-there-evidence.py --validate --all
+        id: validate
+        run: |
+          mkdir -p .qa-report
+          python scripts/qa/collect-getting-there-evidence.py \
+            --validate --all \
+            --report .qa-report/evidence-validation-report.md \
+            --base-ref "${{ steps.base.outputs.ref }}"
+
+      - name: Upload validation report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-evidence-validation-report
+          path: .qa-report/
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Summary
         if: always()
@@ -41,10 +65,13 @@ jobs:
           if [ "${{ job.status }}" = "success" ]; then
             echo "All evidence sessions under \`docs/qa/evidence/\` passed strict validation." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "One or more evidence sessions failed validation. See the **Validate all evidence sessions** step above for the per-file error list." >> "$GITHUB_STEP_SUMMARY"
+            echo "One or more evidence sessions failed validation." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Download the **qa-evidence-validation-report** artifact (top of this run) for per-session errors and diffs against \`${{ steps.base.outputs.ref }}\`." >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "Reproduce locally:" >> "$GITHUB_STEP_SUMMARY"
             echo '```bash' >> "$GITHUB_STEP_SUMMARY"
-            echo "python scripts/qa/collect-getting-there-evidence.py --validate --all" >> "$GITHUB_STEP_SUMMARY"
+            echo "python scripts/qa/collect-getting-there-evidence.py --validate --all \\" >> "$GITHUB_STEP_SUMMARY"
+            echo "  --report report.md --base-ref ${{ steps.base.outputs.ref }}" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
