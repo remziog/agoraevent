@@ -13,6 +13,76 @@ type Coords = { lat: number; lng: number };
 type Provider = "google" | "yandex";
 const PROVIDER_KEY = "agora:preferredMapProvider";
 const MANUAL_ORIGIN_KEY = "agora:manualStartingAddress";
+// Cache of recent successful Google Places autocomplete responses, keyed by
+// the normalized query, so offline / failure cases can still show real
+// matches the user has seen before.
+const PLACES_CACHE_KEY = "agora:placesAutocompleteCache";
+const PLACES_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const PLACES_CACHE_MAX_ENTRIES = 50;
+
+type CachedSuggestion = { placeId: string; primary: string; secondary: string; text: string };
+type PlacesCacheEntry = { ts: number; suggestions: CachedSuggestion[] };
+type PlacesCache = Record<string, PlacesCacheEntry>;
+
+function normalizeQuery(q: string): string {
+  return q.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function readPlacesCache(): PlacesCache {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(PLACES_CACHE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as PlacesCache;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePlacesCache(cache: PlacesCache) {
+  try {
+    window.localStorage.setItem(PLACES_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    /* quota or unavailable — caching is best-effort */
+  }
+}
+
+function savePlacesCacheEntry(query: string, suggestions: CachedSuggestion[]) {
+  if (suggestions.length === 0) return;
+  const key = normalizeQuery(query);
+  if (!key) return;
+  const cache = readPlacesCache();
+  cache[key] = { ts: Date.now(), suggestions };
+  // Evict oldest entries if we're over the cap. Also drop anything past TTL.
+  const cutoff = Date.now() - PLACES_CACHE_TTL_MS;
+  const entries = Object.entries(cache)
+    .filter(([, v]) => v.ts >= cutoff)
+    .sort((a, b) => b[1].ts - a[1].ts)
+    .slice(0, PLACES_CACHE_MAX_ENTRIES);
+  writePlacesCache(Object.fromEntries(entries));
+}
+
+/**
+ * Look up cached suggestions for a query. Tries an exact match first, then
+ * falls back to any cached entry whose key shares a prefix with the query
+ * (in either direction) so e.g. typing "taks" can still surface the cached
+ * results for "taksim square".
+ */
+function lookupPlacesCache(query: string): CachedSuggestion[] {
+  const key = normalizeQuery(query);
+  if (!key) return [];
+  const cache = readPlacesCache();
+  const cutoff = Date.now() - PLACES_CACHE_TTL_MS;
+  const exact = cache[key];
+  if (exact && exact.ts >= cutoff) return exact.suggestions;
+  // Prefix match — prefer the longest cached key that overlaps the query.
+  const candidates = Object.entries(cache)
+    .filter(([k, v]) => v.ts >= cutoff && (k.startsWith(key) || key.startsWith(k)))
+    .sort((a, b) => b[0].length - a[0].length);
+  return candidates[0]?.[1].suggestions ?? [];
+}
+
 
 function getPreferredProvider(): Provider | null {
   if (typeof window === "undefined") return null;
@@ -173,7 +243,7 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [activeIndex, setActiveIndex] = useState(-1);
   // Tracks whether the current suggestion list came from the offline
   // fallback so we can show an inline notice ("offline — showing landmarks").
-  const [suggestSource, setSuggestSource] = useState<"places" | "fallback">("places");
+  const [suggestSource, setSuggestSource] = useState<"places" | "fallback" | "cache">("places");
   // Suppress fetching right after the user picks a suggestion (the resulting
   // setManualOrigin would otherwise trigger another round-trip).
   const skipNextFetchRef = useRef(false);
@@ -231,13 +301,14 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       setSuggestLoading(false);
       return;
     }
-    // Offline: skip the network entirely and surface the local fallback so
-    // the input still feels alive instead of going silent.
+    // Offline: try the recently-cached Places responses first, then fall
+    // back to the curated landmark list so the input still feels alive.
     if (!isOnline) {
-      const local = localFallback(q);
-      setSuggestions(local);
-      setSuggestSource("fallback");
-      setSuggestOpen(local.length > 0);
+      const cached = lookupPlacesCache(q);
+      const list = cached.length > 0 ? cached : localFallback(q);
+      setSuggestions(list);
+      setSuggestSource(list === cached ? "cache" : "fallback");
+      setSuggestOpen(list.length > 0);
       setSuggestLoading(false);
       setActiveIndex(-1);
       return;
@@ -256,26 +327,31 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
         });
         if (cancelled) return;
         if (next.length === 0) {
-          // No remote matches — offer local landmarks rather than an empty list.
-          const local = localFallback(q);
+          // No remote matches — try cache, then local landmarks.
+          const cached = lookupPlacesCache(q);
+          const local = cached.length > 0 ? cached : localFallback(q);
           setSuggestions(local);
-          setSuggestSource(local.length > 0 ? "fallback" : "places");
+          setSuggestSource(local.length === 0 ? "places" : cached.length > 0 ? "cache" : "fallback");
           setSuggestOpen(local.length > 0);
         } else {
           setSuggestions(next);
           setSuggestSource("places");
           setSuggestOpen(true);
+          // Persist the successful result so we can serve it later when
+          // offline or when Places is unavailable.
+          savePlacesCacheEntry(q, next);
         }
         setActiveIndex(-1);
       } catch (err) {
         // Ignore aborts triggered by the user continuing to type — a newer
         // request is already in flight (or about to be).
         if (cancelled || (err as { name?: string } | null)?.name === "AbortError") return;
-        // Real failure (network, gateway, quota): fall back to local matches
-        // so the user still gets something useful instead of an empty list.
-        const local = localFallback(q);
+        // Real failure (network, gateway, quota): prefer cached Places
+        // results for this query (or a prefix of it), then landmarks.
+        const cached = lookupPlacesCache(q);
+        const local = cached.length > 0 ? cached : localFallback(q);
         setSuggestions(local);
-        setSuggestSource("fallback");
+        setSuggestSource(local.length === 0 ? "fallback" : cached.length > 0 ? "cache" : "fallback");
         setSuggestOpen(local.length > 0);
         setActiveIndex(-1);
       } finally {
@@ -620,10 +696,16 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
                       role="listbox"
                       className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border bg-popover py-1 text-xs shadow-lg"
                     >
-                      {suggestSource === "fallback" && suggestions.length > 0 && (
+                      {suggestSource !== "places" && suggestions.length > 0 && (
                         <li className="flex items-center gap-2 border-b px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
                           <WifiOff className="h-3 w-3" />
-                          {isOnline ? "Search unavailable — showing local landmarks" : "Offline — showing local landmarks"}
+                          {suggestSource === "cache"
+                            ? isOnline
+                              ? "Search unavailable — showing recent matches"
+                              : "Offline — showing recent matches"
+                            : isOnline
+                              ? "Search unavailable — showing local landmarks"
+                              : "Offline — showing local landmarks"}
                         </li>
                       )}
                       {suggestLoading && suggestions.length === 0 && (
