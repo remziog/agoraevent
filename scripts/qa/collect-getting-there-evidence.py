@@ -535,6 +535,8 @@ def main() -> int:
                 print(f"No session folders under {EVIDENCE_ROOT.relative_to(REPO_ROOT)} — nothing to validate.")
                 if args.report and args.validate:
                     write_report(Path(args.report), [], args.base_ref)
+                if args.report_json and args.validate:
+                    write_report_json(Path(args.report_json), [], args.base_ref)
                 return 0
             sessions = sorted(p for p in EVIDENCE_ROOT.iterdir() if p.is_dir())
         else:
