@@ -191,7 +191,10 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     };
   }, []);
 
-  // Debounced autocomplete fetch as the user types in the manual address box.
+  // Debounced autocomplete fetch — only fires after the user pauses typing
+  // for DEBOUNCE_MS, so each keystroke cancels the pending request instead
+  // of hitting Google Places on every character.
+  const DEBOUNCE_MS = 400;
   useEffect(() => {
     if (!showManual) return;
     if (skipNextFetchRef.current) {
@@ -199,12 +202,16 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       return;
     }
     const q = manualOrigin.trim();
-    if (q.length < 2) {
+    if (q.length < 3) {
       setSuggestions([]);
       setSuggestOpen(false);
+      setSuggestLoading(false);
       return;
     }
     if (!isOnline) return;
+
+    // Show the "waiting to search" state immediately, but DON'T call the API
+    // until the debounce timer fires uninterrupted.
     let cancelled = false;
     setSuggestLoading(true);
     const handle = window.setTimeout(async () => {
@@ -224,8 +231,10 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
       } finally {
         if (!cancelled) setSuggestLoading(false);
       }
-    }, 220);
+    }, DEBOUNCE_MS);
     return () => {
+      // Cleanup runs on every keystroke before the timer fires, so the
+      // pending fetch is aborted before it ever hits the network.
       cancelled = true;
       window.clearTimeout(handle);
     };
