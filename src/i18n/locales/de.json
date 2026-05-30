@@ -99,13 +99,20 @@
   },
   "gettingThere": {
     "title": "Anfahrt",
-    "openInMaps": "Route in Google Maps öffnen",
+    "openIn": "Öffnen in",
+    "googleMaps": "Google Maps",
+    "yandexMaps": "Yandex Maps",
+    "openInGoogle": "Route in Google Maps öffnen",
+    "openInYandex": "Route in Yandex Maps öffnen",
+    "openInMaps": "Route öffnen",
     "useMyLocation": "Meinen Standort verwenden",
     "landmarks": "Sehenswürdigkeiten",
     "metro": "Metro / Tram",
     "taxi": "Taxi",
     "walking": "Zu Fuß",
     "tipLabel": "Tipp",
-    "deniedNote": "Standort nicht verfügbar. Nutze die Schaltfläche „Route öffnen“ und gib deinen Startpunkt in Google Maps ein."
+    "deniedNote": "Standort nicht verfügbar. Nutze die Schaltfläche „Route öffnen“ und gib deinen Startpunkt in Google Maps ein.",
+    "offlineTitle": "Offline-Wegbeschreibung",
+    "offlineHint": "Live-Routing braucht Internet — lade vorab im WLAN Offline-Karten von Google oder Yandex herunter."
   }
 }
