@@ -374,13 +374,22 @@ def main() -> int:
                              "Exit code 1 on any error. Use this as the merge gate.")
     args = parser.parse_args()
 
+    # --validate and --verify-only operate on an existing folder and never rotate.
+    if args.validate or args.verify_only:
+        session_dir = EVIDENCE_ROOT / f"{args.date}-{args.sha}"
+        if not session_dir.is_dir():
+            print(f"error: session folder does not exist: {session_dir.relative_to(REPO_ROOT)}")
+            return 2
+        print(f"Session folder: {session_dir.relative_to(REPO_ROOT)}")
+        if args.validate:
+            return validate_session(session_dir)
+        missing, _ = verify_session(session_dir)
+        return 1 if missing else 0
+
     session_dir = ensure_session_dir(args.date, args.sha)
     write_readme(session_dir, args.tester, args.sha, args.event)
     print(f"Session folder: {session_dir.relative_to(REPO_ROOT)}")
 
-    if args.validate:
-        return validate_session(session_dir)
-    if args.verify_only:
         missing, _ = verify_session(session_dir)
         return 1 if missing else 0
 
