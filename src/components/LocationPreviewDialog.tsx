@@ -418,18 +418,36 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
             </div>
             {showManual && (
               <div className="space-y-1.5">
-                <Input
-                  type="text"
-                  inputMode="text"
-                  autoComplete="street-address"
-                  placeholder="Starting address, e.g. Taksim Square, Istanbul"
-                  value={manualOrigin}
-                  onChange={(e) => setManualOrigin(e.target.value)}
-                  className="h-8 text-xs"
-                />
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    type="text"
+                    inputMode="text"
+                    autoComplete="street-address"
+                    placeholder="Starting address, e.g. Taksim Square, Istanbul"
+                    value={manualOrigin}
+                    onChange={(e) => setManualOrigin(e.target.value)}
+                    onBlur={() => rememberManualOrigin(manualOrigin)}
+                    className="h-8 text-xs"
+                  />
+                  {manualOrigin.trim() && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2 text-[11px]"
+                      onClick={() => {
+                        setManualOrigin("");
+                        rememberManualOrigin("");
+                      }}
+                    >
+                      Forget
+                    </Button>
+                  )}
+                </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Used as the origin when location services aren't available. Yandex
-                  Maps will open a search prefilled with the route — confirm it inside the app.
+                  Saved on this device for next time. Used as the origin when location
+                  services aren't available — Yandex Maps will open a search prefilled
+                  with the route.
                 </p>
               </div>
             )}
