@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-30T08:51:05+00:00",
+  "base_ref": null,
+  "summary": {"sessions":1,"passing":0,"failing":1,"total_errors":1,"total_warnings":0,"result":"FAIL"},
+  "sessions": [
+    {"path":"docs/qa/evidence/2026-05-30-a1b2c3d","name":"2026-05-30-a1b2c3d","status":"FAIL","exit_code":1,"errors":["\u200b\u202f\u000b\u2060\u205f\u000c\ufeff\u00a0\u0085"],"warnings":[]}
+  ]
+}
