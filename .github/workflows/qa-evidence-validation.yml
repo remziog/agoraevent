@@ -4,13 +4,17 @@ on:
   pull_request:
     paths:
       - 'docs/qa/evidence/**'
+      - 'docs/qa/getting-there-evidence-report.schema.json'
       - 'scripts/qa/collect-getting-there-evidence.py'
+      - 'scripts/qa/tests/**'
       - '.github/workflows/qa-evidence-validation.yml'
   push:
     branches: [main]
     paths:
       - 'docs/qa/evidence/**'
+      - 'docs/qa/getting-there-evidence-report.schema.json'
       - 'scripts/qa/collect-getting-there-evidence.py'
+      - 'scripts/qa/tests/**'
   workflow_dispatch:
 
 jobs:
@@ -31,6 +35,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install JSON Schema validator
+        run: pip install --quiet "check-jsonschema>=0.29"
+
+      - name: Run schema fixture regression tests
+        run: python scripts/qa/tests/run_schema_fixtures.py
+
       - name: Resolve diff base
         id: base
         run: |
@@ -50,9 +60,6 @@ jobs:
             --report-json .qa-report/evidence-validation-report.json \
             --base-ref "${{ steps.base.outputs.ref }}"
 
-      - name: Install JSON Schema validator
-        if: always() && hashFiles('.qa-report/evidence-validation-report.json') != ''
-        run: pip install --quiet "check-jsonschema>=0.29"
 
       - name: Validate report against JSON Schema
         if: always() && hashFiles('.qa-report/evidence-validation-report.json') != ''

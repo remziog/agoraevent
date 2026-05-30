@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-30T09:14:22+00:00",
+  "base_ref": "origin/main",
+  "summary": {
+    "sessions": 3,
+    "passing": 2,
+    "failing": 1,
+    "total_errors": 2,
+    "total_warnings": 1,
+    "result": "FAIL"
+  },
+  "sessions": [
+    {
+      "path": "docs/qa/evidence/2026-05-29-9f8e7d6",
+      "name": "2026-05-29-9f8e7d6",
+      "status": "PASS",
+      "exit_code": 0,
+      "errors": [],
+      "warnings": ["physical-android/granted: notes.md is empty"],
+      "diff": "$ git diff --stat origin/main -- docs/qa/evidence/2026-05-29-9f8e7d6\n ..."
+    },
+    {
+      "path": "docs/qa/evidence/2026-05-30-a1b2c3d-r2",
+      "name": "2026-05-30-a1b2c3d-r2",
+      "status": "PASS",
+      "exit_code": 0,
+      "errors": [],
+      "warnings": [],
+      "diff": null
+    },
+    {
+      "path": "docs/qa/evidence/2026-05-30-deadbee",
+      "name": "2026-05-30-deadbee",
+      "status": "FAIL",
+      "exit_code": 1,
+      "errors": ["ios-safari/granted: missing 10-permission-prompt.png", "ios-safari/granted: 20-map-opened.png bad magic bytes"],
+      "warnings": [],
+      "diff": "$ git diff --stat origin/main -- ...\n"
+    }
+  ]
+}
