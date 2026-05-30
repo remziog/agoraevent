@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-30T08:51:05+00:00",
+  "base_ref": null,
+  "summary": {"sessions":1,"passing":0,"failing":1,"total_errors":4,"total_warnings":0,"result":"FAIL"},
+  "sessions": [
+    {
+      "path": "docs/qa/evidence/2026-05-30-deadbee",
+      "name": "2026-05-30-deadbee",
+      "status": "FAIL",
+      "exit_code": 1,
+      "errors": [
+        " leading space before message",
+        "trailing space after message ",
+        "\n leading newline before message",
+        "multi-line message\n  with indented continuation"
+      ],
+      "warnings": []
+    }
+  ]
+}
