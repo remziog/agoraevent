@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
+import { LandmarkDetailsDrawer } from "@/components/LandmarkDetailsDrawer";
+import { ISTANBUL_LANDMARKS, type Landmark } from "@/lib/istanbul-landmarks";
 
 function mapsHref(e: {
   latitude?: number | null;
@@ -53,6 +55,20 @@ function MapView() {
   } | null>(null);
   const [selected, setSelected] = useState<EventRow | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [landmarkOpen, setLandmarkOpen] = useState(false);
+  const [activeLandmark, setActiveLandmark] = useState<Landmark | null>(null);
+  const landmarkById = useMemo(
+    () => new Map(ISTANBUL_LANDMARKS.map((l) => [l.id, l])),
+    [],
+  );
+
+  function openIfLandmark(e: EventRow) {
+    const lm = landmarkById.get(e.id);
+    if (lm) {
+      setActiveLandmark(lm);
+      setLandmarkOpen(true);
+    }
+  }
 
   useEffect(() => {
     const raw = sessionStorage.getItem("agora:lastSearch");
@@ -125,9 +141,12 @@ function MapView() {
         label: idx === 0 ? { text: "★", color: "#fff", fontSize: "16px" } : undefined,
         animation: idx === 0 ? window.google.maps.Animation.DROP : undefined,
       });
-      marker.addListener("click", () => setSelected(e));
+      marker.addListener("click", () => {
+        setSelected(e);
+        openIfLandmark(e);
+      });
     });
-  }, [mapReady, data]);
+  }, [mapReady, data, landmarkById]);
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -226,11 +245,21 @@ function MapView() {
                             </Button>
                           }
                         />
-                        <Button asChild size="sm" variant="outline">
-                          <Link to="/app/event/$id" params={{ id: selected.id }}>
-                            Event details
-                          </Link>
-                        </Button>
+                        {landmarkById.has(selected.id) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openIfLandmark(selected)}
+                          >
+                            View details
+                          </Button>
+                        ) : (
+                          <Button asChild size="sm" variant="outline">
+                            <Link to="/app/event/$id" params={{ id: selected.id }}>
+                              Event details
+                            </Link>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -243,7 +272,10 @@ function MapView() {
                       {data.events.slice(1, 6).map((e) => (
                         <button
                           key={e.id}
-                          onClick={() => setSelected(e)}
+                          onClick={() => {
+                            setSelected(e);
+                            openIfLandmark(e);
+                          }}
                           className="block w-full rounded-xl border bg-card/60 p-3 text-left transition hover:border-primary/50"
                         >
                           <div className="flex items-baseline justify-between gap-2">
@@ -267,6 +299,12 @@ function MapView() {
             </>
           )}
         </div>
+
+        <LandmarkDetailsDrawer
+          landmark={activeLandmark}
+          open={landmarkOpen}
+          onOpenChange={setLandmarkOpen}
+        />
       </div>
     </div>
   );
