@@ -99,13 +99,20 @@
   },
   "gettingThere": {
     "title": "Getting there",
-    "openInMaps": "Open directions in Google Maps",
+    "openIn": "Open in",
+    "googleMaps": "Google Maps",
+    "yandexMaps": "Yandex Maps",
+    "openInGoogle": "Open directions in Google Maps",
+    "openInYandex": "Open directions in Yandex Maps",
+    "openInMaps": "Open directions",
     "useMyLocation": "Use my location",
     "landmarks": "Landmarks",
     "metro": "Metro / Tram",
     "taxi": "Taxi",
     "walking": "Walking",
     "tipLabel": "Tip",
-    "deniedNote": "Location unavailable. Use the “Open directions” button and enter your start point in Google Maps."
+    "deniedNote": "Location unavailable. Use the “Open directions” button and enter your start point in the map.",
+    "offlineTitle": "Offline directions",
+    "offlineHint": "Live routing needs internet — download Google or Yandex offline maps on wifi before you go."
   }
 }
