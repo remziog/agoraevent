@@ -135,6 +135,23 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState<Coords | null>(null);
   const [geoState, setGeoState] = useState<"idle" | "locating" | "denied" | "unavailable" | "ready">("idle");
+  const [manualOrigin, setManualOrigin] = useState("");
+  const [showManual, setShowManual] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
   const autoLaunchedRef = useRef(false);
   const embedLoadedRef = useRef(false);
   const label = [place.venue, place.city].filter(Boolean).join(" · ") || place.title;
