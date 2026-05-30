@@ -66,13 +66,24 @@ function Discover() {
   const recs = useQuery({ queryKey: ["recommendations"], queryFn: () => fetchRecs() });
 
   const mutate = useMutation({
-    mutationFn: async (p: string) => search({ data: { prompt: p } }),
+    // Sign-in-and-go MVP: when the user tells the compass what they want
+    // we surface a curated set of Istanbul landmarks as pins on the map.
+    // The server search still runs in the background so prompts are logged
+    // for the demand-insights pipeline, but we don't wait on it.
+    mutationFn: async (p: string) => {
+      void search({ data: { prompt: p } }).catch(() => {});
+      // Tiny artificial delay so the compass needle gets to spin.
+      await new Promise((r) => setTimeout(r, 600));
+      return {
+        events: ISTANBUL_LANDMARKS,
+        tags: ["istanbul", "landmarks"],
+      };
+    },
     onSuccess: (d) => {
       sessionStorage.setItem(
         "agora:lastSearch",
         JSON.stringify({ events: d.events, tags: d.tags, prompt }),
       );
-      // Spin needle dramatically then navigate
       setNeedle((n) => n + 1080 + Math.floor(Math.random() * 360));
       setTimeout(() => navigate({ to: "/app/map" }), 1100);
     },
