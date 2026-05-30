@@ -13,6 +13,76 @@ type Coords = { lat: number; lng: number };
 type Provider = "google" | "yandex";
 const PROVIDER_KEY = "agora:preferredMapProvider";
 const MANUAL_ORIGIN_KEY = "agora:manualStartingAddress";
+// Cache of recent successful Google Places autocomplete responses, keyed by
+// the normalized query, so offline / failure cases can still show real
+// matches the user has seen before.
+const PLACES_CACHE_KEY = "agora:placesAutocompleteCache";
+const PLACES_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const PLACES_CACHE_MAX_ENTRIES = 50;
+
+type CachedSuggestion = { placeId: string; primary: string; secondary: string; text: string };
+type PlacesCacheEntry = { ts: number; suggestions: CachedSuggestion[] };
+type PlacesCache = Record<string, PlacesCacheEntry>;
+
+function normalizeQuery(q: string): string {
+  return q.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function readPlacesCache(): PlacesCache {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(PLACES_CACHE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as PlacesCache;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePlacesCache(cache: PlacesCache) {
+  try {
+    window.localStorage.setItem(PLACES_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    /* quota or unavailable — caching is best-effort */
+  }
+}
+
+function savePlacesCacheEntry(query: string, suggestions: CachedSuggestion[]) {
+  if (suggestions.length === 0) return;
+  const key = normalizeQuery(query);
+  if (!key) return;
+  const cache = readPlacesCache();
+  cache[key] = { ts: Date.now(), suggestions };
+  // Evict oldest entries if we're over the cap. Also drop anything past TTL.
+  const cutoff = Date.now() - PLACES_CACHE_TTL_MS;
+  const entries = Object.entries(cache)
+    .filter(([, v]) => v.ts >= cutoff)
+    .sort((a, b) => b[1].ts - a[1].ts)
+    .slice(0, PLACES_CACHE_MAX_ENTRIES);
+  writePlacesCache(Object.fromEntries(entries));
+}
+
+/**
+ * Look up cached suggestions for a query. Tries an exact match first, then
+ * falls back to any cached entry whose key shares a prefix with the query
+ * (in either direction) so e.g. typing "taks" can still surface the cached
+ * results for "taksim square".
+ */
+function lookupPlacesCache(query: string): CachedSuggestion[] {
+  const key = normalizeQuery(query);
+  if (!key) return [];
+  const cache = readPlacesCache();
+  const cutoff = Date.now() - PLACES_CACHE_TTL_MS;
+  const exact = cache[key];
+  if (exact && exact.ts >= cutoff) return exact.suggestions;
+  // Prefix match — prefer the longest cached key that overlaps the query.
+  const candidates = Object.entries(cache)
+    .filter(([k, v]) => v.ts >= cutoff && (k.startsWith(key) || key.startsWith(k)))
+    .sort((a, b) => b[0].length - a[0].length);
+  return candidates[0]?.[1].suggestions ?? [];
+}
+
 
 function getPreferredProvider(): Provider | null {
   if (typeof window === "undefined") return null;
