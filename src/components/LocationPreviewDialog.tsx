@@ -155,8 +155,8 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState<Coords | null>(null);
   const [geoState, setGeoState] = useState<"idle" | "locating" | "denied" | "unavailable" | "ready">("idle");
-  const [manualOrigin, setManualOrigin] = useState("");
-  const [showManual, setShowManual] = useState(false);
+  const [manualOrigin, setManualOrigin] = useState<string>(() => getRememberedManualOrigin());
+  const [showManual, setShowManual] = useState<boolean>(() => getRememberedManualOrigin().length > 0);
   const [isOnline, setIsOnline] = useState(
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
