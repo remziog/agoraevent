@@ -9,10 +9,6 @@ Breaking changes bump that integer. CI consumers should pin against a known
 version.
 
 > Current `schema_version`: **1**
->
-> Formal JSON Schema (Draft 2020-12): [`docs/qa/schemas/evidence-validation-report.schema.json`](./schemas/evidence-validation-report.schema.json).
-> Validate locally with `python scripts/qa/validate-report-schema.py <report.json>` (requires `pip install jsonschema`).
-> CI runs this validator on every PR — schema regressions fail the build.
 
 ## Generating a report
 

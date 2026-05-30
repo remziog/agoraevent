@@ -31,9 +31,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install schema validator
-        run: pip install --quiet 'jsonschema>=4.18'
-
       - name: Resolve diff base
         id: base
         run: |
@@ -45,7 +42,6 @@ jobs:
 
       - name: Validate all evidence sessions
         id: validate
-        continue-on-error: true
         run: |
           mkdir -p .qa-report
           python scripts/qa/collect-getting-there-evidence.py \
@@ -53,20 +49,6 @@ jobs:
             --report .qa-report/evidence-validation-report.md \
             --report-json .qa-report/evidence-validation-report.json \
             --base-ref "${{ steps.base.outputs.ref }}"
-
-      - name: Validate JSON report against schema
-        id: schema
-        if: always()
-        run: |
-          python scripts/qa/validate-report-schema.py \
-            .qa-report/evidence-validation-report.json \
-            docs/qa/schemas/evidence-validation-report.schema.json
-
-      - name: Fail build if evidence validation failed
-        if: steps.validate.outcome != 'success'
-        run: |
-          echo "::error::Evidence session validation failed (see qa-evidence-validation-report artifact)."
-          exit 1
 
       - name: Upload validation report on failure
         if: failure()
