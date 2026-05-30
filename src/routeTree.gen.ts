@@ -18,6 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConcertSlugRouteImport } from './routes/concert.$slug'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedBizIndexRouteImport } from './routes/_authenticated/biz.index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -75,6 +76,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConcertSlugRoute = ConcertSlugRouteImport.update({
+  id: '/concert/$slug',
+  path: '/concert/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/map': typeof AuthenticatedAppMapRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/map': typeof AuthenticatedAppMapRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/concert/$slug': typeof ConcertSlugRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/map': typeof AuthenticatedAppMapRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/onboarding'
+    | '/concert/$slug'
     | '/app/calendar'
     | '/app/integrations'
     | '/app/map'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/onboarding'
+    | '/concert/$slug'
     | '/app/calendar'
     | '/app/integrations'
     | '/app/map'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/onboarding'
+    | '/concert/$slug'
     | '/_authenticated/app/calendar'
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/map'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  ConcertSlugRoute: typeof ConcertSlugRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/concert/$slug': {
+      id: '/concert/$slug'
+      path: '/concert/$slug'
+      fullPath: '/concert/$slug'
+      preLoaderRoute: typeof ConcertSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/onboarding': {
@@ -529,6 +549,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  ConcertSlugRoute: ConcertSlugRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
