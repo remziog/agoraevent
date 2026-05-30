@@ -372,10 +372,33 @@ def main() -> int:
                         help="Skip prompts; run STRICT validation: presence, slug, "
                              "extension, content magic-bytes, no stray files. "
                              "Exit code 1 on any error. Use this as the merge gate.")
+    parser.add_argument("--all", action="store_true",
+                        help="With --validate or --verify-only, validate every session "
+                             "folder under docs/qa/evidence/ instead of a single one.")
     args = parser.parse_args()
 
-    # --validate and --verify-only operate on an existing folder and never rotate.
+    # --validate and --verify-only operate on existing folders and never rotate.
     if args.validate or args.verify_only:
+        if args.all:
+            if not EVIDENCE_ROOT.is_dir():
+                print(f"No evidence root at {EVIDENCE_ROOT.relative_to(REPO_ROOT)} — nothing to validate.")
+                return 0
+            sessions = sorted(p for p in EVIDENCE_ROOT.iterdir() if p.is_dir())
+            if not sessions:
+                print(f"No session folders under {EVIDENCE_ROOT.relative_to(REPO_ROOT)} — nothing to validate.")
+                return 0
+            overall = 0
+            for s in sessions:
+                print(f"\n############ {s.relative_to(REPO_ROOT)} ############")
+                if args.validate:
+                    rc = validate_session(s)
+                else:
+                    missing, _ = verify_session(s)
+                    rc = 1 if missing else 0
+                overall = overall or rc
+            print(f"\n{'PASS' if overall == 0 else 'FAIL'}: validated {len(sessions)} session(s).")
+            return overall
+
         session_dir = EVIDENCE_ROOT / f"{args.date}-{args.sha}"
         if not session_dir.is_dir():
             print(f"error: session folder does not exist: {session_dir.relative_to(REPO_ROOT)}")
