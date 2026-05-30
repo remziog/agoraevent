@@ -113,15 +113,13 @@ function EventDetail() {
         {event && (() => {
           const tipTag = (event.tags ?? []).find((t: string) => t.startsWith("tip:"));
           const label = [event.venue, event.city].filter(Boolean).join(", ") || event.title;
-          // GettingThere now needs lat/lng. Events without coords don't get
-          // the directions block — falling back to a text-search URL would
-          // defeat Yandex's coord-based routing and lose static-map support.
           if (event.latitude == null || event.longitude == null) return null;
           return (
             <GettingThere
               destination={{ lat: event.latitude, lng: event.longitude }}
               destinationLabel={label}
               tip={tipTag ? tipTag.slice("tip:".length) : undefined}
+              offlineSummary={getOfflineSummary(event.id, i18n.language) ?? undefined}
             />
           );
         })()}
