@@ -26,7 +26,9 @@ type Suggestion = {
  * still returns global matches when nothing local fits.
  */
 export const autocompletePlaces = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
+
   .handler(async ({ data }): Promise<{ suggestions: Suggestion[] }> => {
     const lovableKey = process.env.LOVABLE_API_KEY;
     const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
