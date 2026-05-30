@@ -16,10 +16,10 @@ export const Route = createFileRoute("/signup")({
       { name: "description", content: "Create your Agora account and start finding nearby events that match your taste in music, sport, and film." },
       { property: "og:title", content: "Join Agora — Find your people" },
       { property: "og:description", content: "Create your account and start finding nearby events that match your taste." },
-      { property: "og:url", content: "/signup" },
+      { property: "og:url", content: "https://ago-ra.life/signup" },
       { name: "robots", content: "index, follow" },
     ],
-    links: [{ rel: "canonical", href: "/signup" }],
+    links: [{ rel: "canonical", href: "https://ago-ra.life/signup" }],
   }),
   component: SignupPage,
 });
