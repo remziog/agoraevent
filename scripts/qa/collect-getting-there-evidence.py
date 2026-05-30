@@ -367,18 +367,43 @@ def main() -> int:
                         help="Comma-separated targets: platform or platform:flow "
                              "(e.g. 'ios-safari', 'android-emulator:denied')")
     parser.add_argument("--verify-only", action="store_true",
-                        help="Skip prompts; just verify an existing session folder")
+                        help="Skip prompts; just verify required files are present")
+    parser.add_argument("--validate", action="store_true",
+                        help="Skip prompts; run STRICT validation: presence, slug, "
+                             "extension, content magic-bytes, no stray files. "
+                             "Exit code 1 on any error. Use this as the merge gate.")
     args = parser.parse_args()
 
     session_dir = ensure_session_dir(args.date, args.sha)
     write_readme(session_dir, args.tester, args.sha, args.event)
     print(f"Session folder: {session_dir.relative_to(REPO_ROOT)}")
 
+    if args.validate:
+        return validate_session(session_dir)
     if args.verify_only:
         missing, _ = verify_session(session_dir)
         return 1 if missing else 0
 
     targets = parse_only(args.only)
+    print(f"Collecting for: {', '.join(f'{p}/{f}' for p, f in targets)}\n")
+
+    quit_early = False
+    for platform, flow in targets:
+        if quit_early:
+            break
+        print(f"\n--- {platform} / {flow} ---")
+        for art in FLOW_ARTIFACTS[flow]:
+            dest = session_dir / platform / flow / art.filename
+            result = prompt_file(dest, art, platform, flow)
+            if result == "quit":
+                quit_early = True
+                break
+
+    # After interactive collection, run strict validation as the final word.
+    code = validate_session(session_dir)
+    print(f"\nNext: fill in {session_dir.relative_to(REPO_ROOT)}/README.md")
+    return code
+
     print(f"Collecting for: {', '.join(f'{p}/{f}' for p, f in targets)}\n")
 
     quit_early = False
