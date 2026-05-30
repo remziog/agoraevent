@@ -494,16 +494,48 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
             </div>
             {showManual && (
               <div className="space-y-1.5">
-                <div className="flex items-center gap-1.5">
+                <div className="relative flex items-center gap-1.5">
                   <Input
                     type="text"
                     inputMode="text"
-                    autoComplete="street-address"
+                    autoComplete="off"
                     placeholder="Starting address, e.g. Taksim Square, Istanbul"
                     value={manualOrigin}
-                    onChange={(e) => setManualOrigin(e.target.value)}
-                    onBlur={() => rememberManualOrigin(manualOrigin)}
+                    onChange={(e) => {
+                      setManualOrigin(e.target.value);
+                      setSuggestOpen(true);
+                    }}
+                    onFocus={() => {
+                      if (suggestions.length > 0) setSuggestOpen(true);
+                    }}
+                    onBlur={() => {
+                      // Delay so a click on a suggestion can register first.
+                      window.setTimeout(() => setSuggestOpen(false), 150);
+                      rememberManualOrigin(manualOrigin);
+                    }}
+                    onKeyDown={(e) => {
+                      if (!suggestOpen || suggestions.length === 0) return;
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setActiveIndex((i) => (i + 1) % suggestions.length);
+                      } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+                      } else if (e.key === "Enter" && activeIndex >= 0) {
+                        e.preventDefault();
+                        pickSuggestion(suggestions[activeIndex]);
+                      } else if (e.key === "Escape") {
+                        setSuggestOpen(false);
+                      }
+                    }}
                     className="h-8 text-xs"
+                    role="combobox"
+                    aria-expanded={suggestOpen}
+                    aria-autocomplete="list"
+                    aria-controls="manual-origin-suggestions"
+                    aria-activedescendant={
+                      activeIndex >= 0 ? `manual-origin-suggestion-${activeIndex}` : undefined
+                    }
                   />
                   {manualOrigin.trim() && (
                     <Button
@@ -514,16 +546,57 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
                       onClick={() => {
                         setManualOrigin("");
                         rememberManualOrigin("");
+                        setSuggestions([]);
+                        setSuggestOpen(false);
                       }}
                     >
                       Forget
                     </Button>
                   )}
+                  {suggestOpen && (suggestions.length > 0 || suggestLoading) && (
+                    <ul
+                      id="manual-origin-suggestions"
+                      role="listbox"
+                      className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border bg-popover py-1 text-xs shadow-lg"
+                    >
+                      {suggestLoading && suggestions.length === 0 && (
+                        <li className="flex items-center gap-2 px-3 py-2 text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Searching addresses…
+                        </li>
+                      )}
+                      {suggestions.map((s, i) => (
+                        <li
+                          key={s.placeId}
+                          id={`manual-origin-suggestion-${i}`}
+                          role="option"
+                          aria-selected={i === activeIndex}
+                          className={`flex cursor-pointer items-start gap-2 px-3 py-1.5 ${
+                            i === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-accent/60"
+                          }`}
+                          onMouseDown={(e) => {
+                            // Prevent the input's onBlur from firing before the click.
+                            e.preventDefault();
+                            pickSuggestion(s);
+                          }}
+                          onMouseEnter={() => setActiveIndex(i)}
+                        >
+                          <Search className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium">{s.primary}</p>
+                            {s.secondary && (
+                              <p className="truncate text-[10px] text-muted-foreground">{s.secondary}</p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Saved on this device for next time. Used as the origin when location
-                  services aren't available — Yandex Maps will open a search prefilled
-                  with the route.
+                  Saved on this device for next time. Suggestions are biased toward Istanbul.
+                  Used as the origin when location services aren't available — Yandex Maps will
+                  open a search prefilled with the route.
                 </p>
               </div>
             )}
