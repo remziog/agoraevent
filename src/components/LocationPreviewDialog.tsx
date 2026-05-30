@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Navigation, MapPin, Clock, Copy, Check, ExternalLink, LocateFixed, Loader2 } from "lucide-react";
+import { Navigation, MapPin, Clock, Copy, Check, ExternalLink, LocateFixed, Loader2, WifiOff, Pencil } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 type Coords = { lat: number; lng: number };
