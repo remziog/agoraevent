@@ -5,8 +5,9 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import en from "./locales/en.json";
 import tr from "./locales/tr.json";
 import de from "./locales/de.json";
+import ru from "./locales/ru.json";
 
-export const SUPPORTED_LANGS = ["en", "tr", "de"] as const;
+export const SUPPORTED_LANGS = ["en", "tr", "de", "ru"] as const;
 export type SupportedLang = (typeof SUPPORTED_LANGS)[number];
 export const STORAGE_KEY = "agora:lang";
 
@@ -19,6 +20,7 @@ if (!i18n.isInitialized) {
         en: { translation: en },
         tr: { translation: tr },
         de: { translation: de },
+        ru: { translation: ru },
       },
       fallbackLng: "en",
       supportedLngs: SUPPORTED_LANGS as unknown as string[],
