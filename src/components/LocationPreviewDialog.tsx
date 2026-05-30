@@ -197,10 +197,15 @@ export function LocationPreviewDialog({ place, trigger }: { place: Place; trigge
     const pref = getPreferredProvider();
     if (!pref) return;
     if (geoState === "idle" || geoState === "locating") return;
+    // Don't launch a map provider while offline — the deep link would just
+    // load an error page. We keep the dialog open and let the offline banner
+    // explain what to do. As soon as the connection returns the user can tap
+    // the button again.
+    if (!isOnline) return;
     autoLaunchedRef.current = true;
     setOpen(false);
     openTop(pref === "google" ? gHref : yHref);
-  }, [open, gHref, yHref, geoState]);
+  }, [open, gHref, yHref, geoState, isOnline]);
 
   // Detect when the embedded map fails to load (CSP/X-Frame-Options, blocked
   // by an extension, or offline). If onLoad doesn't fire within ~4s, fall
