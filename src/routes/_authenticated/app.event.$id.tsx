@@ -107,6 +107,18 @@ function EventDetail() {
             </div>
           </article>
         )}
+        {event && (() => {
+          const mapsTag = (event.tags ?? []).find((t: string) => t.startsWith("mapsurl:"));
+          const tipTag = (event.tags ?? []).find((t: string) => t.startsWith("tip:"));
+          const destination = [event.venue, event.city].filter(Boolean).join(", ") || event.title;
+          return (
+            <GettingThere
+              destinationQuery={destination}
+              destinationUrl={mapsTag ? mapsTag.slice("mapsurl:".length) : undefined}
+              tip={tipTag ? tipTag.slice("tip:".length) : undefined}
+            />
+          );
+        })()}
         {event && (
           <script
             type="application/ld+json"
