@@ -126,6 +126,137 @@ Then reopen the event detail page so Chrome re-prompts on the next tap.
 
 ---
 
+## Physical Android device reset (use this when recording on real hardware)
+
+Mirrors the Emulator reset, but accounts for real-device constraints: USB debugging must be enabled, `pm clear` doesn't work on system-protected app slots without uninstall, and there is no `geo fix` — real GPS or a mock-location app is the only way to seed coordinates.
+
+### One-time setup
+
+1. On the phone: Settings → About phone → tap **Build number** 7 times to enable Developer options.
+2. Settings → System → Developer options → enable **USB debugging**.
+3. Plug the device into the host with a data-capable USB cable. On the device, tap **Allow USB debugging** for this host's RSA key (check "Always allow").
+4. On the host: `adb devices` must list the phone as `device` (not `unauthorized`). If unauthorized, revoke and re-pair: Developer options → **Revoke USB debugging authorizations** → unplug/replug.
+5. Install **Google Chrome** and **Google Maps** from the Play Store (skip Maps only if you'll verify against `maps.google.com`).
+6. Sign into the preview once in Chrome and add the event detail URL to the Home Screen.
+
+### Full reset before recording (≈15s)
+
+```bash
+# 1. Confirm the right device (use -s <serial> if multiple are attached).
+adb devices
+
+# 2. Reset Chrome's per-site permission + clear site data + cache (nuclear).
+adb shell pm clear com.android.chrome
+# This signs you OUT of Chrome sync on this device. See GUI alternative below
+# if you need to stay signed in.
+
+# 3. Confirm system Location Services is ON (High accuracy).
+adb shell settings put secure location_mode 3
+
+# 4. Force-stop Chrome so the next launch is clean.
+adb shell am force-stop com.android.chrome
+
+# 5. (Optional) Force-stop Google Maps so the "Open with" sheet appears fresh.
+adb shell am force-stop com.google.android.apps.maps
+```
+
+GUI-only alternative (keeps Chrome signed in):
+
+- Chrome → ⋮ → **Settings → Site settings → Location** → tap preview host → **Reset permissions**.
+- Chrome → ⋮ → **Settings → Privacy and security → Clear browsing data** → time range **All time** → check **Cookies and site data** + **Cached images and files** → **Clear data**.
+- Settings → Location → toggle **Off → On**, mode = **High accuracy**.
+
+### Full uninstall / reinstall (when state is corrupted)
+
+Use this only if `pm clear` doesn't fix a stuck permission banner or persistent crash:
+
+```bash
+# Uninstall Chrome updates (system app on most OEMs — can't fully remove).
+adb shell pm uninstall --user 0 com.android.chrome
+# Reinstall from Play Store (open Play Store → search Chrome → Update/Install).
+# OR sideload a known-good APK:
+adb install /path/to/chrome.apk
+
+# Google Maps (user-installed on most phones):
+adb uninstall com.google.android.apps.maps
+# Reinstall from Play Store.
+```
+
+After reinstall, re-grant USB debugging if prompted, re-sign into the preview, and re-add the Home Screen shortcut.
+
+### Seed location on a physical device
+
+There is no `geo fix` over `adb`. Options:
+
+- **Real GPS** (recommended for accuracy): take the phone outside or near a window, open Google Maps once to acquire a fix, then return to Chrome. The browser will use the cached fix for ~30s.
+- **Mock location app** (for repeatable Istanbul fix from your desk):
+  1. Install **"Lockito"** or **"Mock GPS Location"** from the Play Store.
+  2. Settings → System → Developer options → **Select mock location app** → pick the installed app.
+  3. In the app, set coordinates to `41.0086, 28.9802` (Sultanahmet) and **Start**.
+  4. Verify in Google Maps that the blue dot is in Istanbul before continuing.
+- **Clear mock**: in the mock app, **Stop**. Disable "Select mock location app" if testing the no-GPS-available path.
+
+### Full pre-record sequence (copy/paste)
+
+```bash
+# Verify connection
+adb devices
+
+# Reset Chrome + Location Services + Maps
+adb shell pm clear com.android.chrome
+adb shell settings put secure location_mode 3
+adb shell am force-stop com.android.chrome
+adb shell am force-stop com.google.android.apps.maps
+
+# Open Chrome to the event detail page (replace <id>)
+adb shell am start -a android.intent.action.VIEW \
+  -d "https://id-preview--0d3101bb-9764-405c-8d64-1cd8781cef23.lovable.app/app/event/<id>" \
+  com.android.chrome
+```
+
+Then on the device: sign back into the preview (Chrome was cleared), confirm the mock-location app is running (if using one), and start the built-in screen recorder (Quick Settings → **Screen Record** → enable **Show touches** under Developer options first so taps are visible on the video).
+
+Optional `adb`-driven recording (max 3 min per clip, no audio):
+
+```bash
+adb shell screenrecord --show-touches --bit-rate 6000000 /sdcard/getting-there.mp4
+# Ctrl+C to stop, then:
+adb pull /sdcard/getting-there.mp4
+adb shell rm /sdcard/getting-there.mp4
+```
+
+### Between takes (granted → denied or denied → granted)
+
+```bash
+adb shell pm clear com.android.chrome
+adb shell am force-stop com.android.chrome
+```
+
+Reopen the event detail page so Chrome re-prompts on the next tap. Re-confirm the mock-location app is still running if you're testing the granted flow.
+
+### Sanity checks before pressing Record
+
+- [ ] `adb devices` shows the phone as `device` (authorized).
+- [ ] `adb shell settings get secure location_mode` returns `3`.
+- [ ] Google Maps blue dot is at the expected location (real or mocked).
+- [ ] Chrome opens to the event detail page, signed back in, no stale permission banner under the URL bar.
+- [ ] Developer options → **Show taps** is ON so the video shows tap targets.
+- [ ] Status bar / system clock visible for video timestamps.
+- [ ] Battery > 30% (screen recording is power-hungry) or plugged in.
+
+### Known physical-device gotchas
+
+- `pm clear com.android.chrome` signs you out of Chrome sync on this device. Use the GUI per-site reset to stay signed in.
+- Many OEM skins (Samsung One UI, Xiaomi MIUI) ship a **forked Chrome** as the default browser. Confirm the package is `com.android.chrome`; on Samsung the system browser is `com.sec.android.app.sbrowser` — use stock Chrome from Play Store for parity with the test plan.
+- Battery Saver and **Adaptive Battery** can throttle background geolocation between takes. Disable both during the session.
+- Some carriers preinstall a location-permission overlay (e.g., Samsung's "Apps that use location"). Approve once, then the OS-level prompt behaves normally.
+- Mock locations require Developer options to remain enabled; toggling Developer options off clears the **Select mock location app** setting.
+- If the OS permission prompt never appears, the site already has a stored decision — Chrome's "Reset permissions" wasn't applied to the right host. Confirm you reset the **exact** preview host (id-preview vs published URL are different origins).
+
+---
+
+
+
 
 
 ## Part 1 — GRANTED flow (0:00 – 0:45)
