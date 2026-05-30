@@ -209,6 +209,154 @@ def verify_session(session_dir: Path) -> tuple[int, int]:
     return missing, present
 
 
+# ---- Strict validation -------------------------------------------------------
+
+MAGIC_BYTES: dict[str, bytes] = {
+    "png": b"\x89PNG\r\n\x1a\n",
+}
+
+# Filenames that are allowed inside a flow folder beyond the required/optional set.
+EXTRA_ALLOWED_FILES = {"notes.md"}
+EXTRA_ALLOWED_PREFIX_ORDINAL = 90  # 90+ ordinals are reserved for free-form extras
+
+
+def _validate_file_content(path: Path, ext: str) -> str | None:
+    """Return an error string, or None if the file's bytes look right."""
+    try:
+        if path.stat().st_size == 0:
+            return "file is empty"
+        if ext in MAGIC_BYTES:
+            with path.open("rb") as fh:
+                head = fh.read(len(MAGIC_BYTES[ext]))
+            if head != MAGIC_BYTES[ext]:
+                return f"bytes do not start with the {ext.upper()} magic signature"
+        if ext == "txt":
+            # Must be valid UTF-8
+            try:
+                path.read_text(encoding="utf-8")
+            except UnicodeDecodeError as e:
+                return f"not valid UTF-8 ({e.reason})"
+        if ext == "har":
+            import json
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as e:
+                return f"not valid JSON ({e.msg})"
+            if not isinstance(data, dict) or "log" not in data:
+                return "missing top-level 'log' key (not a HAR file)"
+    except OSError as e:
+        return f"cannot read file: {e}"
+    return None
+
+
+def _validate_flow_dir(flow_dir: Path, artifacts: list[Artifact], errors: list[str], warnings: list[str]) -> None:
+    rel = flow_dir.relative_to(REPO_ROOT)
+    expected_by_name = {a.filename: a for a in artifacts}
+
+    # 1. required + optional artifacts: presence, slug, ext, content
+    for art in artifacts:
+        path = flow_dir / art.filename
+        if not path.exists():
+            (errors if art.required else warnings).append(
+                f"{rel}/{art.filename}: " + ("MISSING required artifact" if art.required else "optional artifact not provided")
+            )
+            continue
+        if not path.is_file():
+            errors.append(f"{rel}/{art.filename}: exists but is not a regular file")
+            continue
+        actual_ext = path.suffix.lower().lstrip(".")
+        if actual_ext != art.ext:
+            errors.append(f"{rel}/{art.filename}: extension '.{actual_ext}' does not match required '.{art.ext}'")
+            continue
+        content_err = _validate_file_content(path, art.ext)
+        if content_err:
+            errors.append(f"{rel}/{art.filename}: {content_err}")
+
+    # 2. stray files: anything in the flow folder that isn't a known artifact, notes.md, or 90+ extra
+    if not flow_dir.exists():
+        return
+    for entry in sorted(flow_dir.iterdir()):
+        if not entry.is_file():
+            errors.append(f"{rel}/{entry.name}: unexpected non-file entry in flow folder")
+            continue
+        name = entry.name
+        if name in expected_by_name or name in EXTRA_ALLOWED_FILES:
+            continue
+        # Allow 90+ ordinals: NN-slug.ext where NN >= 90
+        parts = name.split("-", 1)
+        if len(parts) == 2 and parts[0].isdigit() and len(parts[0]) == 2 and int(parts[0]) >= EXTRA_ALLOWED_PREFIX_ORDINAL:
+            # Loose slug check: kebab-case lowercase ASCII before the dot
+            slug_and_ext = parts[1]
+            if "." not in slug_and_ext:
+                errors.append(f"{rel}/{name}: extra file missing extension")
+                continue
+            slug, ext = slug_and_ext.rsplit(".", 1)
+            if not slug or not slug.replace("-", "").isalnum() or slug.lower() != slug:
+                errors.append(f"{rel}/{name}: extra file slug must be lowercase kebab-case ASCII")
+            if ext.lower() != ext:
+                errors.append(f"{rel}/{name}: extension must be lowercase")
+            continue
+        # Otherwise it's a naming-standard violation
+        errors.append(
+            f"{rel}/{name}: filename does not match the standard "
+            f"(expected one of: {', '.join(sorted(expected_by_name))}, notes.md, or 90+ extras)"
+        )
+
+
+def validate_session(session_dir: Path) -> int:
+    """Strict validation. Returns process exit code (0 = ok)."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    # Session folder name must match <YYYY-MM-DD>-<SHORT_SHA> (optionally with -rN)
+    import re
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}-[0-9a-f]{7}(?:-r\d+)?", session_dir.name):
+        errors.append(f"{session_dir.relative_to(REPO_ROOT)}: folder name does not match <YYYY-MM-DD>-<SHORT_SHA>[-rN]")
+
+    if not (session_dir / "README.md").is_file():
+        errors.append(f"{session_dir.relative_to(REPO_ROOT)}/README.md: missing session README")
+
+    # Platform folder names must be the exact fixed set
+    actual_platforms = {p.name for p in session_dir.iterdir() if p.is_dir()}
+    unexpected = actual_platforms - set(PLATFORMS)
+    if unexpected:
+        errors.append(f"{session_dir.relative_to(REPO_ROOT)}: unexpected platform folder(s): {', '.join(sorted(unexpected))}")
+    missing_platforms = set(PLATFORMS) - actual_platforms
+    if missing_platforms:
+        errors.append(f"{session_dir.relative_to(REPO_ROOT)}: missing platform folder(s): {', '.join(sorted(missing_platforms))}")
+
+    for platform in PLATFORMS:
+        platform_dir = session_dir / platform
+        if not platform_dir.is_dir():
+            continue
+        actual_flows = {p.name for p in platform_dir.iterdir() if p.is_dir()}
+        unexpected_flows = actual_flows - set(FLOWS)
+        if unexpected_flows:
+            errors.append(f"{platform_dir.relative_to(REPO_ROOT)}: unexpected flow folder(s): {', '.join(sorted(unexpected_flows))}")
+        for flow in FLOWS:
+            flow_dir = platform_dir / flow
+            if not flow_dir.is_dir():
+                errors.append(f"{flow_dir.relative_to(REPO_ROOT)}: missing flow folder")
+                continue
+            _validate_flow_dir(flow_dir, FLOW_ARTIFACTS[flow], errors, warnings)
+
+    print("\n=== Strict validation ===")
+    if warnings:
+        print(f"\nWarnings ({len(warnings)}):")
+        for w in warnings:
+            print(f"  - {w}")
+    if errors:
+        print(f"\nErrors ({len(errors)}):")
+        for e in errors:
+            print(f"  - {e}")
+        print("\nResult: FAIL — session is not acceptable.")
+        return 1
+    print(f"\nResult: PASS — all required artifacts present, correctly named, and content-valid.")
+    return 0
+
+
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--date", default=dt.date.today().isoformat(), help="ISO date (default: today)")
