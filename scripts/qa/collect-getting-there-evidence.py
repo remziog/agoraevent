@@ -562,6 +562,8 @@ def main() -> int:
 
         if args.report and args.validate:
             write_report(Path(args.report), results, args.base_ref)
+        if args.report_json and args.validate:
+            write_report_json(Path(args.report_json), results, args.base_ref)
 
         return overall
 
