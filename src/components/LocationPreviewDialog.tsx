@@ -56,12 +56,16 @@ function toUnixSeconds(local: string): number | null {
   return Number.isFinite(t) ? Math.floor(t / 1000) : null;
 }
 
-function googleMapsHref(p: Place, departISO: string) {
+function googleMapsHref(p: Place, departISO: string, origin: Coords | null) {
   const params = new URLSearchParams({
     api: "1",
     destination: destinationQuery(p),
     travelmode: "driving",
+    // dir_action=navigate launches turn-by-turn directly in the Google Maps app
+    // (and the closest equivalent in the web client).
+    dir_action: "navigate",
   });
+  if (origin) params.set("origin", `${origin.lat},${origin.lng}`);
   // Google Maps web URL doesn't officially honor departure_time, but we
   // include it so deep-linking into the Google Maps app can pick it up.
   const unix = toUnixSeconds(departISO);
@@ -69,14 +73,18 @@ function googleMapsHref(p: Place, departISO: string) {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
-function yandexMapsHref(p: Place, departISO: string) {
-  const rtext =
+function yandexMapsHref(p: Place, departISO: string, origin: Coords | null) {
+  const destPart =
     p.latitude != null && p.longitude != null
-      ? `~${p.latitude},${p.longitude}`
+      ? `${p.latitude},${p.longitude}`
       : "";
   const params = new URLSearchParams({ rtt: "auto" });
-  if (rtext) {
-    params.set("rtext", rtext);
+  if (destPart) {
+    // Yandex rtext format: "fromLat,fromLng~toLat,toLng". A leading "~"
+    // (no origin) means "from my location" once the user grants permission
+    // in Yandex Maps itself.
+    const originPart = origin ? `${origin.lat},${origin.lng}` : "";
+    params.set("rtext", `${originPart}~${destPart}`);
   } else {
     params.set("text", [p.venue, p.city, p.title].filter(Boolean).join(", "));
   }
