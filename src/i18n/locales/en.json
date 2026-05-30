@@ -96,5 +96,16 @@
   },
   "footer": {
     "tagline": "The modern gathering place."
+  },
+  "gettingThere": {
+    "title": "Getting there",
+    "openInMaps": "Open directions in Google Maps",
+    "useMyLocation": "Use my location",
+    "landmarks": "Landmarks",
+    "metro": "Metro / Tram",
+    "taxi": "Taxi",
+    "walking": "Walking",
+    "tipLabel": "Tip",
+    "deniedNote": "Location unavailable. Use the “Open directions” button and enter your start point in Google Maps."
   }
 }
