@@ -141,9 +141,12 @@ function MapView() {
         label: idx === 0 ? { text: "★", color: "#fff", fontSize: "16px" } : undefined,
         animation: idx === 0 ? window.google.maps.Animation.DROP : undefined,
       });
-      marker.addListener("click", () => setSelected(e));
+      marker.addListener("click", () => {
+        setSelected(e);
+        openIfLandmark(e);
+      });
     });
-  }, [mapReady, data]);
+  }, [mapReady, data, landmarkById]);
 
   return (
     <div className="flex h-screen flex-col bg-background">
