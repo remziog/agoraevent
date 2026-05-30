@@ -206,3 +206,91 @@ When every row in the matrix is ticked across all three columns, the flow is ver
 - `docs/qa/getting-there-android-video-checklist.md`
 
 Date / tester / commit SHA / matrix-pass evidence (screenshot of this section ticked) should be archived in the QA folder alongside the recorded videos.
+
+---
+
+## Evidence capture (before recording the video)
+
+Lightweight artifact set proving the granted and denied flows actually fired on each platform. Capture this **after** the cross-platform verification matrix passes and **before** you start the screen recording — it doubles as a regression baseline if a future change breaks the flow.
+
+Save everything under `docs/qa/evidence/<YYYY-MM-DD>-<commit-sha>/<platform>/` with these filenames:
+
+```
+granted-01-prompt.png         # OS permission sheet visible
+granted-02-maps-url.png       # Maps directions URL with origin=<lat>,<lng>&travelmode=transit
+granted-03-console.txt        # Browser console (zero errors)
+denied-01-prompt.png          # OS permission sheet visible
+denied-02-fallback-note.png   # deniedNote visible under primary button
+denied-03-maps-url.png        # Maps directions URL with NO origin param
+denied-04-console.txt         # Browser console (zero errors)
+```
+
+### iOS Safari (Simulator or device)
+
+1. Apply the iOS reset; seed GPS to `41.0086, 28.9802`.
+2. Connect Safari Web Inspector: Mac → Safari → Develop → <device name> → preview page.
+3. In Web Inspector → **Console** → ⚙ → enable **Preserve Log**. Clear the console.
+4. **Granted**:
+   - Tap **Use my location**. Screenshot the iOS permission sheet → `granted-01-prompt.png`.
+   - Tap **Allow Once**. After Maps opens, long-press the primary button → **Copy Link** → paste into Notes and screenshot → `granted-02-maps-url.png` (must show `origin=41.0086,28.9802&travelmode=transit`).
+   - Back in Web Inspector → Console → ⋯ → **Save as…** → `granted-03-console.txt`. Verify zero red entries.
+5. Apply the iOS between-takes reset (close tab, reopen).
+6. **Denied**:
+   - Tap **Use my location**. Screenshot the prompt → `denied-01-prompt.png`.
+   - Tap **Don't Allow**. Wait 1s. Screenshot the section with the fallback note visible → `denied-02-fallback-note.png`.
+   - Tap **Open directions in Google Maps**. Long-press → **Copy Link** → paste → screenshot → `denied-03-maps-url.png` (must **not** contain `origin=`).
+   - Save console → `denied-04-console.txt`. Verify zero red entries.
+
+### Android Emulator
+
+1. Apply the Emulator reset; `geo fix 28.9802 41.0086`.
+2. Connect Chrome DevTools from the host: `chrome://inspect` → **inspect** under the emulator's Chrome tab.
+3. DevTools → **Console** → ⚙ → enable **Preserve log**. Clear.
+4. **Granted**:
+   - Tap **Use my location**. From the host, snap the emulator window → `granted-01-prompt.png` (Chrome prompt visible).
+   - Tap **Allow**. When Maps opens, long-press the primary button in Chrome → **Copy link address** → paste into the URL bar of a new tab → snap → `granted-02-maps-url.png`.
+   - DevTools → Console → right-click → **Save as…** → `granted-03-console.txt`.
+5. Apply the between-takes reset (`adb shell pm clear com.android.chrome` → reopen page).
+6. **Denied**:
+   - Tap **Use my location** → snap prompt → `denied-01-prompt.png`.
+   - Tap **Block** → wait 1s → snap section with fallback note → `denied-02-fallback-note.png`.
+   - Tap **Open directions in Google Maps** → copy link → paste → snap → `denied-03-maps-url.png` (no `origin=`).
+   - Save console → `denied-04-console.txt`.
+
+Quick capture commands (host shell):
+
+```bash
+# Screenshot from emulator to local file
+adb exec-out screencap -p > granted-01-prompt.png
+
+# Dump Chrome logcat in parallel for the run (Ctrl+C to stop)
+adb logcat -s chromium:* > chrome-logcat.txt
+```
+
+### Physical Android device
+
+Same as the Emulator with two differences:
+
+- Use real GPS or the mock-location app (Lockito at `41.0086, 28.9802`) instead of `geo fix`.
+- Plug into the host with USB debugging enabled; `chrome://inspect` works identically.
+
+Capture commands:
+
+```bash
+# Screenshot from device
+adb exec-out screencap -p > granted-01-prompt.png
+
+# Tap-by-tap UI dump (optional, useful when prompts render off-screen)
+adb shell uiautomator dump /sdcard/ui.xml && adb pull /sdcard/ui.xml
+```
+
+### Minimum acceptance bar before recording
+
+For each of the three platforms, the `evidence/.../<platform>/` folder must contain all **7 files** above, and:
+
+- [ ] `granted-02-maps-url.png` URL contains `origin=41.0086,28.9802` and `travelmode=transit`.
+- [ ] `denied-02-fallback-note.png` clearly shows the `gettingThere.deniedNote` text under the primary button.
+- [ ] `denied-03-maps-url.png` URL contains `destination=` and `travelmode=…` but **no** `origin=`.
+- [ ] `granted-03-console.txt` and `denied-04-console.txt` contain zero `error`-level entries during the flow window.
+
+Once all three platforms meet the bar, archive the folder, link it from the PR description, and proceed to record the platform-specific videos.
