@@ -1,0 +1,14 @@
+{
+  "name": "Agora — Meet your people in real life",
+  "short_name": "Agora",
+  "description": "Discover nearby events and gatherings — music, sport, film, and more.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
