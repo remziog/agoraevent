@@ -33,8 +33,7 @@ export function GettingThere({ destinationQuery, destinationUrl, tip }: Props) {
   const [loading, setLoading] = useState(false);
 
   const primaryHref =
-    destinationUrl ??
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destinationQuery)}`;
+    destinationUrl ?? buildDirUrl(destinationQuery, "transit", coords ?? undefined);
 
   function useMyLocation() {
     if (!("geolocation" in navigator)) {
