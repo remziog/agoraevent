@@ -3,7 +3,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { awardXp } from "./gamification.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Resolve the object path inside the `memories` bucket from a public/signed URL
 // produced by `supabase.storage.from("memories").getPublicUrl(path)`.
@@ -24,6 +23,14 @@ function memoryObjectPath(photoUrl: string): string | null {
     }
   }
   return null;
+}
+
+// Uploads go to `<userId>/<eventId>/<file>` (storage RLS only lets a user write
+// and delete inside their own top-level folder). A memory may only reference a
+// file in the caller's own folder — otherwise a user could attach someone else's
+// photo to their memory and later have it deleted along with that memory.
+function isOwnObjectPath(objectPath: string, userId: string): boolean {
+  return objectPath.startsWith(`${userId}/`) && !objectPath.split("/").includes("..");
 }
 
 export const listMyMemories = createServerFn({ method: "GET" })
@@ -78,15 +85,25 @@ export const addMemory = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    // Only accept URLs from this project's `memories` storage bucket so a
-    // malicious client can't inject arbitrary external URLs that other users
-    // would then load (IP-tracking / pixel-leak).
-    const base = process.env.SUPABASE_URL ?? "";
-    const prefix = `${base}/storage/v1/object/public/memories/`;
-    const signedPrefix = `${base}/storage/v1/object/sign/memories/`;
-    if (!base || (!data.photo_url.startsWith(prefix) && !data.photo_url.startsWith(signedPrefix))) {
+    // Only accept files from this project's `memories` bucket (no external URLs
+    // that other users would load — IP tracking / pixel leaks), and only from
+    // the caller's own folder.
+    const objectPath = memoryObjectPath(data.photo_url);
+    if (!objectPath || !isOwnObjectPath(objectPath, context.userId)) {
       throw new Error("Invalid photo URL");
     }
+
+    // Memories are for people who RSVP'd (the UI only offers "Add memory" then;
+    // enforce it here too so the API can't be used to post to any event).
+    const { data: rsvp, error: rsvpErr } = await context.supabase
+      .from("rsvps")
+      .select("id")
+      .eq("event_id", data.event_id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (rsvpErr) throw dbError(rsvpErr);
+    if (!rsvp) throw new Error("Only people going to this event can add memories");
+
     const { error } = await context.supabase.from("event_memories").insert({
       event_id: data.event_id,
       user_id: context.userId,
@@ -117,9 +134,11 @@ export const deleteMemory = createServerFn({ method: "POST" })
     if (!row) return { ok: true };
 
     const objectPath = memoryObjectPath(row.photo_url);
-    if (objectPath) {
-      // Best-effort: the DB row is already gone; log but don't fail the request.
-      const { error: storageErr } = await supabaseAdmin.storage
+    if (objectPath && isOwnObjectPath(objectPath, context.userId)) {
+      // Delete with the caller's own session (not the service role): storage RLS
+      // then guarantees nobody can remove a file outside their folder, even if
+      // an old row points at one. Best-effort — the row is already gone.
+      const { error: storageErr } = await context.supabase.storage
         .from("memories")
         .remove([objectPath]);
       if (storageErr) console.error("[memories] storage remove failed", storageErr);

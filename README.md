@@ -6,11 +6,11 @@ Stack: TanStack Start (SSR) · React 19 · Vite 7 · Tailwind v4 · Supabase (Au
 
 ## Local development
 
-The project is managed by Lovable and uses **bun** (`bun.lock` is the lockfile of record; it is resolved against Lovable's registry mirror, so outside Lovable install without `--frozen-lockfile`).
+The project is managed by Lovable, which syncs the `main` branch both ways. It uses **bun**; `bun.lock` is the lockfile of record, but it pins tarballs to Lovable's private registry mirror, so a plain `bun install` fails outside Lovable. Use the helper, which installs the exact same versions from npmjs:
 
 ```bash
-bun install
-cp .env.example .env.local   # fill in the values (see comments in the file)
+bash scripts/install-outside-lovable.sh
+cp .env.example .env.local   # server-only values; see comments in the file
 bun run dev                  # http://localhost:5173
 ```
 
@@ -18,14 +18,16 @@ Useful checks:
 
 ```bash
 bunx tsc --noEmit   # typecheck
-bun run lint        # eslint (+ prettier)
 bun run build       # production build (Cloudflare worker + client)
 ```
 
 ## Environment
 
-`.env` is git-ignored. Publishable client values are prefixed `VITE_`; everything else is server-only and must never be exposed to the browser. The full list with comments lives in [`.env.example`](./.env.example).
+- `.env` (tracked, managed by Lovable Cloud): publishable client values (`VITE_*`). Don't edit or delete it — Lovable's Vite config reads it at build time.
+- `.env.local` (git-ignored): server-only secrets for local development. The full list is in [`.env.example`](./.env.example).
 
 ## Database
 
 Schema lives in `supabase/migrations/`. All tables have RLS enabled; server functions run with the caller's JWT (`requireSupabaseAuth`) and only use the service-role client for aggregated/public reads and gamification writes (`src/lib/*.server.ts`).
+
+**Migrations pushed through GitHub are not applied by Lovable.** To run one, ask Lovable in the chat to apply it, or paste the SQL into the Cloud SQL editor.
