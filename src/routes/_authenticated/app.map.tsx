@@ -52,6 +52,8 @@ function MapView() {
     events: EventRow[];
     tags: string[];
     prompt: string;
+    /** Real prompt matches; the list also carries other upcoming events + landmarks. */
+    matchCount?: number;
   } | null>(null);
   const [selected, setSelected] = useState<EventRow | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -192,9 +194,17 @@ function MapView() {
             <>
               <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-muted-foreground/30" />
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                {data.events.length} matches for
+                {(data.matchCount ?? data.events.length) > 0
+                  ? `${data.matchCount ?? data.events.length} matches for`
+                  : "Nothing matched exactly —"}
               </p>
               <p className="line-clamp-1 font-display text-base">"{data.prompt}"</p>
+              {data.matchCount === 0 && data.events.length > 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Showing what's on this week plus the city's landmarks. Try a broader phrase
+                  like "live music" or "quiet drinks" for a closer match.
+                </p>
+              )}
 
               {data.events.length === 0 ? (
                 <div className="mt-4 rounded-2xl border border-dashed border-primary/30 bg-card/60 p-5">
