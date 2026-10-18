@@ -77,10 +77,23 @@ jobs:
         run: npm ci
       - name: Copy the web bundle into the Android project
         working-directory: mobile
-        run: npx cap sync android
+        shell: bash
+        run: |
+          status=0
+          npx cap sync android > cap-sync.log 2>&1 || status=$?
+          cat cap-sync.log
+          # Failures also become annotations, readable without the raw log
+          [ "$status" -eq 0 ] || grep -iE "error|fatal" -A3 cap-sync.log | head -n 10 | sed 's/^/::error::/'
+          exit $status
       - name: Build
         working-directory: mobile/android
-        run: ./gradlew assembleDebug --no-daemon
+        shell: bash
+        run: |
+          status=0
+          ./gradlew assembleDebug --no-daemon --console=plain > gradle.log 2>&1 || status=$?
+          tail -n 40 gradle.log
+          [ "$status" -eq 0 ] || grep -E "What went wrong|error:|^e: |Could not|^> " gradle.log | head -n 10 | sed 's/^/::error::/'
+          exit $status
       - uses: actions/upload-artifact@v5
         with:
           name: agora-android-debug-apk
@@ -111,7 +124,13 @@ jobs:
         run: npm ci
       - name: Copy the web bundle into the iOS project
         working-directory: mobile
-        run: npx cap sync ios
+        shell: bash
+        run: |
+          status=0
+          npx cap sync ios > cap-sync.log 2>&1 || status=$?
+          cat cap-sync.log
+          [ "$status" -eq 0 ] || grep -iE "error|fatal" -A3 cap-sync.log | head -n 10 | sed 's/^/::error::/'
+          exit $status
       - name: Build (simulator, unsigned)
         working-directory: mobile/ios/App
         shell: bash
@@ -122,6 +141,7 @@ jobs:
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO build > xcodebuild.log 2>&1 || status=$?
           grep -E "error:|\*\* BUILD" xcodebuild.log | tail -n 60 || true
+          [ "$status" -eq 0 ] || grep -E "error:" xcodebuild.log | sort -u | head -n 10 | sed 's/^/::error::/'
           exit $status
       - uses: actions/upload-artifact@v5
         if: failure()
