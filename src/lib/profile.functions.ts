@@ -2,39 +2,6 @@ import { dbError } from "./db-error";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-const ProfileInput = z.object({
-  display_name: z.string().min(1).max(80),
-  city: z.string().min(1).max(120),
-  bio: z.string().max(500).optional().nullable(),
-});
-
-export const completeOnboarding = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ProfileInput.parse(d))
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { error: pErr } = await supabase
-      .from("profiles")
-      .upsert({
-        id: userId,
-        display_name: data.display_name,
-        city: data.city,
-        bio: data.bio ?? null,
-        onboarded: true,
-      });
-    if (pErr) throw dbError(pErr);
-    // Onboarding only ever grants the default `member` role. Elevated roles
-    // (e.g. organizer) must be granted by a separate, gated server function
-    // after server-side identity/eligibility checks — never trust a
-    // client-supplied role value here.
-    const { error: rErr } = await supabaseAdmin
-      .from("user_roles")
-      .upsert({ user_id: userId, role: "member" }, { onConflict: "user_id,role" });
-    if (rErr) throw dbError(rErr);
-    return { ok: true };
-  });
 
 // Sign-in-and-go: derive a sensible display name from auth metadata and
 // finish onboarding with no UI questions. City defaults to Istanbul since
@@ -62,12 +29,6 @@ export const autoCompleteOnboarding = createServerFn({ method: "POST" })
       onboarded: true,
     });
     if (pErr) throw dbError(pErr);
-
-    const { error: rErr } = await supabaseAdmin
-      .from("user_roles")
-      .upsert({ user_id: userId, role: "member" }, { onConflict: "user_id,role" });
-    if (rErr) throw dbError(rErr);
-
     return { ok: true };
   });
 
@@ -75,16 +36,11 @@ export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [{ data: profile }, { data: roles }, { data: taste }] = await Promise.all([
+    const [{ data: profile }, { data: taste }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
       supabase.from("taste_profiles").select("*").eq("user_id", userId).maybeSingle(),
     ]);
-    return {
-      profile,
-      roles: (roles ?? []).map((r) => r.role) as ("member" | "organizer")[],
-      taste,
-    };
+    return { profile, taste };
   });
 
 const TasteInput = z.object({

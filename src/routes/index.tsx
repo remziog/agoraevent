@@ -96,7 +96,7 @@ function Landing() {
               <Link to="/signup">{t("landing.ctaFindEvent")}</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/signup">{t("landing.ctaIHost")}</Link>
+              <Link to="/biz">{t("landing.ctaIHost")}</Link>
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
@@ -132,7 +132,7 @@ function Landing() {
               </p>
               <div className="mt-7">
                 <Button asChild>
-                  <Link to="/signup">{t("landing.hostsCta")}</Link>
+                  <Link to="/biz">{t("landing.hostsCta")}</Link>
                 </Button>
               </div>
             </div>

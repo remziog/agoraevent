@@ -19,6 +19,7 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
     navigate({ to: "/" });
   }
 
+  // Any member can host: both surfaces link to each other.
   const navLinks =
     variant === "member"
       ? [
@@ -26,8 +27,12 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
           { to: "/app/calendar", label: "Calendar" },
           { to: "/app/memories", label: "Memories" },
           { to: "/app/profile", label: "Taste" },
+          { to: "/biz", label: "Host" },
         ]
-      : [{ to: "/biz", label: "Dashboard" }];
+      : [
+          { to: "/biz", label: "Dashboard" },
+          { to: "/app", label: "Discover" },
+        ];
 
   return (
     <header className="border-b border-border/60 bg-background/80 backdrop-blur">
