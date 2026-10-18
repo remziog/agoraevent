@@ -44,6 +44,8 @@ const EventInput = z.object({
   ends_at: z.string().optional().nullable(),
   city: z.string().max(120).optional().nullable(),
   venue: z.string().max(160).optional().nullable(),
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
   capacity: z.number().int().positive().max(100000).optional().nullable(),
   price: z.number().nonnegative().max(100000).optional().nullable(),
   tags: z.array(z.string().max(40)).max(20),
