@@ -42,7 +42,22 @@ declare global {
   interface Window {
     google?: any;
     __agoraInitMap?: () => void;
+    /** Called by the Maps JS API when the key is rejected (e.g. referrer not allowed). */
+    gm_authFailure?: () => void;
   }
+}
+
+// Keyless Google Maps embed — the fallback when the Maps JS API can't load.
+// The browser key is restricted to the website's domains, so it fails inside
+// the iOS/Android app (whose origin is capacitor://localhost or https://localhost).
+function embedSrc(e: Pick<EventRow, "latitude" | "longitude" | "venue" | "city" | "title"> | null) {
+  const q =
+    e && typeof e.latitude === "number" && typeof e.longitude === "number"
+      ? `${e.latitude},${e.longitude}`
+      : e
+        ? [e.venue, e.city, e.title].filter(Boolean).join(", ")
+        : "Istanbul";
+  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=15&output=embed`;
 }
 
 function MapView() {
@@ -57,6 +72,7 @@ function MapView() {
   } | null>(null);
   const [selected, setSelected] = useState<EventRow | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [mapFailed, setMapFailed] = useState(false);
   const [landmarkOpen, setLandmarkOpen] = useState(false);
   const [activeLandmark, setActiveLandmark] = useState<Landmark | null>(null);
   const landmarkById = useMemo(
@@ -98,14 +114,24 @@ function MapView() {
     }
     const key = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
     const tracking = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID;
-    if (!key) return;
+    if (!key) {
+      setMapFailed(true);
+      return;
+    }
     window.__agoraInitMap = () => setMapReady(true);
+    window.gm_authFailure = () => setMapFailed(true);
     const s = document.createElement("script");
     s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__agoraInitMap${tracking ? `&channel=${tracking}` : ""}`;
     s.async = true;
+    s.onerror = () => setMapFailed(true);
     document.head.appendChild(s);
+    // Offline or blocked without an error event: don't spin forever.
+    const timeout = window.setTimeout(() => {
+      if (!window.google?.maps) setMapFailed(true);
+    }, 10_000);
     return () => {
       window.__agoraInitMap = undefined;
+      window.clearTimeout(timeout);
     };
   }, []);
 
@@ -155,13 +181,23 @@ function MapView() {
       <AppHeader variant="member" />
       <div className="relative flex-1 overflow-hidden">
         {/* Map */}
-        <div ref={mapRef} className="absolute inset-0 bg-muted">
-          {!mapReady && (
+        <div ref={mapRef} className={`absolute inset-0 bg-muted ${mapFailed ? "invisible" : ""}`}>
+          {!mapReady && !mapFailed && (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
               Loading map…
             </div>
           )}
         </div>
+        {mapFailed && (
+          <iframe
+            key={selected?.id ?? "default"}
+            title={selected ? `Map of ${selected.title}` : "Map"}
+            src={embedSrc(selected)}
+            className="absolute inset-0 h-full w-full border-0"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        )}
 
         {/* Top bar */}
         <div className="absolute left-4 right-4 top-4 z-10 flex items-center gap-2">

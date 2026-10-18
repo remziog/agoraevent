@@ -62,7 +62,8 @@
     "submit": "Sign in",
     "submitting": "Signing in…",
     "welcomeBack": "Welcome back",
-    "errorGeneric": "We couldn't sign you in. Please try again."
+    "errorGeneric": "We couldn't sign you in. Please try again.",
+    "nativeGoogleHint": "Signed up with Google? Google sign-in isn't in the app yet — use “Forgot password?” once to set a password, then sign in here."
   },
   "signup": {
     "metaTitle": "Join Agora — Find your people",

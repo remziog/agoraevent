@@ -1,3 +1,5 @@
+import { IS_NATIVE_APP } from "./site";
+
 /**
  * Register the Agora service worker — only on the published production domain.
  * Lovable's preview iframe and dev hosts are explicitly excluded because a SW
@@ -5,6 +7,8 @@
  */
 export function registerServiceWorker() {
   if (typeof window === "undefined") return;
+  // The iOS/Android app ships its assets inside the app; no service worker.
+  if (IS_NATIVE_APP) return;
   if (!("serviceWorker" in navigator)) return;
 
   const hostname = window.location.hostname;
