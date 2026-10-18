@@ -55,11 +55,12 @@ function EventDetail() {
   const q = useQuery({ queryKey: ["event", id], queryFn: () => get({ data: { id } }) });
   const mutate = useMutation({
     mutationFn: (going: boolean) => rsvp({ data: { event_id: id, going } }),
-    onSuccess: () => {
+    onSuccess: (res, wasGoing) => {
       qc.invalidateQueries({ queryKey: ["event", id] });
       qc.invalidateQueries({ queryKey: ["rsvps"] });
       qc.invalidateQueries({ queryKey: ["my-stats"] });
-      toast.success("Saved · +25 XP");
+      if (!wasGoing) toast.success("RSVP cancelled");
+      else toast.success(res?.awarded ? "Saved · +25 XP" : "Saved");
     },
     onError: (e: Error) => toast.error(e.message),
   });

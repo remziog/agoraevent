@@ -101,7 +101,8 @@ export const Route = createFileRoute("/concert/$slug")({
             "@type": "BreadcrumbList",
             itemListElement: [
               { "@type": "ListItem", position: 1, name: "Agora", item: BASE_URL },
-              { "@type": "ListItem", position: 2, name: "Concerts", item: `${BASE_URL}/concert` },
+              // There is no /concert index route; /today is the public listing.
+              { "@type": "ListItem", position: 2, name: "Today in Istanbul", item: `${BASE_URL}/today` },
               { "@type": "ListItem", position: 3, name: ev.title, item: url },
             ],
           }),

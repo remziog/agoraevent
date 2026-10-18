@@ -15,14 +15,13 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         // Public, indexable routes only. Authenticated /app/* and /biz/*
         // surfaces and /onboarding are excluded (also blocked by robots.txt).
+        // /login, /forgot-password and /reset-password carry `noindex`, so
+        // listing them here would contradict the page directive — left out.
+        // Per-concert pages are only listed while the event is upcoming.
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
           { path: "/today", changefreq: "daily", priority: "0.9" },
-          { path: "/concert/kanye-west-istanbul-2026", changefreq: "daily", priority: "0.9" },
-          { path: "/login", changefreq: "monthly", priority: "0.3" },
           { path: "/signup", changefreq: "monthly", priority: "0.5" },
-          { path: "/forgot-password", changefreq: "yearly", priority: "0.2" },
-          { path: "/reset-password", changefreq: "yearly", priority: "0.2" },
           { path: "/privacy", changefreq: "yearly", priority: "0.2" },
           { path: "/terms", changefreq: "yearly", priority: "0.2" },
         ];

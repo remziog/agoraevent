@@ -4,7 +4,9 @@ import { Logo, LogoMark } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SiteFooter } from "@/components/SiteFooter";
-import ogImage from "@/assets/og-landing.jpg";
+
+const SITE_URL = "https://ago-ra.life";
+const OG_IMAGE = `${SITE_URL}/og-landing.jpg`;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,11 +17,13 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Tell Agora the kind of night you want. We find the room." },
       { property: "og:url", content: "https://ago-ra.life/" },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: ogImage },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Agora — Meet your people in real life" },
       { name: "twitter:description", content: "Tell Agora the kind of night you want. We find the room." },
-      { name: "twitter:image", content: ogImage },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
     links: [{ rel: "canonical", href: "https://ago-ra.life/" }],
     scripts: [
@@ -40,7 +44,7 @@ export const Route = createFileRoute("/")({
           "@type": "Organization",
           name: "Agora",
           url: "https://ago-ra.life/",
-          logo: "https://ago-ra.life/favicon.ico",
+          logo: `${SITE_URL}/icons/icon-512.png`,
           description: "Agora helps you find nearby events that match your taste — music, sport, film, and more. The modern gathering place.",
         }),
       },

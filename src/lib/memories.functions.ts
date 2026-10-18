@@ -2,7 +2,29 @@ import { dbError } from "./db-error";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { awardXp } from "./gamification.functions";
+import { awardXp } from "./gamification.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+// Resolve the object path inside the `memories` bucket from a public/signed URL
+// produced by `supabase.storage.from("memories").getPublicUrl(path)`.
+function memoryObjectPath(photoUrl: string): string | null {
+  const base = process.env.SUPABASE_URL ?? "";
+  if (!base) return null;
+  for (const prefix of [
+    `${base}/storage/v1/object/public/memories/`,
+    `${base}/storage/v1/object/sign/memories/`,
+  ]) {
+    if (photoUrl.startsWith(prefix)) {
+      const rest = photoUrl.slice(prefix.length).split("?")[0];
+      try {
+        return decodeURIComponent(rest);
+      } catch {
+        return rest;
+      }
+    }
+  }
+  return null;
+}
 
 export const listMyMemories = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -80,11 +102,30 @@ export const deleteMemory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
+    // RLS restricts the delete to the caller's own rows; `.select()` tells us
+    // whether a row was actually removed and gives us the photo URL so the
+    // storage object can be removed too. The bucket is public, so leaving the
+    // file behind would keep a "deleted" photo reachable by URL.
+    const { data: removed, error } = await context.supabase
       .from("event_memories")
       .delete()
       .eq("id", data.id)
-      .eq("user_id", context.userId);
+      .eq("user_id", context.userId)
+      .select("id, photo_url");
     if (error) throw dbError(error);
+    const row = removed?.[0];
+    if (!row) return { ok: true };
+
+    const objectPath = memoryObjectPath(row.photo_url);
+    if (objectPath) {
+      // Best-effort: the DB row is already gone; log but don't fail the request.
+      const { error: storageErr } = await supabaseAdmin.storage
+        .from("memories")
+        .remove([objectPath]);
+      if (storageErr) console.error("[memories] storage remove failed", storageErr);
+    }
+
+    // Revert the XP granted on upload so add → delete → add can't farm XP.
+    await awardXp(context.userId, -50);
     return { ok: true };
   });

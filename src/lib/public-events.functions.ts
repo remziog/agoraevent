@@ -49,12 +49,14 @@ export const listTodayPublicEvents = createServerFn({ method: "GET" }).handler(a
   const ids = Object.values(PUBLIC_EVENT_SLUGS);
   if (ids.length === 0) return { events: [] as PublicEvent[], date: new Date().toISOString().slice(0, 10) };
 
-  // "Today" in Europe/Istanbul (operating market)
+  // "Today" in Europe/Istanbul (operating market).
+  // `day` must be "2-digit": with "numeric" en-CA yields "2026-10-8", which is
+  // not valid ISO and makes `new Date(...)` below Invalid → toISOString throws.
   const istanbulDate = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Istanbul",
     year: "numeric",
     month: "2-digit",
-    day: "numeric",
+    day: "2-digit",
   }).format(new Date());
   const startUtc = new Date(`${istanbulDate}T00:00:00+03:00`).toISOString();
   const endUtc = new Date(`${istanbulDate}T23:59:59+03:00`).toISOString();

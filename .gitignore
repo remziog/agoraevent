@@ -30,3 +30,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files — publishable keys are injected by Lovable Cloud / Cloudflare;
+# local copies go in .env.local. See .env.example for the full list.
+.env
+.env.*
+!.env.example
