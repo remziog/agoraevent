@@ -1,0 +1,131 @@
+name: Mobile build
+
+# Builds the iOS/Android apps (Capacitor, mobile/) from the same web code:
+#   web     – static SPA of the app (VITE_AGORA_NATIVE=1), with the exact
+#             dependency versions Lovable uses (bun.lock)
+#   android – debug APK, uploaded as an artifact you can install on a phone
+#   ios     – simulator build without signing, to prove the Xcode project compiles
+# Signed store builds (TestFlight / Play Console) are made locally — see mobile/README.md.
+
+on:
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "src/**"
+      - "public/**"
+      - "vite.config.ts"
+      - "package.json"
+      - "bun.lock"
+      - "scripts/install-outside-lovable.sh"
+      - ".github/workflows/mobile-build.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web bundle for the apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install (exact Lovable versions)
+        run: bash scripts/install-outside-lovable.sh
+      - name: Build the static SPA
+        run: npx vite build
+        env:
+          VITE_AGORA_NATIVE: "1"
+      - name: Check the app shell exists
+        run: test -s dist/client/index.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-native
+          path: dist/client
+          retention-days: 3
+
+  android:
+    name: Android debug APK
+    needs: web
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-native
+          path: dist/client
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - name: Install Capacitor
+        working-directory: mobile
+        run: npm ci
+      - name: Copy the web bundle into the Android project
+        working-directory: mobile
+        run: npx cap sync android
+      - name: Build
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agora-android-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+  ios:
+    name: iOS simulator build
+    needs: web
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-native
+          path: dist/client
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable # Capacitor 8 needs Xcode 26+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Install Capacitor
+        working-directory: mobile
+        run: npm ci
+      - name: Copy the web bundle into the iOS project
+        working-directory: mobile
+        run: npx cap sync ios
+      - name: Build (simulator, unsigned)
+        working-directory: mobile/ios/App
+        shell: bash
+        run: |
+          xcodebuild -version
+          status=0
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build > xcodebuild.log 2>&1 || status=$?
+          grep -E "error:|\*\* BUILD" xcodebuild.log | tail -n 60 || true
+          exit $status
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: xcodebuild-log
+          path: mobile/ios/App/xcodebuild.log
+          retention-days: 7

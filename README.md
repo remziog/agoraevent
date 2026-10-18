@@ -31,3 +31,7 @@ bun run build       # production build (Cloudflare worker + client)
 Schema lives in `supabase/migrations/`. All tables have RLS enabled; server functions run with the caller's JWT (`requireSupabaseAuth`) and only use the service-role client for aggregated/public reads and gamification writes (`src/lib/*.server.ts`).
 
 **Migrations pushed through GitHub are not applied by Lovable.** To run one, ask Lovable in the chat to apply it, or paste the SQL into the Cloud SQL editor.
+
+## Mobile apps
+
+The iOS and Android apps live in [`mobile/`](./mobile/README.md): a Capacitor shell around a static build of this same code (`VITE_AGORA_NATIVE=1 vite build`). Native-only behaviour is gated on `IS_NATIVE_APP` in `src/lib/site.ts`; the website build is unaffected. CI (`.github/workflows/mobile-build.yml`) builds a debug APK and an iOS simulator build on every PR that touches the app.
