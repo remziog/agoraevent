@@ -1,0 +1,23 @@
+{
+  "name": "agora-mobile",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Capacitor shell for the Agora iOS and Android apps. Wraps a static build of the web app in ../ (VITE_AGORA_NATIVE=1).",
+  "scripts": {
+    "build:web": "cd .. && VITE_AGORA_NATIVE=1 npx vite build",
+    "sync": "npm run build:web && cap sync",
+    "ios": "npm run sync && cap open ios",
+    "android": "npm run sync && cap open android",
+    "assets": "capacitor-assets generate --ios --android --iconBackgroundColor '#f5f0e8' --iconBackgroundColorDark '#f5f0e8' --splashBackgroundColor '#fdf6ea' --splashBackgroundColorDark '#fdf6ea'"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/splash-screen": "8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.2"
+  }
+}
