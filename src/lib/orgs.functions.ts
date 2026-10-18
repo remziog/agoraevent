@@ -143,7 +143,11 @@ export const upsertCustomer = createServerFn({ method: "POST" })
         .from("customers")
         .select("id, tags, notes, email")
         .eq("org_id", data.org_id);
-      q = data.user_id ? q.eq("user_id", data.user_id) : q.ilike("email", data.email!);
+      // Case-insensitive exact match: escape ilike's wildcards so an address
+      // like "ali_veli@x.com" can't match "alixveli@x.com".
+      q = data.user_id
+        ? q.eq("user_id", data.user_id)
+        : q.ilike("email", data.email!.replace(/[\\%_]/g, (c) => `\\${c}`));
       const { data: rows, error } = await q.limit(1);
       if (error) throw dbError(error);
       existing = rows?.[0] ?? null;
