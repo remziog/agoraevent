@@ -4,6 +4,21 @@ Mobile-first web app for discovering small real-world gatherings — [ago-ra.lif
 
 Stack: TanStack Start (SSR) · React 19 · Vite 7 · Tailwind v4 · Supabase (Auth, Postgres + RLS, Storage) · Lovable Cloud (AI gateway, Maps connector, email queue) · Cloudflare Workers.
 
+## Agora × Qloo Agentic Hackathon (October 2026)
+
+Agora first shipped in May 2026 as an events app. For the [Qloo Agentic Hackathon](https://qloo.devpost.com/) it is becoming a **taste-aware Istanbul companion**: tell it what you love — artists, films, books — and an agent uses Qloo's taste graph to pick the historic places, nearby restaurants and gatherings you'll connect with, explains each pick with Qloo's evidence, then tells the place's story (a short AI-made film for the hero landmarks, a narrated photo story for the rest), keeping history and legend clearly apart.
+
+```
+taste form ──▶ server function (agent, Vercel AI SDK tools) ──▶ Qloo /search · /v2/insights (+ explainability)
+                     │                                              │
+                     ├──▶ 3 landmarks + "why"  ◀────────────────────┘
+                     ├──▶ restaurants in the landmark's neighbourhood (Qloo, taste-ranked)
+                     ├──▶ Agora community events nearby (Agora data, no Qloo badge)
+                     └──▶ landmark drawer: story video / narration, History vs Legend
+```
+
+Everything Qloo-related is documented in [`docs/qloo-hackathon.md`](./docs/qloo-hackathon.md): client modules, configuration (`QLOO_API_KEY` is a server-only secret), probe scripts, the Workers-vs-harness decision and the data rules we follow (no personal data to Qloo, no fake "Qloo-powered" labels). Hackathon work happens on the `hackathon/qloo-agent` branch and reaches `main` through pull requests. Licensed under [MIT](./LICENSE).
+
 ## Local development
 
 The project is managed by Lovable, which syncs the `main` branch both ways. It uses **bun**; `bun.lock` is the lockfile of record, but it pins tarballs to Lovable's private registry mirror, so a plain `bun install` fails outside Lovable. Use the helper, which installs the exact same versions from npmjs:

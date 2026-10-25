@@ -17,6 +17,12 @@ export type Landmark = {
   description: string;
   hours: string;
   photos: string[];
+  // Neighbourhood used as Qloo's `filter.location.query` ("<district>, Istanbul")
+  // for taste-ranked restaurants near the landmark. Never the user's GPS.
+  district: string;
+  // Qloo entity mapping (filled by scripts/qloo-map-landmarks.mjs). `entityId`
+  // null means no confident match: the UI must not label it as a Qloo result.
+  qloo: { entityId: string | null; name?: string; confidence: "exact" | "likely" | "none" };
 };
 
 const nowIso = () => new Date().toISOString();
@@ -30,6 +36,8 @@ const wiki = (file: string, width = 800) =>
 export const ISTANBUL_LANDMARKS: Landmark[] = [
   {
     id: "lm-hagia-sophia",
+    district: "Sultanahmet",
+    qloo: { entityId: null, confidence: "none" },
     title: "Hagia Sophia",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -50,6 +58,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-blue-mosque",
+    district: "Sultanahmet",
+    qloo: { entityId: null, confidence: "none" },
     title: "Sultan Ahmed (Blue) Mosque",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -70,6 +80,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-topkapi",
+    district: "Sultanahmet",
+    qloo: { entityId: null, confidence: "none" },
     title: "Topkapı Palace",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -90,6 +102,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-basilica-cistern",
+    district: "Sultanahmet",
+    qloo: { entityId: null, confidence: "none" },
     title: "Basilica Cistern",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -110,6 +124,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-grand-bazaar",
+    district: "Beyazıt",
+    qloo: { entityId: null, confidence: "none" },
     title: "Grand Bazaar",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -130,6 +146,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-spice-bazaar",
+    district: "Eminönü",
+    qloo: { entityId: null, confidence: "none" },
     title: "Spice Bazaar",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -150,6 +168,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-galata-tower",
+    district: "Karaköy",
+    qloo: { entityId: null, confidence: "none" },
     title: "Galata Tower",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -170,6 +190,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-istiklal",
+    district: "Beyoğlu",
+    qloo: { entityId: null, confidence: "none" },
     title: "İstiklal Avenue",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -190,6 +212,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-taksim",
+    district: "Beyoğlu",
+    qloo: { entityId: null, confidence: "none" },
     title: "Taksim Square",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -210,6 +234,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-dolmabahce",
+    district: "Beşiktaş",
+    qloo: { entityId: null, confidence: "none" },
     title: "Dolmabahçe Palace",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -230,6 +256,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-bosphorus-cruise",
+    district: "Eminönü",
+    qloo: { entityId: null, confidence: "none" },
     title: "Bosphorus Ferry",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -250,6 +278,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-maiden-tower",
+    district: "Üsküdar",
+    qloo: { entityId: null, confidence: "none" },
     title: "Maiden's Tower (Kız Kulesi)",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -270,6 +300,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-suleymaniye",
+    district: "Fatih",
+    qloo: { entityId: null, confidence: "none" },
     title: "Süleymaniye Mosque",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -290,6 +322,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-chora",
+    district: "Edirnekapı",
+    qloo: { entityId: null, confidence: "none" },
     title: "Chora Church (Kariye)",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -310,6 +344,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-kadikoy",
+    district: "Kadıköy",
+    qloo: { entityId: null, confidence: "none" },
     title: "Kadıköy & Moda",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -330,6 +366,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-ortakoy",
+    district: "Ortaköy",
+    qloo: { entityId: null, confidence: "none" },
     title: "Ortaköy Mosque",
     starts_at: nowIso(),
     city: "Istanbul",
