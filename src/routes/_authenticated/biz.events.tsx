@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { PlacePicker } from "@/components/PlacePicker";
 import { toast } from "sonner";
 
 const search = z.object({ org: z.string().uuid() });
@@ -33,7 +34,9 @@ function EventsPage() {
   const [title, setTitle] = useState("");
   const [cat, setCat] = useState("");
   const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
   const [venue, setVenue] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [capacity, setCapacity] = useState("");
   const [price, setPrice] = useState("");
   const [tags, setTags] = useState("");
@@ -51,14 +54,17 @@ function EventsPage() {
           description: desc || null,
           category: cat,
           starts_at: new Date(startsAt).toISOString(),
+          ends_at: endsAt ? new Date(endsAt).toISOString() : null,
           city: orgRow?.city ?? null,
           venue: venue || null,
+          latitude: coords?.lat ?? null,
+          longitude: coords?.lng ?? null,
           capacity: capacity ? Number(capacity) : null,
           price: price ? Number(price) : 0,
           tags: tags.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
         },
       });
-      setTitle(""); setCat(""); setStartsAt(""); setVenue(""); setCapacity(""); setPrice(""); setTags(""); setDesc("");
+      setTitle(""); setCat(""); setStartsAt(""); setEndsAt(""); setVenue(""); setCoords(null); setCapacity(""); setPrice(""); setTags(""); setDesc("");
       qc.invalidateQueries({ queryKey: ["org-events", org] });
       toast.success("Event created");
     } catch (e) { toast.error((e as Error).message); }
@@ -105,11 +111,20 @@ function EventsPage() {
             <h3 className="font-display text-xl">New event</h3>
             <div className="space-y-2"><Label>Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} required /></div>
             <div className="space-y-2"><Label>Category</Label><Input placeholder="run club, listening session…" value={cat} onChange={(e) => setCat(e.target.value)} required /></div>
-            <div className="space-y-2"><Label>Starts at</Label><Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required /></div>
             <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2"><Label>Venue</Label><Input value={venue} onChange={(e) => setVenue(e.target.value)} /></div>
-              <div className="space-y-2"><Label>Capacity</Label><Input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Starts at</Label><Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required /></div>
+              <div className="space-y-2"><Label>Ends at <span className="text-muted-foreground">(optional)</span></Label><Input type="datetime-local" value={endsAt} min={startsAt || undefined} onChange={(e) => setEndsAt(e.target.value)} /></div>
             </div>
+            <div className="space-y-2">
+              <Label>Venue</Label>
+              <PlacePicker
+                value={venue}
+                onTextChange={(text) => { setVenue(text); setCoords(null); }}
+                onPick={(place) => { setVenue(place.name || venue); setCoords({ lat: place.latitude, lng: place.longitude }); }}
+                disabled={submitting}
+              />
+            </div>
+            <div className="space-y-2"><Label>Capacity</Label><Input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} /></div>
             <div className="space-y-2"><Label>Price</Label><Input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
             <div className="space-y-2"><Label>Tags</Label><Input placeholder="comma, separated" value={tags} onChange={(e) => setTags(e.target.value)} /></div>
             <div className="space-y-2"><Label>Description</Label><Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} /></div>

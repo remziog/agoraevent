@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,8 +11,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
+const loginSearch = z.object({ redirect: z.string().optional() });
+
+// Only allow same-origin paths as a post-login destination (no "//evil.com",
+// no absolute URLs) so the `redirect` param can't be used for open redirects.
+function safeRedirect(target: string | undefined): string | null {
+  if (!target) return null;
+  if (!target.startsWith("/") || target.startsWith("//") || target.startsWith("/\\")) return null;
+  if (target.startsWith("/login") || target.startsWith("/signup")) return null;
+  return target;
+}
+
 export const Route = createFileRoute("/login")({
-  beforeLoad: async () => {
+  validateSearch: (s) => loginSearch.parse(s),
+  beforeLoad: async ({ search }) => {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return;
 
@@ -21,7 +34,10 @@ export const Route = createFileRoute("/login")({
       .eq("id", auth.user.id)
       .maybeSingle();
 
-    throw redirect({ to: profile?.onboarded ? "/app" : "/onboarding" });
+    if (!profile?.onboarded) throw redirect({ to: "/onboarding" });
+    const target = safeRedirect(search.redirect);
+    if (target) throw redirect({ href: target });
+    throw redirect({ to: "/app" });
   },
   head: () => ({
     meta: [
@@ -39,6 +55,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { redirect: redirectTarget } = Route.useSearch();
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,7 +73,13 @@ function LoginPage() {
           .eq("id", auth.user.id)
           .maybeSingle()
       : { data: null };
-    navigate({ to: profile?.onboarded ? "/app" : "/onboarding" });
+    if (!profile?.onboarded) {
+      navigate({ to: "/onboarding" });
+      return;
+    }
+    const target = safeRedirect(redirectTarget);
+    if (target) navigate({ href: target });
+    else navigate({ to: "/app" });
   }
 
   async function onSubmit(e: React.FormEvent) {

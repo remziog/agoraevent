@@ -11,12 +11,15 @@ const SearchInput = z.object({
   city: z.string().max(120).optional().nullable(),
 });
 
+// Keyword fallback when the AI gateway is unavailable. Unicode-aware so
+// Turkish/German/Russian prompts ("müzik", "straße", "концерт") keep their
+// letters instead of being shredded by an ASCII-only character class.
 function extractTagsFallback(prompt: string): string[] {
   return Array.from(
     new Set(
       prompt
         .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")
         .split(/\s+/)
         .filter((w) => w.length > 3)
         .slice(0, 8),
@@ -51,12 +54,12 @@ export const searchEvents = createServerFn({ method: "POST" })
         });
         // Sanitize: lowercase, strip control/punctuation noise, length-cap,
         // drop suspicious values. Prevents tag poisoning into shared insights.
-        const TAG_RE = /^[a-z0-9][a-z0-9 \-]{0,38}$/;
+        const TAG_RE = /^[\p{L}\p{N}][\p{L}\p{N}-]{0,38}$/u;
         tags = Array.from(
           new Set(
             output.tags
               .map((t) =>
-                String(t).toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9\-]/g, ""),
+                String(t).toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\p{L}\p{N}-]/gu, ""),
               )
               .filter((t) => t.length >= 2 && t.length <= 40 && TAG_RE.test(t)),
           ),

@@ -41,7 +41,7 @@ function CustomersPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await addCust({
+      const res = await addCust({
         data: {
           org_id: org,
           name,
@@ -52,7 +52,7 @@ function CustomersPage() {
       });
       setName(""); setEmail(""); setTags(""); setNotes("");
       qc.invalidateQueries({ queryKey: ["org-customers", org] });
-      toast.success("Customer added");
+      toast.success(res.created ? "Customer added" : "Existing customer updated (same email)");
     } catch (e) { toast.error((e as Error).message); }
     finally { setSubmitting(false); }
   }

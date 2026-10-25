@@ -36,6 +36,8 @@ export const Route = createFileRoute("/_authenticated/app/")({
   component: Discover,
 });
 
+type SearchEvent = Awaited<ReturnType<typeof searchEvents>>["events"][number];
+
 const SUGGESTIONS = [
   { dir: "N", angle: -90, label: "Quiet & intimate", prompt: "A quiet bar with people who like vinyl and slow conversation" },
   { dir: "E", angle: 0, label: "Loud & alive", prompt: "Something loud and sweaty tonight" },
@@ -66,23 +68,37 @@ function Discover() {
   const recs = useQuery({ queryKey: ["recommendations"], queryFn: () => fetchRecs() });
 
   const mutate = useMutation({
-    // Sign-in-and-go MVP: when the user tells the compass what they want
-    // we surface a curated set of Istanbul landmarks as pins on the map.
-    // The server search still runs in the background so prompts are logged
-    // for the demand-insights pipeline, but we don't wait on it.
+    // The compass runs the real search: the server extracts tags from the
+    // prompt (AI with keyword fallback) and scores upcoming events by tag
+    // overlap. Matches come first, then a few other upcoming events, then the
+    // curated Istanbul landmarks so the map is never empty. If the search
+    // itself fails we still land on the map with the landmarks.
     mutationFn: async (p: string) => {
-      void search({ data: { prompt: p } }).catch(() => {});
-      // Tiny artificial delay so the compass needle gets to spin.
-      await new Promise((r) => setTimeout(r, 600));
+      const started = Date.now();
+      let matches: SearchEvent[] = [];
+      let others: SearchEvent[] = [];
+      let tags: string[] = [];
+      try {
+        const res = await search({ data: { prompt: p } });
+        tags = res.tags;
+        matches = res.events.filter((e) => e._score > 0);
+        others = res.events.filter((e) => e._score === 0).slice(0, 5);
+      } catch (e) {
+        console.error("[compass] search failed, falling back to landmarks", e);
+      }
+      // Keep the needle spinning for a moment even when the search is fast.
+      const elapsed = Date.now() - started;
+      if (elapsed < 600) await new Promise((r) => setTimeout(r, 600 - elapsed));
       return {
-        events: ISTANBUL_LANDMARKS,
-        tags: ["istanbul", "landmarks"],
+        events: [...matches, ...others, ...ISTANBUL_LANDMARKS],
+        matchCount: matches.length,
+        tags: tags.length > 0 ? tags : ["istanbul", "landmarks"],
       };
     },
     onSuccess: (d) => {
       sessionStorage.setItem(
         "agora:lastSearch",
-        JSON.stringify({ events: d.events, tags: d.tags, prompt }),
+        JSON.stringify({ events: d.events, tags: d.tags, prompt, matchCount: d.matchCount }),
       );
       setNeedle((n) => n + 1080 + Math.floor(Math.random() * 360));
       setTimeout(() => navigate({ to: "/app/map" }), 1100);

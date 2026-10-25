@@ -68,9 +68,17 @@ function LeadsPage() {
               </div>
               <Button size="sm" variant="ghost" onClick={async () => {
                 try {
-                  await addCust({ data: { org_id: org, name: l.profiles?.display_name ?? "Lead", tags: [] } });
+                  const res = await addCust({
+                    data: {
+                      org_id: org,
+                      user_id: l.user_id,
+                      name: l.profiles?.display_name ?? "Lead",
+                      notes: l.profiles?.city ? `City: ${l.profiles.city}` : null,
+                      tags: ["lead"],
+                    },
+                  });
                   qc.invalidateQueries({ queryKey: ["org-customers", org] });
-                  toast.success("Added to customers");
+                  toast.success(res.created ? "Added to customers" : "Already in customers — updated");
                 } catch (e) { toast.error((e as Error).message); }
               }}>+ CRM</Button>
             </li>
