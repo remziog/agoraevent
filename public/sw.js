@@ -9,7 +9,7 @@ const VERSION = "agora-v1";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const MAP_CACHE = `${VERSION}-maps`;
-const SHELL_URLS = ["/", "/favicon.svg", "/manifest.webmanifest"];
+const SHELL_URLS = ["/", "/favicon.svg", "/favicon.ico", "/manifest.webmanifest", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

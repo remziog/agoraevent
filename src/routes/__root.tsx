@@ -17,6 +17,8 @@ import "@/i18n";
 
 import appCss from "../styles.css?url";
 
+const SITE_URL = "https://ago-ra.life";
+
 function NotFoundComponent() {
   const { t } = useTranslation();
   return (
@@ -87,9 +89,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Agora — Meet your people in real life" },
       { property: "og:description", content: "Agora helps you find nearby events that match your taste — music, sport, film, and more. The modern gathering place." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:site_name", content: "Agora" },
+      // Social crawlers require an absolute og:image URL; a stable file under
+      // /public avoids hashed asset paths changing between builds.
+      { property: "og:image", content: `${SITE_URL}/og-landing.jpg` },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Agora — Meet your people in real life" },
       { name: "twitter:description", content: "Agora helps you find nearby events that match your taste — music, sport, film, and more. The modern gathering place." },
+      { name: "twitter:image", content: `${SITE_URL}/og-landing.jpg` },
       { name: "google-site-verification", content: "QPgfYQXEb-1wmo8CS2xJqW_EtjFlrUjZ2tVxEItXnig" },
       { name: "theme-color", content: "#111111" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -99,7 +108,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/favicon.svg" },
+      { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      // iOS ignores SVG touch icons; needs an opaque PNG.
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

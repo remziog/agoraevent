@@ -27,7 +27,11 @@ export function MemorySection({ eventId, canPost }: { eventId: string; canPost: 
       const { data: session } = await supabase.auth.getUser();
       const userId = session.user?.id;
       if (!userId) throw new Error("Sign in required");
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const ext =
+        (file.name.split(".").pop() ?? "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "")
+          .slice(0, 5) || "jpg";
       const path = `${userId}/${eventId}/${Date.now()}.${ext}`;
       const up = await supabase.storage.from("memories").upload(path, file, {
         contentType: file.type,
@@ -35,13 +39,20 @@ export function MemorySection({ eventId, canPost }: { eventId: string; canPost: 
       });
       if (up.error) throw new Error(up.error.message);
       const { data: pub } = supabase.storage.from("memories").getPublicUrl(path);
-      await add({
-        data: {
-          event_id: eventId,
-          photo_url: pub.publicUrl,
-          caption: caption.trim() || null,
-        },
-      });
+      try {
+        await add({
+          data: {
+            event_id: eventId,
+            photo_url: pub.publicUrl,
+            caption: caption.trim() || null,
+          },
+        });
+      } catch (err) {
+        // The bucket is public: don't leave an orphaned photo reachable by URL
+        // when the memory row wasn't created.
+        await supabase.storage.from("memories").remove([path]);
+        throw err;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["memories", "event", eventId] });

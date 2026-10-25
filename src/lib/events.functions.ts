@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
-import { awardXp } from "./gamification.functions";
+import { awardXp } from "./gamification.server";
 import { generateText, Output } from "ai";
 
 const SearchInput = z.object({
@@ -144,25 +144,42 @@ export const rsvpEvent = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     if (data.going) {
-      const { error } = await context.supabase
+      // `onConflict` must name the real unique key (event_id, user_id); the
+      // default conflict target is the PK, which never matches an existing
+      // RSVP. With `ignoreDuplicates` + `.select()` PostgREST returns the row
+      // only when it was actually inserted, which makes the XP award
+      // idempotent in a single round-trip (no re-award on repeat RSVPs).
+      const { data: inserted, error } = await context.supabase
         .from("rsvps")
-        .upsert({ event_id: data.event_id, user_id: context.userId, status: "going" });
+        .upsert(
+          { event_id: data.event_id, user_id: context.userId, status: "going" },
+          { onConflict: "event_id,user_id", ignoreDuplicates: true },
+        )
+        .select("id");
       if (error) throw dbError(error);
+      const isNew = (inserted?.length ?? 0) > 0;
+      if (!isNew) return { ok: true, awarded: false };
+
       const { data: ev } = await context.supabase
         .from("events")
         .select("starts_at")
         .eq("id", data.event_id)
         .maybeSingle();
       await awardXp(context.userId, 25, ev?.starts_at ? new Date(ev.starts_at) : undefined);
-    } else {
-      const { error } = await context.supabase
-        .from("rsvps")
-        .delete()
-        .eq("event_id", data.event_id)
-        .eq("user_id", context.userId);
-      if (error) throw dbError(error);
+      return { ok: true, awarded: true };
     }
-    return { ok: true };
+
+    // Cancelling reverts the XP so RSVP → cancel → RSVP nets zero instead of
+    // +25 per cycle. The streak is left untouched (see awardXp).
+    const { data: removed, error } = await context.supabase
+      .from("rsvps")
+      .delete()
+      .eq("event_id", data.event_id)
+      .eq("user_id", context.userId)
+      .select("id");
+    if (error) throw dbError(error);
+    if ((removed?.length ?? 0) > 0) await awardXp(context.userId, -25);
+    return { ok: true, awarded: false };
   });
 
 export const listMyRsvps = createServerFn({ method: "GET" })

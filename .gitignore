@@ -30,3 +30,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local secrets for development. The tracked `.env` is managed by Lovable Cloud
+# and holds only publishable values; Lovable's Vite config reads VITE_* from it,
+# so it must stay in the repo. Server-only values go in .env.local (see .env.example).
+.env.local
+.env.*.local
+
+# Local backup made by scripts/install-outside-lovable.sh if it is interrupted
+bun.lock.lovable
