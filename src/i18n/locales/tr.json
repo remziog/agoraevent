@@ -63,7 +63,8 @@
     "submit": "Giriş yap",
     "submitting": "Giriş yapılıyor…",
     "welcomeBack": "Tekrar hoş geldin",
-    "errorGeneric": "Giriş yapılamadı. Lütfen tekrar dene."
+    "errorGeneric": "Giriş yapılamadı. Lütfen tekrar dene.",
+    "nativeGoogleHint": "Google ile mi kaydoldun? Google ile giriş uygulamada henüz yok — bir kez “Şifreni mi unuttun?” ile şifre belirle, sonra buradan giriş yap."
   },
   "signup": {
     "metaTitle": "Agora'ya katıl — İnsanlarını bul",

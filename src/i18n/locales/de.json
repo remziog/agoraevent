@@ -62,7 +62,8 @@
     "submit": "Anmelden",
     "submitting": "Anmeldung läuft…",
     "welcomeBack": "Willkommen zurück",
-    "errorGeneric": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
+    "errorGeneric": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+    "nativeGoogleHint": "Mit Google registriert? Die Google-Anmeldung gibt es in der App noch nicht — lege einmal über „Passwort vergessen?“ ein Passwort fest und melde dich dann hier an."
   },
   "signup": {
     "metaTitle": "Agora beitreten — Finde deine Leute",

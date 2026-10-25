@@ -1,14 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Logo, LogoMark } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SiteFooter } from "@/components/SiteFooter";
+import { IS_NATIVE_APP, SITE_URL } from "@/lib/site";
 
-const SITE_URL = "https://ago-ra.life";
 const OG_IMAGE = `${SITE_URL}/og-landing.jpg`;
 
 export const Route = createFileRoute("/")({
+  // The iOS/Android app opens on "/": skip the marketing page and go to the
+  // app (which sends signed-out users to /login).
+  beforeLoad: () => {
+    if (IS_NATIVE_APP) throw redirect({ to: "/app" });
+  },
   head: () => ({
     meta: [
       { title: "Agora — Meet your people in real life" },

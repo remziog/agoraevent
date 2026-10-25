@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthShell, GoogleButton, EmailToggleButton, Divider } from "./login";
+import { IS_NATIVE_APP, publicSiteUrl } from "@/lib/site";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -32,7 +33,8 @@ function SignupPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | null>(null);
-  const [showEmail, setShowEmail] = useState(false);
+  // No Google sign-in in the iOS/Android app yet (see login.tsx).
+  const [showEmail, setShowEmail] = useState(IS_NATIVE_APP);
   const [formError, setFormError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
@@ -43,7 +45,9 @@ function SignupPage() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin + "/onboarding",
+        // The confirmation link opens in a browser; from the app it must point
+        // at the public site, not the app's local origin.
+        emailRedirectTo: publicSiteUrl() + "/onboarding",
         data: { display_name: name },
       },
     });
@@ -85,20 +89,22 @@ function SignupPage() {
         </div>
       )}
 
-      <div className="space-y-3">
-        <GoogleButton
-          onClick={() => onOAuth("google")}
-          label={oauthLoading === "google" ? t("common.loading") : t("signup.continueGoogle")}
-          disabled={oauthLoading !== null || loading}
-        />
-        {!showEmail && (
-          <EmailToggleButton onClick={() => setShowEmail(true)} label={t("signup.signUpEmail")} />
-        )}
-      </div>
+      {!IS_NATIVE_APP && (
+        <div className="space-y-3">
+          <GoogleButton
+            onClick={() => onOAuth("google")}
+            label={oauthLoading === "google" ? t("common.loading") : t("signup.continueGoogle")}
+            disabled={oauthLoading !== null || loading}
+          />
+          {!showEmail && (
+            <EmailToggleButton onClick={() => setShowEmail(true)} label={t("signup.signUpEmail")} />
+          )}
+        </div>
+      )}
 
       {showEmail && (
         <>
-          <Divider />
+          {!IS_NATIVE_APP && <Divider />}
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">{t("common.name")}</Label>

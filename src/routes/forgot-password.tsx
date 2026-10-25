@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthShell } from "./login";
+import { publicSiteUrl } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +36,8 @@ function ForgotPasswordPage() {
     setLoading(true);
     setFormError(null);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      // From the iOS/Android app the reset link must open the public site.
+      redirectTo: `${publicSiteUrl()}/reset-password`,
     });
     setLoading(false);
     if (error) {

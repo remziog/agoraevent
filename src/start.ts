@@ -1,6 +1,7 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
+import { IS_NATIVE_APP, nativeServerFnFetch } from "./lib/site";
 import { attachSupabaseAuth } from "./integrations/supabase/auth-attacher";
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
@@ -25,4 +26,7 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
 export const startInstance = createStart(() => ({
   requestMiddleware: [errorMiddleware],
   functionMiddleware: [attachSupabaseAuth],
+  // The iOS/Android app has no server at its own origin: send server-function
+  // calls to the public site instead (see src/lib/site.ts).
+  ...(IS_NATIVE_APP ? { serverFns: { fetch: nativeServerFnFetch } } : {}),
 }));

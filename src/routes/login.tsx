@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { IS_NATIVE_APP } from "@/lib/site";
 
 const loginSearch = z.object({ redirect: z.string().optional() });
 
@@ -61,7 +62,9 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | null>(null);
-  const [showEmail, setShowEmail] = useState(false);
+  // The iOS/Android app has no Google sign-in yet (Google blocks OAuth inside
+  // embedded web views; it needs native sign-in), so it goes straight to email.
+  const [showEmail, setShowEmail] = useState(IS_NATIVE_APP);
   const [formError, setFormError] = useState<string | null>(null);
 
   async function routeAfterAuth() {
@@ -125,20 +128,22 @@ function LoginPage() {
         </div>
       )}
 
-      <div className="space-y-3">
-        <GoogleButton
-          onClick={() => onOAuth("google")}
-          label={oauthLoading === "google" ? t("common.loading") : t("login.continueGoogle")}
-          disabled={oauthLoading !== null || loading}
-        />
-        {!showEmail && (
-          <EmailToggleButton onClick={() => setShowEmail(true)} label={t("login.continueEmail")} />
-        )}
-      </div>
+      {!IS_NATIVE_APP && (
+        <div className="space-y-3">
+          <GoogleButton
+            onClick={() => onOAuth("google")}
+            label={oauthLoading === "google" ? t("common.loading") : t("login.continueGoogle")}
+            disabled={oauthLoading !== null || loading}
+          />
+          {!showEmail && (
+            <EmailToggleButton onClick={() => setShowEmail(true)} label={t("login.continueEmail")} />
+          )}
+        </div>
+      )}
 
       {showEmail && (
         <>
-          <Divider />
+          {!IS_NATIVE_APP && <Divider />}
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">{t("common.email")}</Label>
@@ -157,6 +162,11 @@ function LoginPage() {
               {t("common.forgotPassword")}
             </Link>
           </div>
+          {IS_NATIVE_APP && (
+            <p className="mt-4 rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+              {t("login.nativeGoogleHint")}
+            </p>
+          )}
         </>
       )}
 
