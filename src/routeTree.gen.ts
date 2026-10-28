@@ -20,6 +20,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConcertSlugRouteImport } from './routes/concert.$slug'
+import { Route as ApiGuideHealthRouteImport } from './routes/api/guide-health'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedBizIndexRouteImport } from './routes/_authenticated/biz.index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -89,6 +90,11 @@ const IndexRoute = IndexRouteImport.update({
 const ConcertSlugRoute = ConcertSlugRouteImport.update({
   id: '/concert/$slug',
   path: '/concert/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGuideHealthRoute = ApiGuideHealthRouteImport.update({
+  id: '/api/guide-health',
+  path: '/api/guide-health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/guide': typeof AuthenticatedAppGuideRoute
@@ -218,6 +225,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/guide': typeof AuthenticatedAppGuideRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/guide': typeof AuthenticatedAppGuideRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/today'
     | '/onboarding'
+    | '/api/guide-health'
     | '/concert/$slug'
     | '/app/calendar'
     | '/app/guide'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/today'
     | '/onboarding'
+    | '/api/guide-health'
     | '/concert/$slug'
     | '/app/calendar'
     | '/app/guide'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/today'
     | '/_authenticated/onboarding'
+    | '/api/guide-health'
     | '/concert/$slug'
     | '/_authenticated/app/calendar'
     | '/_authenticated/app/guide'
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TodayRoute: typeof TodayRoute
+  ApiGuideHealthRoute: typeof ApiGuideHealthRoute
   ConcertSlugRoute: typeof ConcertSlugRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
@@ -445,6 +458,13 @@ declare module '@tanstack/react-router' {
       path: '/concert/$slug'
       fullPath: '/concert/$slug'
       preLoaderRoute: typeof ConcertSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/guide-health': {
+      id: '/api/guide-health'
+      path: '/api/guide-health'
+      fullPath: '/api/guide-health'
+      preLoaderRoute: typeof ApiGuideHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/onboarding': {
@@ -613,6 +633,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TodayRoute: TodayRoute,
+  ApiGuideHealthRoute: ApiGuideHealthRoute,
   ConcertSlugRoute: ConcertSlugRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }

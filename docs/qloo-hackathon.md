@@ -80,6 +80,19 @@ Reference while building: the Qloo docs MCP server (`https://docs.qloo.com/mcp`,
 
 Agora's server functions run on Cloudflare Workers. The hackathon kit lists `qloo explore/exec/api/mcp` from `@qloo/qloo-harness` as the supported surfaces and says serverless functions are not a supported route and a browser cannot start `qloo mcp`. Agora therefore calls the same HTTP endpoints the harness wraps (`/search`, `/v2/insights`, `/v2/tags`) directly from the worker with the event credential. The first live call decides: if the credential works against `api.qloo.com` from the worker runtime we stay with direct HTTP (plan A); if not, a small Node service running the harness sits between the worker and Qloo (plan B).
 
+## Coordination (two Claude sessions on this branch, 28 Oct)
+
+Two sessions were committing to `hackathon/qloo-agent` on 28 Oct and both merge to `main` through PRs. To avoid stepping on each other:
+
+- **Session `01P8W87q…` (Remzi's chat "Hackathon analizi durumu"):** live verification on the Lovable preview and ago-ra.life (Qloo credential, landmark map, agent, the `/app/guide` flow), fixes found by live testing, deploys. Owns `src/lib/guide-agent.server.ts`, `src/lib/qloo*.ts`, `src/routes/_authenticated/app.guide.tsx`, `src/components/guide/*` and `src/routes/api/guide-health.ts` until the live test is done.
+- **Session `0148Wf1W…`:** offline tests (`tests/`), `docs/devpost.md`, README, this file's other sections.
+
+Always `git fetch` and rebase before pushing; open a PR rather than pushing to `main`. Status of the live test is tracked in GitHub issue "Live verification of the taste guide".
+
+## Operator health check
+
+`GET/POST /api/guide-health` exists only when `GUIDE_HEALTH_TOKEN` (≥ 16 chars) is set in the server environment and the caller sends it as `Authorization: Bearer …`; otherwise the route answers 404. `GET ?map=1` checks the credential, runs one `/search`, and fills/reads the landmark map; `POST {"terms": [...], "mood": "..."}` resolves the terms and runs the agent, returning the full plan and trace. It is for verifying a deployment; the production secret should stay unset once the live test is done.
+
 ## Rules we follow
 
 - Never present a non-Qloo result as Qloo-powered; landmarks without a confident Qloo entity never get a Qloo badge; events are Agora data.
