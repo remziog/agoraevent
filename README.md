@@ -17,7 +17,7 @@ taste form ──▶ server function (agent, Vercel AI SDK tools) ──▶ Qloo
                      └──▶ landmark drawer: story video / narration, History vs Legend
 ```
 
-Everything Qloo-related is documented in [`docs/qloo-hackathon.md`](./docs/qloo-hackathon.md): client modules, configuration (`QLOO_API_KEY` is a server-only secret), probe scripts, the Workers-vs-harness decision and the data rules we follow (no personal data to Qloo, no fake "Qloo-powered" labels). Hackathon work happens on the `hackathon/qloo-agent` branch and reaches `main` through pull requests. Licensed under [MIT](./LICENSE).
+The guide lives at `/app/guide` (sign in → **Taste guide**); `/app/qloo-status` shows the live Qloo state. Everything Qloo-related is documented in [`docs/qloo-hackathon.md`](./docs/qloo-hackathon.md): client modules, configuration (`QLOO_API_KEY` is a server-only secret), probe scripts, the Workers-vs-harness decision and the data rules we follow (no personal data to Qloo, no fake "Qloo-powered" labels). The Devpost write-up is [`docs/devpost.md`](./docs/devpost.md). Hackathon work happens on the `hackathon/qloo-agent` branch and reaches `main` through pull requests. Licensed under [MIT](./LICENSE).
 
 ## Local development
 
