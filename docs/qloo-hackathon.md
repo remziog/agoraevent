@@ -52,7 +52,7 @@ Every fact shown comes from tool executions recorded on the server; the model on
 Configuration (server only — see `.env.example`):
 
 - `QLOO_API_KEY` — the event credential. Lovable secret in production, `.env.local` locally. Never `VITE_`-prefixed, never committed, never in screenshots.
-- `QLOO_BASE_URL` — defaults to `https://api.qloo.com` (same host the `@qloo/qloo-harness` uses). The legacy `QLOO_API_BASE_URL` is still read as a fallback.
+- `QLOO_BASE_URL` — defaults to `https://api.qloo.com` (same host the `@qloo/qloo-harness` uses). The legacy `QLOO_API_BASE_URL` is still read as a fallback. Hackathon credentials may be provisioned only on `https://hackathon.api.qloo.com` (first live call on 28 Oct 2026: 401 on `api.qloo.com`): the transport retries an auth failure once on the other known host, remembers the host that accepted the key, and `/app/qloo-status` says which one answered. Set `QLOO_BASE_URL` to the host named in the key email to skip the failed first try.
 - `QLOO_RESTAURANT_TAGS` — optional comma-separated tag ids to pin the restaurant filter; otherwise discovered at runtime via `/v2/tags`.
 
 Probe scripts (Node ≥ 22, no dependencies, key from `.env.local`):
@@ -79,6 +79,19 @@ Reference while building: the Qloo docs MCP server (`https://docs.qloo.com/mcp`,
 ## Architecture note: Workers vs. the harness
 
 Agora's server functions run on Cloudflare Workers. The hackathon kit lists `qloo explore/exec/api/mcp` from `@qloo/qloo-harness` as the supported surfaces and says serverless functions are not a supported route and a browser cannot start `qloo mcp`. Agora therefore calls the same HTTP endpoints the harness wraps (`/search`, `/v2/insights`, `/v2/tags`) directly from the worker with the event credential. The first live call decides: if the credential works against `api.qloo.com` from the worker runtime we stay with direct HTTP (plan A); if not, a small Node service running the harness sits between the worker and Qloo (plan B).
+
+## Coordination (two Claude sessions on this branch, 28 Oct)
+
+Two sessions were committing to `hackathon/qloo-agent` on 28 Oct and both merge to `main` through PRs. To avoid stepping on each other:
+
+- **Session `01P8W87q…` (Remzi's chat "Hackathon analizi durumu"):** live verification on the Lovable preview and ago-ra.life (Qloo credential, landmark map, agent, the `/app/guide` flow), fixes found by live testing, deploys. Owns `src/lib/guide-agent.server.ts`, `src/lib/qloo*.ts`, `src/routes/_authenticated/app.guide.tsx`, `src/components/guide/*` and `src/routes/api/guide-health.ts` until the live test is done.
+- **Session `0148Wf1W…`:** offline tests (`tests/`), `docs/devpost.md`, README, this file's other sections.
+
+Always `git fetch` and rebase before pushing; open a PR rather than pushing to `main`. Status of the live test is tracked in GitHub issue "Live verification of the taste guide".
+
+## Operator health check
+
+`GET/POST /api/guide-health` exists only when `GUIDE_HEALTH_TOKEN` (≥ 16 chars) is set in the server environment and the caller sends it as `Authorization: Bearer …`; otherwise the route answers 404. `GET ?map=1` checks the credential, runs one `/search`, and fills/reads the landmark map; `POST {"terms": [...], "mood": "..."}` resolves the terms and runs the agent, returning the full plan and trace. It is for verifying a deployment; the production secret should stay unset once the live test is done.
 
 ## Rules we follow
 

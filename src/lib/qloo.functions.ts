@@ -22,7 +22,8 @@ import { ISTANBUL_LANDMARKS } from "./istanbul-landmarks";
 import { QLOO_ENTITY_PLACE, type QlooCall } from "./qloo.schemas";
 import {
   cached,
-  DEFAULT_QLOO_BASE_URL,
+  qlooAcceptedBaseUrl,
+  qlooConfiguredBaseUrl,
   qlooErrorCode,
   qlooPlacesNear,
   qlooSearch,
@@ -130,9 +131,7 @@ export const getQlooStatus = createServerFn({ method: "POST" })
     const configured = Boolean(process.env.QLOO_API_KEY);
     let host: string;
     try {
-      host = new URL(
-        process.env.QLOO_BASE_URL ?? process.env.QLOO_API_BASE_URL ?? DEFAULT_QLOO_BASE_URL,
-      ).host;
+      host = new URL(qlooConfiguredBaseUrl()).host;
     } catch {
       host = "invalid QLOO_BASE_URL";
     }
@@ -146,6 +145,14 @@ export const getQlooStatus = createServerFn({ method: "POST" })
       } catch (error) {
         probe = { ok: false, error: qlooErrorCode(error) };
       }
+    }
+    // The host that actually accepted the key may differ from the configured one
+    // (hackathon credentials live on hackathon.api.qloo.com); say which one answered.
+    const accepted = qlooAcceptedBaseUrl();
+    if (accepted) {
+      const acceptedHost = new URL(accepted).host;
+      if (acceptedHost !== host)
+        host = `${acceptedHost} (configured: ${host}, which rejected the key)`;
     }
     const map = await readLandmarkQlooMap();
     return { configured, host, probe, landmarks: withTitles(map), calls };

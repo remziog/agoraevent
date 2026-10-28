@@ -128,6 +128,8 @@ export type QlooTag = { id: string; name: string; type?: string };
  */
 export type QlooCall = {
   endpoint: string;
+  /** Host that answered (api.qloo.com or hackathon.api.qloo.com). */
+  host?: string;
   params: Record<string, string>;
   status: number;
   ms: number;

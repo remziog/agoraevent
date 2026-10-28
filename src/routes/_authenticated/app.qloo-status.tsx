@@ -293,7 +293,8 @@ function Calls({ calls }: { calls: QlooCall[] }) {
       <ul className="mt-2 space-y-1 font-mono">
         {calls.map((c, i) => (
           <li key={i} className="break-all">
-            {c.status || "—"} · {c.ms} ms · GET {c.endpoint}?
+            {c.status || "—"} · {c.ms} ms · GET {c.host ? `${c.host}` : ""}
+            {c.endpoint}?
             {Object.entries(c.params)
               .map(([k, v]) => `${k}=${v}`)
               .join("&")}
