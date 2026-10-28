@@ -24,6 +24,7 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
     variant === "member"
       ? [
           { to: "/app", label: "Discover" },
+          { to: "/app/guide", label: "Taste guide" },
           { to: "/app/calendar", label: "Calendar" },
           { to: "/app/memories", label: "Memories" },
           { to: "/app/profile", label: "Taste" },

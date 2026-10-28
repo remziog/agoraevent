@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
+import { LandmarkStory } from "@/components/LandmarkStory";
 import { Clock, MapPin, Navigation, ImageOff } from "lucide-react";
 import type { Landmark } from "@/lib/istanbul-landmarks";
 
@@ -17,9 +18,11 @@ type Props = {
   landmark: (Landmark & { id: string }) | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Story section to open with (the taste guide's choice). */
+  startWith?: string;
 };
 
-export function LandmarkDetailsDrawer({ landmark, open, onOpenChange }: Props) {
+export function LandmarkDetailsDrawer({ landmark, open, onOpenChange, startWith }: Props) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[88vh]">
@@ -42,11 +45,7 @@ export function LandmarkDetailsDrawer({ landmark, open, onOpenChange }: Props) {
               {landmark.photos.length > 0 ? (
                 <div className="-mx-1 flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory">
                   {landmark.photos.map((src, i) => (
-                    <LandmarkPhoto
-                      key={src}
-                      src={src}
-                      alt={`${landmark.title} — photo ${i + 1}`}
-                    />
+                    <LandmarkPhoto key={src} src={src} alt={`${landmark.title} — photo ${i + 1}`} />
                   ))}
                 </div>
               ) : (
@@ -58,9 +57,7 @@ export function LandmarkDetailsDrawer({ landmark, open, onOpenChange }: Props) {
 
             {/* Body */}
             <div className="space-y-4 px-4 pt-4">
-              <p className="text-[15px] leading-relaxed text-foreground/90">
-                {landmark.description}
-              </p>
+              <LandmarkStory landmark={landmark} startWith={startWith} />
 
               <div className="grid gap-2 rounded-2xl border bg-card/60 p-4 text-sm">
                 <div className="flex items-start gap-2">

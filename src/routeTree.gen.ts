@@ -32,6 +32,7 @@ import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppMemoriesRouteImport } from './routes/_authenticated/app.memories'
 import { Route as AuthenticatedAppMapRouteImport } from './routes/_authenticated/app.map'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
+import { Route as AuthenticatedAppGuideRouteImport } from './routes/_authenticated/app.guide'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AuthenticatedAppEventIdRouteImport } from './routes/_authenticated/app.event.$id'
@@ -155,6 +156,11 @@ const AuthenticatedAppIntegrationsRoute =
     path: '/app/integrations',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAppGuideRoute = AuthenticatedAppGuideRouteImport.update({
+  id: '/app/guide',
+  path: '/app/guide',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAppCalendarRoute =
   AuthenticatedAppCalendarRouteImport.update({
     id: '/app/calendar',
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/app/guide': typeof AuthenticatedAppGuideRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/map': typeof AuthenticatedAppMapRoute
   '/app/memories': typeof AuthenticatedAppMemoriesRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/app/guide': typeof AuthenticatedAppGuideRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/map': typeof AuthenticatedAppMapRoute
   '/app/memories': typeof AuthenticatedAppMemoriesRoute
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/_authenticated/app/guide': typeof AuthenticatedAppGuideRoute
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/map': typeof AuthenticatedAppMapRoute
   '/_authenticated/app/memories': typeof AuthenticatedAppMemoriesRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/concert/$slug'
     | '/app/calendar'
+    | '/app/guide'
     | '/app/integrations'
     | '/app/map'
     | '/app/memories'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/concert/$slug'
     | '/app/calendar'
+    | '/app/guide'
     | '/app/integrations'
     | '/app/map'
     | '/app/memories'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/concert/$slug'
     | '/_authenticated/app/calendar'
+    | '/_authenticated/app/guide'
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/map'
     | '/_authenticated/app/memories'
@@ -519,6 +531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/guide': {
+      id: '/_authenticated/app/guide'
+      path: '/app/guide'
+      fullPath: '/app/guide'
+      preLoaderRoute: typeof AuthenticatedAppGuideRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/calendar': {
       id: '/_authenticated/app/calendar'
       path: '/app/calendar'
@@ -546,6 +565,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
+  AuthenticatedAppGuideRoute: typeof AuthenticatedAppGuideRoute
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppMapRoute: typeof AuthenticatedAppMapRoute
   AuthenticatedAppMemoriesRoute: typeof AuthenticatedAppMemoriesRoute
@@ -563,6 +583,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
+  AuthenticatedAppGuideRoute: AuthenticatedAppGuideRoute,
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppMapRoute: AuthenticatedAppMapRoute,
   AuthenticatedAppMemoriesRoute: AuthenticatedAppMemoriesRoute,
