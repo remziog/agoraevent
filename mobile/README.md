@@ -66,3 +66,11 @@ npm run assets                        # → every iOS/Android size
 - App Store names must be unique — "Agora" is likely taken; the home-screen name can stay "Agora" while the store listing uses e.g. "Agora: Meet IRL".
 - `appId` (`life.agora.app` in `capacitor.config.ts`) can't change after the first upload.
 - The iOS app is iPhone-only and both apps are portrait-only for now.
+
+## Device check for the 28 Oct 2026 web changes
+
+The web layer changed on 28 Oct (talking compass, results page with a sticky "Tell Agora…" input, confirmed RSVP, community pages, Turkish). Nothing in `mobile/` changed, but the apps ship that web code, so the same flows need one pass on real devices before any build is shared:
+
+- **Build to test:** the debug APK built by CI for PR #10 (workflow run 40746528661, artifact `agora-android-debug-apk`), or `npm run android` / `npm run ios` locally against the published backend (the app calls server functions by ID; a build older than 28 Oct will not work with the current backend because `searchEvents` was replaced by `discoverEvents`).
+- **Checklist (iOS Safari-style WebView and Android WebView):** compass direction → results page opens with the conversation; the bottom input stays above the keyboard and the home indicator; typing a follow-up keeps the chips; Android back from an event returns to the results with the conversation intact; "I'm going" → confirmation → calendar shows it; cancel → calendar clears; language switch from the drawer; reduced-motion setting stops the needle/bezel animation.
+- **Still not native:** no microphone or camera plugin is wired (none is shown in the UI); Google/Apple sign-in, push and deep links remain as listed above.
