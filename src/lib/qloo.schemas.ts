@@ -151,8 +151,7 @@ export function normalizeEntity(input: unknown): QlooEntity | null {
     imageUrl,
     address,
     locationText,
-    geocode:
-      lat !== undefined && lon !== undefined ? { latitude: lat, longitude: lon } : undefined,
+    geocode: lat !== undefined && lon !== undefined ? { latitude: lat, longitude: lon } : undefined,
     priceLevel: asNumber(props?.price_level),
     rating: asNumber(props?.business_rating),
     tags,

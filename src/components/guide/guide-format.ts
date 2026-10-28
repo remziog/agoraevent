@@ -54,15 +54,22 @@ export const QLOO_ERROR_TEXT: Record<string, string> = {
   qloo_unavailable: "Qloo didn't answer just now. Try again in a moment.",
 };
 
-
 /** Localised text for a Qloo error code (falls back to the English table). */
 export function qlooErrorText(t: TFunction, code: string): string {
-  return t(`guide.error.${code}`, { defaultValue: QLOO_ERROR_TEXT[code] ?? QLOO_ERROR_TEXT.qloo_unavailable });
+  return t(`guide.error.${code}`, {
+    defaultValue: QLOO_ERROR_TEXT[code] ?? QLOO_ERROR_TEXT.qloo_unavailable,
+  });
 }
 
 /** Date/time in Istanbul for the selected language. */
 export function formatWhenLocalized(iso: string, lang: string): string {
-  const locale = lang.startsWith("tr") ? "tr-TR" : lang.startsWith("de") ? "de-DE" : lang.startsWith("ru") ? "ru-RU" : "en-GB";
+  const locale = lang.startsWith("tr")
+    ? "tr-TR"
+    : lang.startsWith("de")
+      ? "de-DE"
+      : lang.startsWith("ru")
+        ? "ru-RU"
+        : "en-GB";
   return new Date(iso).toLocaleString(locale, {
     weekday: "short",
     day: "numeric",

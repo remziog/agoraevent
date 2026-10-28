@@ -203,7 +203,9 @@ async function resolveOne(landmark: Landmark, calls: QlooCall[]): Promise<Landma
         : far.length > 0
           ? `Name matched but not the same place (${far
               .slice(0, 2)
-              .map((c) => `${c.name}${c.distanceKm !== undefined ? ` ${c.distanceKm} km away` : ""}`)
+              .map(
+                (c) => `${c.name}${c.distanceKm !== undefined ? ` ${c.distanceKm} km away` : ""}`,
+              )
               .join("; ")})`
           : landmark.kind === "area"
             ? "No exact name match for this area (businesses borrowing the name are not accepted)"

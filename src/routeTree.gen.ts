@@ -37,6 +37,7 @@ import { Route as AuthenticatedAppGuideRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AuthenticatedAppEventIdRouteImport } from './routes/_authenticated/app.event.$id'
+import { Route as AuthenticatedAppCommunityIdRouteImport } from './routes/_authenticated/app.community.$id'
 
 const TodayRoute = TodayRouteImport.update({
   id: '/today',
@@ -184,6 +185,12 @@ const AuthenticatedAppEventIdRoute = AuthenticatedAppEventIdRouteImport.update({
   path: '/app/event/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAppCommunityIdRoute =
+  AuthenticatedAppCommunityIdRouteImport.update({
+    id: '/app/community/$id',
+    path: '/app/community/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/biz/leads': typeof AuthenticatedBizLeadsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/biz/': typeof AuthenticatedBizIndexRoute
+  '/app/community/$id': typeof AuthenticatedAppCommunityIdRoute
   '/app/event/$id': typeof AuthenticatedAppEventIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
@@ -240,6 +248,7 @@ export interface FileRoutesByTo {
   '/biz/leads': typeof AuthenticatedBizLeadsRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/biz': typeof AuthenticatedBizIndexRoute
+  '/app/community/$id': typeof AuthenticatedAppCommunityIdRoute
   '/app/event/$id': typeof AuthenticatedAppEventIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
@@ -271,6 +280,7 @@ export interface FileRoutesById {
   '/_authenticated/biz/leads': typeof AuthenticatedBizLeadsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/biz/': typeof AuthenticatedBizIndexRoute
+  '/_authenticated/app/community/$id': typeof AuthenticatedAppCommunityIdRoute
   '/_authenticated/app/event/$id': typeof AuthenticatedAppEventIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/biz/leads'
     | '/app/'
     | '/biz/'
+    | '/app/community/$id'
     | '/app/event/$id'
     | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/biz/leads'
     | '/app'
     | '/biz'
+    | '/app/community/$id'
     | '/app/event/$id'
     | '/lovable/email/queue/process'
   id:
@@ -361,6 +373,7 @@ export interface FileRouteTypes {
     | '/_authenticated/biz/leads'
     | '/_authenticated/app/'
     | '/_authenticated/biz/'
+    | '/_authenticated/app/community/$id'
     | '/_authenticated/app/event/$id'
     | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
@@ -579,6 +592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppEventIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/community/$id': {
+      id: '/_authenticated/app/community/$id'
+      path: '/app/community/$id'
+      fullPath: '/app/community/$id'
+      preLoaderRoute: typeof AuthenticatedAppCommunityIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -597,6 +617,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBizLeadsRoute: typeof AuthenticatedBizLeadsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedBizIndexRoute: typeof AuthenticatedBizIndexRoute
+  AuthenticatedAppCommunityIdRoute: typeof AuthenticatedAppCommunityIdRoute
   AuthenticatedAppEventIdRoute: typeof AuthenticatedAppEventIdRoute
 }
 
@@ -615,6 +636,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBizLeadsRoute: AuthenticatedBizLeadsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedBizIndexRoute: AuthenticatedBizIndexRoute,
+  AuthenticatedAppCommunityIdRoute: AuthenticatedAppCommunityIdRoute,
   AuthenticatedAppEventIdRoute: AuthenticatedAppEventIdRoute,
 }
 

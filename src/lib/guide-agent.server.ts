@@ -30,10 +30,10 @@ import { qlooErrorCode } from "./qloo.server";
 import { rankLandmarks, restaurantsNear } from "./qloo-guide.server";
 
 /** Tried in order; the gateway's catalogue changes, so a rejected model falls through to the next. */
-const MODELS = (process.env.AGORA_AGENT_MODEL
-  ? [process.env.AGORA_AGENT_MODEL]
-  : []
-).concat(["google/gemini-3-flash-preview", "google/gemini-2.5-flash"]);
+const MODELS = (process.env.AGORA_AGENT_MODEL ? [process.env.AGORA_AGENT_MODEL] : []).concat([
+  "google/gemini-3-flash-preview",
+  "google/gemini-2.5-flash",
+]);
 const AGENT_TIMEOUT_MS = 30_000;
 const PICKS = 3;
 const GATHERING_RADIUS_KM = 3;

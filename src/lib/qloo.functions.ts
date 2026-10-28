@@ -19,7 +19,12 @@ import type {
   TasteCandidate,
 } from "./guide.types";
 import { ISTANBUL_LANDMARKS } from "./istanbul-landmarks";
-import { QLOO_ENTITY_PLACE, QLOO_SEARCH_TYPES, type QlooCall, type QlooEntity } from "./qloo.schemas";
+import {
+  QLOO_ENTITY_PLACE,
+  QLOO_SEARCH_TYPES,
+  type QlooCall,
+  type QlooEntity,
+} from "./qloo.schemas";
 import {
   cached,
   qlooAcceptedBaseUrl,

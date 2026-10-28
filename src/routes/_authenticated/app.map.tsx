@@ -1,42 +1,36 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, MapPin, Navigation } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Compass,
+  Map as MapIcon,
+  MapPin,
+  Navigation,
+  Users,
+} from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
+import { EventVisual } from "@/components/EventVisual";
 import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
-import { LandmarkDetailsDrawer } from "@/components/LandmarkDetailsDrawer";
-import { ISTANBUL_LANDMARKS, type Landmark } from "@/lib/istanbul-landmarks";
-
-function mapsHref(e: {
-  latitude?: number | null;
-  longitude?: number | null;
-  venue?: string | null;
-  city?: string | null;
-  title: string;
-}) {
-  if (e.latitude && e.longitude) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
-  }
-  const q = encodeURIComponent([e.venue, e.city, e.title].filter(Boolean).join(", "));
-  return `https://www.google.com/maps/dir/?api=1&destination=${q}`;
-}
+import {
+  AskInput,
+  ConstraintChips,
+  TurnList,
+  whenLabel,
+} from "@/components/discover/DiscoveryPanel";
+import { formatWhenLocalized } from "@/components/guide/guide-format";
+import { useDiscovery } from "@/lib/discovery-store";
+import { windowFor, type ScoredEvent, type Unverified, type Violation } from "@/lib/discovery";
 
 export const Route = createFileRoute("/_authenticated/app/map")({
-  component: MapView,
+  head: () => ({
+    meta: [{ title: "Your gatherings — Agora" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
+  component: ResultsView,
 });
-
-type EventRow = {
-  id: string;
-  title: string;
-  starts_at: string;
-  city: string | null;
-  category: string;
-  latitude: number | null;
-  longitude: number | null;
-  venue: string | null;
-  organizations?: { name?: string } | null;
-  tags?: string[];
-};
 
 declare global {
   interface Window {
@@ -50,63 +44,401 @@ declare global {
 // Keyless Google Maps embed — the fallback when the Maps JS API can't load.
 // The browser key is restricted to the website's domains, so it fails inside
 // the iOS/Android app (whose origin is capacitor://localhost or https://localhost).
-function embedSrc(e: Pick<EventRow, "latitude" | "longitude" | "venue" | "city" | "title"> | null) {
+function embedSrc(
+  e: Pick<ScoredEvent, "latitude" | "longitude" | "venue" | "city" | "title"> | null,
+) {
   const q =
     e && typeof e.latitude === "number" && typeof e.longitude === "number"
       ? `${e.latitude},${e.longitude}`
       : e
         ? [e.venue, e.city, e.title].filter(Boolean).join(", ")
         : "Istanbul";
-  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=15&output=embed`;
+  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=14&output=embed`;
 }
 
-function MapView() {
-  const navigate = useNavigate();
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [data, setData] = useState<{
-    events: EventRow[];
-    tags: string[];
-    prompt: string;
-    /** Real prompt matches; the list also carries other upcoming events + landmarks. */
-    matchCount?: number;
-  } | null>(null);
-  const [selected, setSelected] = useState<EventRow | null>(null);
-  const [mapReady, setMapReady] = useState(false);
-  const [mapFailed, setMapFailed] = useState(false);
-  const [landmarkOpen, setLandmarkOpen] = useState(false);
-  const [activeLandmark, setActiveLandmark] = useState<Landmark | null>(null);
-  const landmarkById = useMemo(
-    () => new Map(ISTANBUL_LANDMARKS.map((l) => [l.id, l])),
-    [],
-  );
+function priceLabel(t: TFunction, price: ScoredEvent["price"]) {
+  if (price === null || price === undefined) return t("event.priceUnknown", "Price not listed");
+  const n = Number(price);
+  if (!Number.isFinite(n)) return t("event.priceUnknown", "Price not listed");
+  return n === 0 ? t("event.free", "Free") : `${n} TL`;
+}
 
-  function openIfLandmark(e: EventRow) {
-    const lm = landmarkById.get(e.id);
-    if (lm) {
-      setActiveLandmark(lm);
-      setLandmarkOpen(true);
-    }
-  }
+function ResultsView() {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const { state, ask, edit, reset } = useDiscovery();
+  const [showMap, setShowMap] = useState(false);
+  const [selected, setSelected] = useState<ScoredEvent | null>(null);
+
+  const result = state.result;
+  const all = useMemo(() => (result ? [...result.matches, ...result.alternatives] : []), [result]);
+
+  // No conversation in this tab → start at the compass.
+  useEffect(() => {
+    if (state.status === "idle" && !state.result && state.turns.length === 0)
+      navigate({ to: "/app" });
+  }, [state.status, state.result, state.turns.length, navigate]);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("agora:lastSearch");
-    if (!raw) {
-      navigate({ to: "/app" });
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw);
-      setData(parsed);
-      setSelected(parsed.events?.[0] ?? null);
-    } catch {
-      navigate({ to: "/app" });
-    }
-  }, [navigate]);
+    if (!selected && all.length > 0) setSelected(all[0]);
+  }, [all, selected]);
 
-  // (Auto-launch removed — user opens Google Maps via the "Take me there" button.)
+  const busy = state.status === "searching";
 
+  return (
+    <div className="min-h-screen bg-background">
+      <AppHeader variant="member" />
+      <main className="mx-auto max-w-6xl px-4 pb-32 pt-6 sm:px-6 sm:pb-12">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="gap-1"
+            onClick={() => {
+              reset();
+              navigate({ to: "/app" });
+            }}
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            {t("discover.newSearch", "New search")}
+          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="gap-1">
+              <Link to="/app">
+                <Compass className="h-4 w-4" aria-hidden /> {t("discover.backToCompass", "Compass")}
+              </Link>
+            </Button>
+            <Button
+              variant={showMap ? "default" : "outline"}
+              size="sm"
+              className="gap-1"
+              aria-pressed={showMap}
+              onClick={() => setShowMap((v) => !v)}
+            >
+              <MapIcon className="h-4 w-4" aria-hidden />
+              {showMap ? t("discover.hideMap", "Hide map") : t("discover.showMap", "Show map")}
+            </Button>
+          </div>
+        </div>
 
-  // Load Google Maps JS
+        <div
+          className={`mt-6 grid gap-8 ${showMap ? "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" : ""}`}
+        >
+          <div className="min-w-0 space-y-8">
+            {/* Conversation + conditions */}
+            <section aria-label={t("discover.conversation", "Conversation")} className="space-y-4">
+              {state.constraints && (
+                <ConstraintChips constraints={state.constraints} onEdit={edit} disabled={busy} />
+              )}
+              <TurnList turns={state.turns} status={state.status} />
+              {state.status === "empty" && state.constraints && (
+                <div className="flex flex-wrap gap-2" aria-label={t("discover.options", "Options")}>
+                  {state.constraints.when?.label !== "tomorrow" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() =>
+                        edit(
+                          { when: windowFor("tomorrow", new Date()) },
+                          t("discover.tomorrowOk", "Tomorrow works too"),
+                        )
+                      }
+                    >
+                      {t("discover.tomorrowOk", "Tomorrow works too")}
+                    </Button>
+                  )}
+                  {state.constraints.district && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() =>
+                        edit(
+                          { district: null },
+                          t("discover.nearbyDistricts", "Look at nearby districts"),
+                        )
+                      }
+                    >
+                      {t("discover.nearbyDistricts", "Look at nearby districts")}
+                    </Button>
+                  )}
+                  {state.constraints.when?.label !== "this-week" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() =>
+                        edit(
+                          { when: windowFor("this-week", new Date()) },
+                          t("discover.thisWeekOk", "Any day this week"),
+                        )
+                      }
+                    >
+                      {t("discover.thisWeekOk", "Any day this week")}
+                    </Button>
+                  )}
+                  <Button asChild size="sm" variant="ghost">
+                    <Link to="/app/calendar">
+                      {t("discover.browseCalendar", "Browse the calendar")}
+                    </Link>
+                  </Button>
+                </div>
+              )}
+              <div className="hidden sm:block">
+                <AskInput onSend={(text) => ask(text)} disabled={busy} />
+              </div>
+            </section>
+
+            {/* Results */}
+            {result && (
+              <section aria-label={t("discover.results", "Results")} className="space-y-6">
+                {result.matches.length > 0 && (
+                  <div>
+                    <h2 className="text-xs uppercase tracking-[0.3em] text-primary">
+                      {t("discover.exactMatches", {
+                        count: result.matches.length,
+                        defaultValue: "Meets every condition ({{count}})",
+                      })}
+                    </h2>
+                    <div className="mt-3 grid gap-4 md:grid-cols-2">
+                      {result.matches.map((e) => (
+                        <ResultCard
+                          key={e.id}
+                          event={e}
+                          kind="match"
+                          selected={selected?.id === e.id}
+                          onSelect={() => setSelected(e)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {result.alternatives.length > 0 && (
+                  <div>
+                    <h2 className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      {result.matches.length > 0
+                        ? t("discover.alternatives", "Close, but not everything")
+                        : t(
+                            "discover.alternativesOnly",
+                            "Not exact — each one says what it misses",
+                          )}
+                    </h2>
+                    <div className="mt-3 grid gap-4 md:grid-cols-2">
+                      {result.alternatives.map((e) => (
+                        <ResultCard
+                          key={e.id}
+                          event={e}
+                          kind="alternative"
+                          selected={selected?.id === e.id}
+                          onSelect={() => setSelected(e)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {result.matches.length === 0 && result.alternatives.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-primary/30 bg-card/60 p-6">
+                    <p className="font-display text-lg">
+                      {t("discover.nothingTitle", "No gathering fits this yet.")}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {t("discover.nothingBody", {
+                        checked: result.checked,
+                        defaultValue:
+                          "Agora checked {{checked}} upcoming listings. Change a condition above, or browse the calendar.",
+                      })}
+                    </p>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  {t("discover.checkedNote", {
+                    checked: result.checked,
+                    when: whenLabel(t, result.constraints.when),
+                    defaultValue:
+                      "Checked {{checked}} real Agora listings for {{when}}. Prices and capacities come from the organiser's listing; unknown values are never assumed to fit.",
+                  })}
+                </p>
+              </section>
+            )}
+          </div>
+
+          {showMap && (
+            <aside className="lg:sticky lg:top-6 lg:self-start">
+              <MapPanel events={all} selected={selected} onSelect={setSelected} />
+            </aside>
+          )}
+        </div>
+      </main>
+
+      {/* Mobile: the input stays reachable above the keyboard and the home indicator. */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
+        <AskInput onSend={(text) => ask(text)} disabled={busy} />
+      </div>
+    </div>
+  );
+}
+
+const VIOLATION_KEYS: Record<Violation, [string, string]> = {
+  date: ["discover.miss.date", "different date"],
+  district: ["discover.miss.district", "different district"],
+  budget: ["discover.miss.budget", "over budget"],
+  interest: ["discover.miss.interest", "different interest"],
+  group: ["discover.miss.group", "group size"],
+};
+const UNVERIFIED_KEYS: Record<Unverified, [string, string]> = {
+  price: ["discover.unverified.price", "price not verified"],
+  capacity: ["discover.unverified.capacity", "group size not listed"],
+};
+
+function ResultCard({
+  event: e,
+  kind,
+  selected,
+  onSelect,
+}: {
+  event: ScoredEvent;
+  kind: "match" | "alternative";
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const { t, i18n } = useTranslation();
+  return (
+    <article
+      className={`flex flex-col overflow-hidden rounded-3xl border bg-card transition ${
+        selected
+          ? "border-primary/60 shadow-[0_20px_60px_-40px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
+          : "hover:border-primary/40"
+      }`}
+      onMouseEnter={onSelect}
+      onFocus={onSelect}
+    >
+      <Link to="/app/event/$id" params={{ id: e.id }} className="block">
+        <EventVisual title={e.title} category={e.category} tags={e.tags} />
+      </Link>
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.25em]">
+          <span className={kind === "match" ? "text-primary" : "text-muted-foreground"}>
+            {kind === "match"
+              ? t("discover.cardMatch", "Meets your conditions")
+              : t("discover.cardAlternative", "Alternative")}
+          </span>
+          {e.demo && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+              {t("common.demo", "Demo")}
+            </span>
+          )}
+        </div>
+        <Link
+          to="/app/event/$id"
+          params={{ id: e.id }}
+          className="font-display text-xl leading-tight hover:underline"
+        >
+          {e.title}
+        </Link>
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+            {formatWhenLocalized(e.starts_at, i18n.language)}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5" aria-hidden />
+            {[e.district, e.venue].filter(Boolean).join(" · ") || e.city || "—"}
+          </span>
+          <span>{priceLabel(t, e.price)}</span>
+          {typeof e.capacity === "number" && (
+            <span className="inline-flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" aria-hidden />
+              {t("event.capacity", { n: e.capacity, defaultValue: "up to {{n}} people" })}
+            </span>
+          )}
+        </p>
+        {e.organizations?.name && (
+          <p className="text-sm">
+            {t("event.hostedBy", "Hosted by")}{" "}
+            {e.org_id ? (
+              <Link
+                to="/app/community/$id"
+                params={{ id: e.org_id }}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                {e.organizations.name}
+              </Link>
+            ) : (
+              <span>{e.organizations.name}</span>
+            )}
+          </p>
+        )}
+        {kind === "alternative" ? (
+          <p className="flex flex-wrap gap-1.5 text-xs">
+            {e.violations.map((v) => (
+              <span
+                key={v}
+                className="rounded-full border border-destructive/40 px-2 py-0.5 text-destructive"
+              >
+                {t(VIOLATION_KEYS[v][0], VIOLATION_KEYS[v][1])}
+              </span>
+            ))}
+            {e.unverified.map((u) => (
+              <span
+                key={u}
+                className="rounded-full border border-dashed px-2 py-0.5 text-muted-foreground"
+              >
+                {t(UNVERIFIED_KEYS[u][0], UNVERIFIED_KEYS[u][1])}
+              </span>
+            ))}
+          </p>
+        ) : (
+          e._score > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {t("discover.whyFits", "Why it fits")}:{" "}
+              {e.tags
+                .filter((tag) => tag !== "demo" && !tag.includes(":"))
+                .slice(0, 4)
+                .map((tag) => `#${tag}`)
+                .join(" ")}
+            </p>
+          )
+        )}
+        <div className="mt-auto flex gap-2 pt-2">
+          <Button asChild size="sm" className="flex-1">
+            <Link to="/app/event/$id" params={{ id: e.id }}>
+              {t("event.details", "Event details")}
+            </Link>
+          </Button>
+          <LocationPreviewDialog
+            place={e}
+            trigger={
+              <Button
+                size="sm"
+                variant="outline"
+                aria-label={t("event.takeMeThere", "Take me there")}
+              >
+                <Navigation className="h-3.5 w-3.5" aria-hidden />
+              </Button>
+            }
+          />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/** Google Maps panel (JS API with a keyless embed fallback); a helper view, never the only way through. */
+function MapPanel({
+  events,
+  selected,
+  onSelect,
+}: {
+  events: ScoredEvent[];
+  selected: ScoredEvent | null;
+  onSelect: (e: ScoredEvent) => void;
+}) {
+  const { t } = useTranslation();
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapFailed, setMapFailed] = useState(false);
+
   useEffect(() => {
     if (window.google?.maps) {
       setMapReady(true);
@@ -125,7 +457,6 @@ function MapView() {
     s.async = true;
     s.onerror = () => setMapFailed(true);
     document.head.appendChild(s);
-    // Offline or blocked without an error event: don't spin forever.
     const timeout = window.setTimeout(() => {
       if (!window.google?.maps) setMapFailed(true);
     }, 10_000);
@@ -135,223 +466,52 @@ function MapView() {
     };
   }, []);
 
-  // Render map + markers
   useEffect(() => {
-    if (!mapReady || !data || !mapRef.current || !window.google?.maps) return;
-    const withCoords = data.events.filter(
+    if (!mapReady || !mapRef.current || !window.google?.maps) return;
+    const withCoords = events.filter(
       (e) => typeof e.latitude === "number" && typeof e.longitude === "number",
     );
+    const first = selected && typeof selected.latitude === "number" ? selected : withCoords[0];
     const center =
-      withCoords[0] && withCoords[0].latitude && withCoords[0].longitude
-        ? { lat: withCoords[0].latitude, lng: withCoords[0].longitude }
-        : { lat: 41.0082, lng: 28.9784 }; // fallback Istanbul
-
+      first && typeof first.latitude === "number" && typeof first.longitude === "number"
+        ? { lat: first.latitude, lng: first.longitude }
+        : { lat: 41.0082, lng: 28.9784 };
     const map = new window.google.maps.Map(mapRef.current, {
       center,
-      zoom: withCoords.length > 0 ? 13 : 4,
+      zoom: withCoords.length > 0 ? 12 : 10,
       disableDefaultUI: true,
       zoomControl: true,
-      styles: [
-        { elementType: "geometry", stylers: [{ color: "#1a1d24" }] },
-        { elementType: "labels.text.stroke", stylers: [{ color: "#1a1d24" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#8a8f9a" }] },
-        { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e1015" }] },
-        { featureType: "road", elementType: "geometry", stylers: [{ color: "#272a32" }] },
-        { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-      ],
     });
-
-    withCoords.forEach((e, idx) => {
+    withCoords.forEach((e) => {
       const marker = new window.google.maps.Marker({
         position: { lat: e.latitude!, lng: e.longitude! },
         map,
         title: e.title,
-        label: idx === 0 ? { text: "★", color: "#fff", fontSize: "16px" } : undefined,
-        animation: idx === 0 ? window.google.maps.Animation.DROP : undefined,
+        label: selected?.id === e.id ? { text: "★", color: "#fff", fontSize: "16px" } : undefined,
       });
-      marker.addListener("click", () => {
-        setSelected(e);
-        openIfLandmark(e);
-      });
+      marker.addListener("click", () => onSelect(e));
     });
-  }, [mapReady, data, landmarkById]);
+  }, [mapReady, events, selected, onSelect]);
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      <AppHeader variant="member" />
-      <div className="relative flex-1 overflow-hidden">
-        {/* Map */}
-        <div ref={mapRef} className={`absolute inset-0 bg-muted ${mapFailed ? "invisible" : ""}`}>
-          {!mapReady && !mapFailed && (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              Loading map…
-            </div>
-          )}
-        </div>
-        {mapFailed && (
-          <iframe
-            key={selected?.id ?? "default"}
-            title={selected ? `Map of ${selected.title}` : "Map"}
-            src={embedSrc(selected)}
-            className="absolute inset-0 h-full w-full border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+    <div className="relative h-[50vh] overflow-hidden rounded-3xl border bg-muted lg:h-[70vh]">
+      <div ref={mapRef} className={`absolute inset-0 ${mapFailed ? "invisible" : ""}`}>
+        {!mapReady && !mapFailed && (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            {t("discover.loadingMap", "Loading map…")}
+          </div>
         )}
-
-        {/* Top bar */}
-        <div className="absolute left-4 right-4 top-4 z-10 flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => navigate({ to: "/app" })}
-            className="gap-1 shadow-lg"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            New search
-          </Button>
-          {data && (
-            <div className="flex flex-1 flex-wrap gap-1 overflow-hidden">
-              {data.tags.slice(0, 5).map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full bg-background/90 px-2 py-1 text-xs shadow-sm backdrop-blur"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Bottom sheet of results */}
-        <div className="absolute inset-x-0 bottom-0 z-10 max-h-[55%] overflow-y-auto rounded-t-3xl border-t border-border bg-background/95 p-4 shadow-2xl backdrop-blur">
-          {data && (
-            <>
-              <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-muted-foreground/30" />
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                {(data.matchCount ?? data.events.length) > 0
-                  ? `${data.matchCount ?? data.events.length} matches for`
-                  : "Nothing matched exactly —"}
-              </p>
-              <p className="line-clamp-1 font-display text-base">"{data.prompt}"</p>
-              {data.matchCount === 0 && data.events.length > 0 && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Showing what's on this week plus the city's landmarks. Try a broader phrase
-                  like "live music" or "quiet drinks" for a closer match.
-                </p>
-              )}
-
-              {data.events.length === 0 ? (
-                <div className="mt-4 rounded-2xl border border-dashed border-primary/30 bg-card/60 p-5">
-                  <p className="font-display text-lg">No room matched that vibe — yet.</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    The compass came up empty nearby. A few things to try:
-                  </p>
-                  <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                    <li>• Loosen the mood — try a broader phrase like "live music" or "quiet drinks"</li>
-                    <li>• Swap a tag — describe the feeling, not a specific artist or band</li>
-                    <li>• Stretch the night — try later this week instead of tonight</li>
-                  </ul>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button size="sm" onClick={() => navigate({ to: "/app" })}>
-                      Try another prompt
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
-                      <Link to="/app/calendar">Browse the calendar</Link>
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {selected && (
-                    <div className="mt-3 rounded-2xl border border-primary/40 bg-card p-4">
-                      <p className="text-xs uppercase tracking-widest text-primary">Top match</p>
-                      <h3 className="mt-1 font-display text-xl">{selected.title}</h3>
-                      <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        {selected.venue ?? selected.organizations?.name} · {selected.city ?? "—"}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {new Date(selected.starts_at).toLocaleString([], {
-                          weekday: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <LocationPreviewDialog
-                          place={selected}
-                          trigger={
-                            <Button size="sm" className="gap-1.5">
-                              <Navigation className="h-3.5 w-3.5" />
-                              Take me there
-                            </Button>
-                          }
-                        />
-                        {landmarkById.has(selected.id) ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openIfLandmark(selected)}
-                          >
-                            View details
-                          </Button>
-                        ) : (
-                          <Button asChild size="sm" variant="outline">
-                            <Link to="/app/event/$id" params={{ id: selected.id }}>
-                              Event details
-                            </Link>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {data.events.length > 1 && (
-                    <div className="mt-3 space-y-2">
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                        Also nearby
-                      </p>
-                      {data.events.slice(1, 6).map((e) => (
-                        <button
-                          key={e.id}
-                          onClick={() => {
-                            setSelected(e);
-                            openIfLandmark(e);
-                          }}
-                          className="block w-full rounded-xl border bg-card/60 p-3 text-left transition hover:border-primary/50"
-                        >
-                          <div className="flex items-baseline justify-between gap-2">
-                            <span className="font-medium">{e.title}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(e.starts_at).toLocaleDateString([], {
-                                month: "short",
-                                day: "numeric",
-                              })}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {e.city ?? "—"} · {e.category}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
-
-        <LandmarkDetailsDrawer
-          landmark={activeLandmark}
-          open={landmarkOpen}
-          onOpenChange={setLandmarkOpen}
-        />
       </div>
+      {mapFailed && (
+        <iframe
+          key={selected?.id ?? "default"}
+          title={selected ? `Map of ${selected.title}` : "Map"}
+          src={embedSrc(selected)}
+          className="absolute inset-0 h-full w-full border-0"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      )}
     </div>
   );
 }

@@ -34,7 +34,8 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
   const gatheringLandmark = plan.gatherings?.landmarkId
     ? landmarkById.get(plan.gatherings.landmarkId)
     : undefined;
-  const qlooRanked = plan.execution.ranking === "ranked" && plan.picks.some((p) => p.source === "qloo");
+  const qlooRanked =
+    plan.execution.ranking === "ranked" && plan.picks.some((p) => p.source === "qloo");
   const editorialOnly = plan.picks.length > 0 && plan.picks.every((p) => p.source === "editorial");
 
   return (
@@ -120,7 +121,8 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
             <p className="mt-4 text-sm text-muted-foreground">
               {t("guide.noRestaurants", {
                 district: plan.dining.district,
-                defaultValue: "Qloo has no restaurants it can rank for you in {{district}} right now.",
+                defaultValue:
+                  "Qloo has no restaurants it can rank for you in {{district}} right now.",
               })}
             </p>
           ) : (
@@ -133,7 +135,11 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
                     className="flex flex-col rounded-2xl border bg-card p-5"
                   >
                     <p className="text-[10px] uppercase tracking-widest text-primary">
-                      {t("guide.qlooRankIn", { n: i + 1, district: r.district, defaultValue: "Qloo #{{n}} in {{district}}" })}
+                      {t("guide.qlooRankIn", {
+                        n: i + 1,
+                        district: r.district,
+                        defaultValue: "Qloo #{{n}} in {{district}}",
+                      })}
                     </p>
                     <h3 className="mt-1 font-display text-xl leading-snug">{r.name}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -155,7 +161,8 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
                     <p className="mt-3 text-sm">
                       {drivers.length > 0 ? (
                         <>
-                          {t("guide.qlooCredits", "Qloo credits")} <strong>{joinNames(drivers)}</strong>
+                          {t("guide.qlooCredits", "Qloo credits")}{" "}
+                          <strong>{joinNames(drivers)}</strong>
                         </>
                       ) : (
                         <span className="text-muted-foreground">
@@ -169,7 +176,8 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
                       rel="noreferrer"
                       className="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm text-primary underline-offset-4 hover:underline"
                     >
-                      <Navigation className="h-3.5 w-3.5" aria-hidden /> {t("guide.directions", "Directions")}
+                      <Navigation className="h-3.5 w-3.5" aria-hidden />{" "}
+                      {t("guide.directions", "Directions")}
                     </a>
                   </article>
                 );
@@ -192,7 +200,10 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
             icon={<CalendarDays className="h-3.5 w-3.5" aria-hidden />}
             eyebrow={
               gatheringLandmark
-                ? t("guide.withinKm", { name: gatheringLandmark.title, defaultValue: "Within 3 km of {{name}}" })
+                ? t("guide.withinKm", {
+                    name: gatheringLandmark.title,
+                    defaultValue: "Within 3 km of {{name}}",
+                  })
                 : t("guide.acrossCity", "Across Istanbul")
             }
             title={t("guide.gatheringsTitle", "Gatherings this week")}
@@ -260,11 +271,13 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
 
       <div className="flex flex-wrap justify-center gap-3">
         <Button variant="outline" className="gap-2 rounded-full" onClick={onRestart}>
-          <RotateCcw className="h-4 w-4" aria-hidden /> {t("guide.tryOthers", "Try other favourites")}
+          <RotateCcw className="h-4 w-4" aria-hidden />{" "}
+          {t("guide.tryOthers", "Try other favourites")}
         </Button>
         <Button asChild variant="ghost" className="gap-2 rounded-full">
           <Link to="/app">
-            <Compass className="h-4 w-4" aria-hidden /> {t("guide.exploreGatherings", "Explore gatherings")}
+            <Compass className="h-4 w-4" aria-hidden />{" "}
+            {t("guide.exploreGatherings", "Explore gatherings")}
           </Link>
         </Button>
       </div>
@@ -333,7 +346,9 @@ function PickCard({
         )}
         <span
           className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-widest backdrop-blur ${
-            pick.source === "qloo" ? "bg-background/90 text-primary" : "bg-background/90 text-muted-foreground"
+            pick.source === "qloo"
+              ? "bg-background/90 text-primary"
+              : "bg-background/90 text-muted-foreground"
           }`}
         >
           {pick.source === "qloo"
@@ -366,7 +381,10 @@ function PickCard({
           {pick.source === "qloo" && pick.affinity !== undefined && (
             <span
               className="ml-1 text-xs text-muted-foreground"
-              title={t("guide.affinityTitle", "Qloo affinity between your favourites and this place (0–1)")}
+              title={t(
+                "guide.affinityTitle",
+                "Qloo affinity between your favourites and this place (0–1)",
+              )}
             >
               · {t("guide.affinity", "affinity")} {pick.affinity.toFixed(2)}
             </span>
@@ -389,8 +407,11 @@ function PickCard({
             ) : (
               <BookOpen className="h-3.5 w-3.5 text-primary" aria-hidden />
             )}
-            {t("guide.startWith", { title: section.title, defaultValue: "Start with “{{title}}”" })} ·{" "}
-            {section.kind === "legend" ? t("story.legend", "Legend") : t("story.history", "History")}
+            {t("guide.startWith", { title: section.title, defaultValue: "Start with “{{title}}”" })}{" "}
+            ·{" "}
+            {section.kind === "legend"
+              ? t("story.legend", "Legend")
+              : t("story.history", "History")}
           </p>
         )}
 
@@ -404,7 +425,10 @@ function PickCard({
               <Button
                 variant="outline"
                 size="icon"
-                aria-label={t("guide.gettingTo", { name: landmark.title, defaultValue: "Getting to {{name}}" })}
+                aria-label={t("guide.gettingTo", {
+                  name: landmark.title,
+                  defaultValue: "Getting to {{name}}",
+                })}
               >
                 <Navigation className="h-4 w-4" aria-hidden />
               </Button>

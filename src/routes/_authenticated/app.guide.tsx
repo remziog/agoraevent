@@ -62,7 +62,11 @@ function GuidePage() {
   const resolve = useServerFn(resolveTaste);
   const plan = useServerFn(planVisit);
 
-  const [values, setValues] = useState<Record<TasteField, string>>({ music: "", film: "", book: "" });
+  const [values, setValues] = useState<Record<TasteField, string>>({
+    music: "",
+    film: "",
+    book: "",
+  });
   const [mood, setMood] = useState("");
   const [candidates, setCandidates] = useState<TasteCandidate[] | null>(null);
   /** term → chosen entity id, null = skipped */
@@ -321,7 +325,9 @@ function GuidePage() {
                 {t("guide.plan", "Plan my visit")} <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
               <Button variant="ghost" onClick={() => setCandidates(null)}>
-                {anyMatches ? t("common.back", "Back") : t("guide.editFavourites", "Edit favourites")}
+                {anyMatches
+                  ? t("common.back", "Back")
+                  : t("guide.editFavourites", "Edit favourites")}
               </Button>
               {!anyMatches && (
                 <button
@@ -445,7 +451,9 @@ function CandidateGroup({
         {candidate.matches.slice(0, 4).map(option)}
         <label
           className={`flex cursor-pointer items-center rounded-2xl border border-dashed p-3 text-left text-sm transition focus-within:ring-2 focus-within:ring-primary/60 ${
-            value === null ? "border-primary text-foreground" : "text-muted-foreground hover:border-primary/40"
+            value === null
+              ? "border-primary text-foreground"
+              : "text-muted-foreground hover:border-primary/40"
           }`}
         >
           <input
@@ -462,9 +470,14 @@ function CandidateGroup({
       {candidate.others.length > 0 && (
         <details className="mt-3">
           <summary className="cursor-pointer text-sm text-muted-foreground underline-offset-4 hover:underline">
-            {t("guide.otherKinds", { count: candidate.others.length, defaultValue: "Other kinds ({{count}})" })}
+            {t("guide.otherKinds", {
+              count: candidate.others.length,
+              defaultValue: "Other kinds ({{count}})",
+            })}
           </summary>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">{candidate.others.slice(0, 4).map(option)}</div>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {candidate.others.slice(0, 4).map(option)}
+          </div>
         </details>
       )}
     </fieldset>

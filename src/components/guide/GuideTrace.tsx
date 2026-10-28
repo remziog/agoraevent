@@ -15,7 +15,6 @@ function SourceIcon({ source }: { source?: GuideTraceStep["source"] }) {
   return <Database className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />;
 }
 
-
 /**
  * One plain-language sentence per execution status. The badge, this sentence
  * and the notice above the results all derive from the same `execution`
@@ -42,14 +41,19 @@ export function executionSummary(t: TFunction, x: GuideExecution): { badge: stri
         : x.agentOutcome === "timeout"
           ? t("guide.exec.agentTimeout", {
               model,
-              defaultValue: "The agent ({{model}}) did not answer in time, so Agora ran its fixed plan with the same tools.",
+              defaultValue:
+                "The agent ({{model}}) did not answer in time, so Agora ran its fixed plan with the same tools.",
             })
           : x.agentOutcome === "failed"
             ? t("guide.exec.agentFailed", {
                 model,
-                defaultValue: "The agent ({{model}}) failed, so Agora ran its fixed plan with the same tools.",
+                defaultValue:
+                  "The agent ({{model}}) failed, so Agora ran its fixed plan with the same tools.",
               })
-            : t("guide.exec.notConfigured", "No AI agent is configured on this server, so Agora ran its fixed plan with the same tools.");
+            : t(
+                "guide.exec.notConfigured",
+                "No AI agent is configured on this server, so Agora ran its fixed plan with the same tools.",
+              );
   const ranking =
     x.ranking === "ranked"
       ? t("guide.exec.ranked", "Qloo ranked Agora's landmarks for your favourites.")
@@ -62,7 +66,10 @@ export function executionSummary(t: TFunction, x: GuideExecution): { badge: stri
               defaultValue:
                 "Qloo answered with {{upstream}} item(s) ({{parsed}} readable), but {{matched}} belong to Agora's landmark shortlist — so no personalised ranking.",
             })
-          : t("guide.exec.rankingEmpty", "Qloo answered with an empty ranking for these favourites — no personalised ranking.")
+          : t(
+              "guide.exec.rankingEmpty",
+              "Qloo answered with an empty ranking for these favourites — no personalised ranking.",
+            )
         : t("guide.exec.rankingFailed", "The Qloo ranking call failed.");
   const badge =
     x.agentOutcome === "plan"
@@ -117,7 +124,11 @@ export function GuideTrace({ plan }: { plan: GuidePlan }) {
                   <span className="font-mono text-xs text-muted-foreground">{step.name}</span>
                   {step.source && (
                     <span className="ml-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {step.source === "qloo" ? "Qloo" : step.source === "ai" ? t("guide.sourceAi", "AI agent") : "Agora"}
+                      {step.source === "qloo"
+                        ? "Qloo"
+                        : step.source === "ai"
+                          ? t("guide.sourceAi", "AI agent")
+                          : "Agora"}
                     </span>
                   )}
                 </p>
