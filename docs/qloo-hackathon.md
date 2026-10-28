@@ -52,7 +52,7 @@ Every fact shown comes from tool executions recorded on the server; the model on
 Configuration (server only — see `.env.example`):
 
 - `QLOO_API_KEY` — the event credential. Lovable secret in production, `.env.local` locally. Never `VITE_`-prefixed, never committed, never in screenshots.
-- `QLOO_BASE_URL` — defaults to `https://api.qloo.com` (same host the `@qloo/qloo-harness` uses). The legacy `QLOO_API_BASE_URL` is still read as a fallback.
+- `QLOO_BASE_URL` — defaults to `https://api.qloo.com` (same host the `@qloo/qloo-harness` uses). The legacy `QLOO_API_BASE_URL` is still read as a fallback. Hackathon credentials may be provisioned only on `https://hackathon.api.qloo.com` (first live call on 28 Oct 2026: 401 on `api.qloo.com`): the transport retries an auth failure once on the other known host, remembers the host that accepted the key, and `/app/qloo-status` says which one answered. Set `QLOO_BASE_URL` to the host named in the key email to skip the failed first try.
 - `QLOO_RESTAURANT_TAGS` — optional comma-separated tag ids to pin the restaurant filter; otherwise discovered at runtime via `/v2/tags`.
 
 Probe scripts (Node ≥ 22, no dependencies, key from `.env.local`):

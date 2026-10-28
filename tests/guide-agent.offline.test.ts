@@ -26,6 +26,8 @@ const requests: Req[] = [];
 /** The mocked landmark_qloo_map table: rows the server upserted. */
 let mapRows: Record<string, unknown>[] = [];
 let qlooStatusOverride: number | null = null;
+/** When set, api.qloo.com answers 401 and only hackathon.api.qloo.com accepts the key. */
+let rejectDefaultHost = false;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -73,6 +75,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
 
   // ---- Qloo ----
   if (qlooStatusOverride) return json({ message: "forbidden" }, qlooStatusOverride);
+  if (rejectDefaultHost && url.host === "api.qloo.com") return json({ error: { code: 401 } }, 401);
 
   if (url.pathname === "/search") {
     const q = url.searchParams.get("query") ?? "";
@@ -277,5 +280,33 @@ test("Qloo auth failure propagates as QlooAuthError (planVisit maps it to qloo_a
     );
   } finally {
     qlooStatusOverride = null;
+  }
+});
+
+test("a key provisioned only on hackathon.api.qloo.com: auth failure on the default host falls back and is remembered", async () => {
+  mapRows = [];
+  rejectDefaultHost = true;
+  try {
+    const before = requests.length;
+    const plan = await runGuideAgent({ db: fakeDb as never, taste: TASTE });
+    assert.equal(plan.picks.length, 3);
+    const qloo = requests.slice(before).filter((r) => r.host !== "supabase.test");
+    assert.ok(
+      qloo.some((r) => r.host === "api.qloo.com"),
+      "default host tried first",
+    );
+    assert.ok(
+      qloo.some((r) => r.host === "hackathon.api.qloo.com"),
+      "then the hackathon host",
+    );
+    // The resolver starts 3 searches at once, so up to 3 may hit the default host before the
+    // first rejection is remembered; everything after that goes straight to the accepted host.
+    const defaultHits = qloo.filter((r) => r.host === "api.qloo.com").length;
+    assert.ok(defaultHits >= 1 && defaultHits <= 3, `default host hits: ${defaultHits}`);
+    const rankStep = plan.trace.find((t) => t.name === "rank_landmarks");
+    assert.ok(rankStep?.qloo?.some((c) => c.error?.includes("trying hackathon.api.qloo.com")));
+    assert.ok(rankStep?.qloo?.every((c) => !JSON.stringify(c).includes("offline-test-key")));
+  } finally {
+    rejectDefaultHost = false;
   }
 });

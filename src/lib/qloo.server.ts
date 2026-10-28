@@ -7,6 +7,9 @@
 // Base URL: https://api.qloo.com (same host and `X-Api-Key` header the official
 // @qloo/qloo-harness uses). Override with QLOO_BASE_URL. The legacy
 // QLOO_API_BASE_URL name from the first scaffold is still read as a fallback.
+// A hackathon credential may be provisioned only on the hackathon gateway
+// (hackathon.api.qloo.com, as in 2025), so an auth failure on one host is retried
+// once on the other and the host that accepts the key is remembered.
 //
 // Rules we follow (Qloo hackathon kit, docs/API_ACCESS.md + SAFE_USE.md):
 // smallest request that answers the question, bounded retries, no personal data
@@ -28,6 +31,7 @@ import {
 } from "./qloo.schemas";
 
 export const DEFAULT_QLOO_BASE_URL = "https://api.qloo.com";
+export const HACKATHON_QLOO_BASE_URL = "https://hackathon.api.qloo.com";
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_RETRY_AFTER_MS = 5_000;
 
@@ -67,8 +71,24 @@ export class QlooRateLimitError extends QlooError {
 
 export type QlooParams = Record<string, string | number | boolean | readonly string[] | undefined>;
 
-function qlooBaseUrl(): string {
+/** The configured base URL (QLOO_BASE_URL, legacy QLOO_API_BASE_URL, or the default). */
+export function qlooConfiguredBaseUrl(): string {
   return process.env.QLOO_BASE_URL ?? process.env.QLOO_API_BASE_URL ?? DEFAULT_QLOO_BASE_URL;
+}
+
+/** Host that last accepted the credential in this isolate (null until a call succeeds). */
+let acceptedBase: string | null = null;
+
+export function qlooAcceptedBaseUrl(): string | null {
+  return acceptedBase;
+}
+
+/** Base URLs to try, in order: the accepted one, the configured one, then the other known gateway. */
+function qlooBaseUrls(): string[] {
+  const configured = qlooConfiguredBaseUrl();
+  const known = [configured, DEFAULT_QLOO_BASE_URL, HACKATHON_QLOO_BASE_URL];
+  const ordered = acceptedBase ? [acceptedBase, ...known] : known;
+  return Array.from(new Set(ordered.map((b) => b.replace(/\/+$/, ""))));
 }
 
 function toSearchParams(params: QlooParams): Record<string, string> {
@@ -89,22 +109,23 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function qlooGet(
   path: string,
   params: QlooParams = {},
-  options: { log?: QlooCall[]; signal?: AbortSignal; retried?: boolean } = {},
+  options: { log?: QlooCall[]; signal?: AbortSignal; retried?: boolean; bases?: string[] } = {},
 ): Promise<unknown> {
-  const apiKey = process.env.QLOO_API_KEY;
+  const apiKey = process.env.QLOO_API_KEY?.trim();
   if (!apiKey) throw new QlooConfigurationError();
   if (!path.startsWith("/") || path.startsWith("//")) {
     throw new Error("Qloo path must be an absolute API path.");
   }
 
-  const base = qlooBaseUrl();
+  const bases = options.bases ?? qlooBaseUrls();
+  const base = bases[0];
   const url = new URL(path, base);
   if (url.origin !== new URL(base).origin) throw new Error("Qloo path cannot change API origin.");
   const flat = toSearchParams(params);
   for (const [key, value] of Object.entries(flat)) url.searchParams.set(key, value);
 
   const started = Date.now();
-  const entry: QlooCall = { endpoint: path, params: flat, status: 0, ms: 0 };
+  const entry: QlooCall = { endpoint: path, params: flat, status: 0, ms: 0, host: url.host };
   const signal = options.signal
     ? AbortSignal.any([options.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)])
     : AbortSignal.timeout(REQUEST_TIMEOUT_MS);
@@ -133,13 +154,21 @@ export async function qlooGet(
     if (!options.retried) {
       options.log?.push({ ...entry, error: "429, retrying once" });
       await sleep(Math.min((retryAfterSec ?? 1) * 1000, MAX_RETRY_AFTER_MS));
-      return qlooGet(path, params, { ...options, retried: true });
+      return qlooGet(path, params, { ...options, retried: true, bases });
     }
     options.log?.push({ ...entry, error: "429" });
     throw new QlooRateLimitError(path, retryAfterSec);
   }
 
   if (response.status === 401 || response.status === 403) {
+    const next = bases.slice(1);
+    if (next.length > 0) {
+      options.log?.push({
+        ...entry,
+        error: `auth on ${url.host}, trying ${new URL(next[0]).host}`,
+      });
+      return qlooGet(path, params, { ...options, bases: next });
+    }
     options.log?.push({ ...entry, error: "auth" });
     throw new QlooAuthError(response.status, path);
   }
@@ -154,6 +183,7 @@ export async function qlooGet(
     );
   }
 
+  acceptedBase = base;
   const json: unknown = await response.json();
   options.log?.push(entry);
   return json;
