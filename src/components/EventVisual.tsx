@@ -71,7 +71,8 @@ export function EventVisual({
       <span className="absolute -right-4 -top-6 select-none font-display text-[7rem] leading-none text-primary/10 sm:text-[9rem]">
         {title.trim().charAt(0).toUpperCase()}
       </span>
-      <span className="relative text-[10px] uppercase tracking-[0.3em] text-primary">
+      {/* Category values are English data: keep English casing even when the UI is Turkish (no dotted İ). */}
+      <span lang="en" className="relative text-[10px] uppercase tracking-[0.3em] text-primary">
         {category}
       </span>
       <span className="relative mt-1 font-display text-2xl leading-tight text-foreground/90 sm:text-3xl">
