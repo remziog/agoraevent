@@ -234,6 +234,39 @@ export type Database = {
           },
         ]
       }
+      landmark_qloo_map: {
+        Row: {
+          candidates: Json
+          confidence: string
+          entity_address: string | null
+          entity_id: string | null
+          entity_name: string | null
+          landmark_id: string
+          note: string | null
+          resolved_at: string
+        }
+        Insert: {
+          candidates?: Json
+          confidence: string
+          entity_address?: string | null
+          entity_id?: string | null
+          entity_name?: string | null
+          landmark_id: string
+          note?: string | null
+          resolved_at?: string
+        }
+        Update: {
+          candidates?: Json
+          confidence?: string
+          entity_address?: string | null
+          entity_id?: string | null
+          entity_name?: string | null
+          landmark_id?: string
+          note?: string | null
+          resolved_at?: string
+        }
+        Relationships: []
+      }
       oauth_tokens: {
         Row: {
           access_token: string

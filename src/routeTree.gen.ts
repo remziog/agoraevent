@@ -27,6 +27,7 @@ import { Route as AuthenticatedBizLeadsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedBizInsightsRouteImport } from './routes/_authenticated/biz.insights'
 import { Route as AuthenticatedBizEventsRouteImport } from './routes/_authenticated/biz.events'
 import { Route as AuthenticatedBizCustomersRouteImport } from './routes/_authenticated/biz.customers'
+import { Route as AuthenticatedAppQlooStatusRouteImport } from './routes/_authenticated/app.qloo-status'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppMemoriesRouteImport } from './routes/_authenticated/app.memories'
 import { Route as AuthenticatedAppMapRouteImport } from './routes/_authenticated/app.map'
@@ -126,6 +127,12 @@ const AuthenticatedBizCustomersRoute =
     path: '/biz/customers',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAppQlooStatusRoute =
+  AuthenticatedAppQlooStatusRouteImport.update({
+    id: '/app/qloo-status',
+    path: '/app/qloo-status',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   id: '/app/profile',
   path: '/app/profile',
@@ -183,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/app/map': typeof AuthenticatedAppMapRoute
   '/app/memories': typeof AuthenticatedAppMemoriesRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/qloo-status': typeof AuthenticatedAppQlooStatusRoute
   '/biz/customers': typeof AuthenticatedBizCustomersRoute
   '/biz/events': typeof AuthenticatedBizEventsRoute
   '/biz/insights': typeof AuthenticatedBizInsightsRoute
@@ -209,6 +217,7 @@ export interface FileRoutesByTo {
   '/app/map': typeof AuthenticatedAppMapRoute
   '/app/memories': typeof AuthenticatedAppMemoriesRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
+  '/app/qloo-status': typeof AuthenticatedAppQlooStatusRoute
   '/biz/customers': typeof AuthenticatedBizCustomersRoute
   '/biz/events': typeof AuthenticatedBizEventsRoute
   '/biz/insights': typeof AuthenticatedBizInsightsRoute
@@ -237,6 +246,7 @@ export interface FileRoutesById {
   '/_authenticated/app/map': typeof AuthenticatedAppMapRoute
   '/_authenticated/app/memories': typeof AuthenticatedAppMemoriesRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/app/qloo-status': typeof AuthenticatedAppQlooStatusRoute
   '/_authenticated/biz/customers': typeof AuthenticatedBizCustomersRoute
   '/_authenticated/biz/events': typeof AuthenticatedBizEventsRoute
   '/_authenticated/biz/insights': typeof AuthenticatedBizInsightsRoute
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/app/map'
     | '/app/memories'
     | '/app/profile'
+    | '/app/qloo-status'
     | '/biz/customers'
     | '/biz/events'
     | '/biz/insights'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/app/map'
     | '/app/memories'
     | '/app/profile'
+    | '/app/qloo-status'
     | '/biz/customers'
     | '/biz/events'
     | '/biz/insights'
@@ -318,6 +330,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/map'
     | '/_authenticated/app/memories'
     | '/_authenticated/app/profile'
+    | '/_authenticated/app/qloo-status'
     | '/_authenticated/biz/customers'
     | '/_authenticated/biz/events'
     | '/_authenticated/biz/insights'
@@ -471,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBizCustomersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/qloo-status': {
+      id: '/_authenticated/app/qloo-status'
+      path: '/app/qloo-status'
+      fullPath: '/app/qloo-status'
+      preLoaderRoute: typeof AuthenticatedAppQlooStatusRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/profile': {
       id: '/_authenticated/app/profile'
       path: '/app/profile'
@@ -530,6 +550,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAppMapRoute: typeof AuthenticatedAppMapRoute
   AuthenticatedAppMemoriesRoute: typeof AuthenticatedAppMemoriesRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedAppQlooStatusRoute: typeof AuthenticatedAppQlooStatusRoute
   AuthenticatedBizCustomersRoute: typeof AuthenticatedBizCustomersRoute
   AuthenticatedBizEventsRoute: typeof AuthenticatedBizEventsRoute
   AuthenticatedBizInsightsRoute: typeof AuthenticatedBizInsightsRoute
@@ -546,6 +567,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppMapRoute: AuthenticatedAppMapRoute,
   AuthenticatedAppMemoriesRoute: AuthenticatedAppMemoriesRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedAppQlooStatusRoute: AuthenticatedAppQlooStatusRoute,
   AuthenticatedBizCustomersRoute: AuthenticatedBizCustomersRoute,
   AuthenticatedBizEventsRoute: AuthenticatedBizEventsRoute,
   AuthenticatedBizInsightsRoute: AuthenticatedBizInsightsRoute,
@@ -576,3 +598,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

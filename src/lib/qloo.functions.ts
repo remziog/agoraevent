@@ -1,45 +1,48 @@
 // Qloo-backed server functions for the taste-aware guide. Same pattern as the
 // rest of src/lib/*.functions.ts: createServerFn + requireSupabaseAuth + zod.
+// Only server functions are exported from here (plain helpers live in
+// *.server.ts files so they can never be pulled into the client bundle).
 //
 // Only taste terms, Qloo entity/tag ids and a neighbourhood name are sent to
 // Qloo — never the user's identity or GPS position (hackathon kit, SAFE_USE.md).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type {
+  LandmarkPick,
+  LandmarkQlooRow,
+  LandmarkStatusRow,
+  QlooOutcome,
+  QlooStatus,
+  RecommendPlacesResult,
+  RestaurantsResult,
+  TasteCandidate,
+} from "./guide.types";
 import { ISTANBUL_LANDMARKS } from "./istanbul-landmarks";
-import type { JsonValue, QlooCall, QlooEntity, QlooTag } from "./qloo.schemas";
+import { QLOO_ENTITY_PLACE, type QlooCall } from "./qloo.schemas";
 import {
   cached,
+  DEFAULT_QLOO_BASE_URL,
   qlooErrorCode,
-  qlooFindTags,
   qlooPlacesNear,
-  qlooRankShortlist,
   qlooSearch,
 } from "./qloo.server";
-
-export type QlooErrorCode = ReturnType<typeof qlooErrorCode>;
-
-/** Every Qloo-backed function returns this shape so the UI can show provenance or degrade honestly. */
-export type QlooOutcome<T> =
-  | { ok: true; data: T; calls: QlooCall[] }
-  | { ok: false; error: QlooErrorCode; calls: QlooCall[] };
+import { getLandmarkQlooMap, readLandmarkQlooMap } from "./qloo-landmarks.server";
+import {
+  rankLandmarks,
+  restaurantTagIds,
+  restaurantsNear,
+  runQloo,
+  toRestaurant,
+} from "./qloo-guide.server";
 
 const EntityIds = z.array(z.string().min(1).max(120)).min(1).max(10);
 const LandmarkId = z
   .string()
   .refine((id) => ISTANBUL_LANDMARKS.some((l) => l.id === id), "Unknown landmark");
-
-async function run<T>(calls: QlooCall[], fn: () => Promise<T>): Promise<QlooOutcome<T>> {
-  try {
-    const data = await fn();
-    return { ok: true, data, calls };
-  } catch (error) {
-    console.error("[qloo]", error instanceof Error ? `${error.name}: ${error.message}` : error);
-    return { ok: false, error: qlooErrorCode(error), calls };
-  }
-}
-
-export type TasteCandidate = { term: string; matches: QlooEntity[] };
+const District = z
+  .string()
+  .refine((d) => ISTANBUL_LANDMARKS.some((l) => l.district === d), "Unknown district");
 
 /**
  * Resolve free-text taste terms (artists, films, books…) to Qloo entities. The
@@ -53,11 +56,11 @@ export const resolveTaste = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<QlooOutcome<TasteCandidate[]>> => {
     const calls: QlooCall[] = [];
-    return run(calls, async () => {
-      const unique = Array.from(new Set(data.terms.map((t) => t.toLowerCase()))).slice(0, 10);
+    return runQloo(calls, async () => {
+      const unique = Array.from(new Set(data.terms.map((t) => t.trim()))).slice(0, 10);
       const candidates: TasteCandidate[] = [];
       for (const term of unique) {
-        const matches = await cached(`search:${term}`, () =>
+        const matches = await cached(`search:${term.toLowerCase()}`, () =>
           qlooSearch({ query: term, take: 5 }, calls),
         );
         candidates.push({ term, matches });
@@ -66,100 +69,18 @@ export const resolveTaste = createServerFn({ method: "POST" })
     });
   });
 
-export type LandmarkPick = {
-  landmarkId: string;
-  qlooEntityId: string;
-  affinity?: number;
-  explainability?: JsonValue;
-};
-
-export type RecommendPlacesResult = {
-  /** Landmarks Qloo could rank, best affinity first. Only these may carry a Qloo badge. */
-  picks: LandmarkPick[];
-  /** Landmarks with no confident Qloo entity yet (see scripts/qloo-map-landmarks.mjs). */
-  unmatchedLandmarkIds: string[];
-};
-
-/**
- * Rank Agora's curated landmarks against the user's confirmed Qloo entities
- * (`/v2/insights` + `filter.results.entities`, the harness's `qloo_rank`).
- */
+/** Rank Agora's curated landmarks against the user's confirmed Qloo entities. */
 export const recommendPlaces = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ entityIds: EntityIds }).parse(d))
   .handler(async ({ data }): Promise<QlooOutcome<RecommendPlacesResult>> => {
     const calls: QlooCall[] = [];
-    return run(calls, async () => {
-      const mapped = ISTANBUL_LANDMARKS.filter((l) => l.qloo.entityId);
-      const unmatchedLandmarkIds = ISTANBUL_LANDMARKS.filter((l) => !l.qloo.entityId).map(
-        (l) => l.id,
-      );
-      if (mapped.length === 0) return { picks: [], unmatchedLandmarkIds };
-
-      const signal = [...data.entityIds].sort();
-      const ranked = await cached(`rank:${signal.join(",")}`, () =>
-        qlooRankShortlist(
-          {
-            resultEntityIds: mapped.map((l) => l.qloo.entityId as string),
-            signalEntityIds: signal,
-          },
-          calls,
-        ),
-      );
-
-      const byEntity = new Map(mapped.map((l) => [l.qloo.entityId as string, l.id]));
-      const picks: LandmarkPick[] = ranked
-        .filter((e) => byEntity.has(e.entityId))
-        .map((e) => ({
-          landmarkId: byEntity.get(e.entityId) as string,
-          qlooEntityId: e.entityId,
-          affinity: e.affinity,
-          explainability: e.explainability,
-        }))
-        .sort((a, b) => (b.affinity ?? 0) - (a.affinity ?? 0));
+    return runQloo(calls, async () => {
+      const { picks, unmatchedLandmarkIds } = await rankLandmarks(data.entityIds, calls);
       return { picks, unmatchedLandmarkIds };
     });
   });
 
-export type Restaurant = {
-  qlooEntityId: string;
-  name: string;
-  district: string;
-  affinity?: number;
-  explainability?: JsonValue;
-  imageUrl?: string;
-  address?: string;
-  geocode?: { latitude: number; longitude: number };
-  priceLevel?: number;
-  rating?: number;
-  cuisineTags: string[];
-};
-
-export type RestaurantsResult = {
-  district: string;
-  /** Tag ids used as `filter.tags`, for the trace. */
-  restaurantTagIds: string[];
-  restaurants: Restaurant[];
-};
-
-/** Restaurant tag discovery: `/v2/tags` semantic search, cached for the isolate's lifetime window. */
-async function restaurantTagIds(calls: QlooCall[]): Promise<string[]> {
-  const configured = (process.env.QLOO_RESTAURANT_TAGS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (configured.length > 0) return configured;
-  const tags = await cached<QlooTag[]>("tags:restaurant", () =>
-    qlooFindTags({ query: "restaurant", take: 5 }, calls),
-  );
-  const best = tags.find((t) => /restaurant/i.test(t.name)) ?? tags[0];
-  return best ? [best.id] : [];
-}
-
-/**
- * Taste-ranked restaurants in the landmark's neighbourhood. Location sent to Qloo
- * is the district name ("Karaköy, Istanbul"), not the user's position.
- */
 export const findRestaurantsNearby = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -173,38 +94,116 @@ export const findRestaurantsNearby = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<QlooOutcome<RestaurantsResult>> => {
     const calls: QlooCall[] = [];
-    return run(calls, async () => {
-      const landmark = ISTANBUL_LANDMARKS.find((l) => l.id === data.landmarkId);
-      if (!landmark) throw new Error("Unknown landmark");
-      const district = landmark.district;
-      const tagIds = await restaurantTagIds(calls);
-      const signal = [...data.entityIds].sort();
-      const places = await cached(
-        `places:${district}:${tagIds.join("|")}:${signal.join(",")}`,
-        () =>
-          qlooPlacesNear(
-            {
-              locationQuery: `${district}, Istanbul`,
-              tagIds,
-              signalEntityIds: signal,
-              take: 10,
-            },
-            calls,
-          ),
+    return runQloo(calls, () =>
+      restaurantsNear(data.landmarkId, data.entityIds, data.limit, calls),
+    );
+  });
+
+// ---------------------------------------------------------------------------
+// Diagnostics (/app/qloo-status). Signed-in users only; every call is bounded
+// and cached, and nothing here can force a re-resolution of the whole map.
+// ---------------------------------------------------------------------------
+
+function withTitles(map: Map<string, LandmarkQlooRow>): LandmarkStatusRow[] {
+  return ISTANBUL_LANDMARKS.map((l) => {
+    const row = map.get(l.id);
+    return {
+      landmarkId: l.id,
+      title: l.title,
+      district: l.district,
+      entityId: row?.entityId ?? null,
+      entityName: row?.entityName ?? null,
+      entityAddress: row?.entityAddress ?? null,
+      confidence: row?.confidence ?? "none",
+      note: row ? row.note : "not looked up yet",
+      candidates: row?.candidates ?? [],
+      resolvedAt: row?.resolvedAt ?? "",
+    };
+  });
+}
+
+/** Is the key configured, does one live call succeed, and what does the landmark map look like? */
+export const getQlooStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (): Promise<QlooStatus> => {
+    const calls: QlooCall[] = [];
+    const configured = Boolean(process.env.QLOO_API_KEY);
+    let host: string;
+    try {
+      host = new URL(
+        process.env.QLOO_BASE_URL ?? process.env.QLOO_API_BASE_URL ?? DEFAULT_QLOO_BASE_URL,
+      ).host;
+    } catch {
+      host = "invalid QLOO_BASE_URL";
+    }
+    let probe: QlooStatus["probe"] = null;
+    if (configured) {
+      try {
+        const found = await cached("status:probe", () =>
+          qlooSearch({ query: "Hagia Sophia", types: [QLOO_ENTITY_PLACE], take: 3 }, calls),
+        );
+        probe = { ok: true, resultCount: found.length, top: found.map((e) => e.name) };
+      } catch (error) {
+        probe = { ok: false, error: qlooErrorCode(error) };
+      }
+    }
+    const map = await readLandmarkQlooMap();
+    return { configured, host, probe, landmarks: withTitles(map), calls };
+  });
+
+/** Look up landmarks that have never been mapped (or "none" older than three days). */
+export const resolveLandmarkMap = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (): Promise<QlooOutcome<LandmarkStatusRow[]>> => {
+    const calls: QlooCall[] = [];
+    return runQloo(calls, async () => withTitles(await getLandmarkQlooMap(calls)));
+  });
+
+export type DebugRankResult = {
+  taste: { entityId: string; name: string; types: string[] } | null;
+  picks: LandmarkPick[];
+  unmatchedLandmarkIds: string[];
+};
+
+/** One taste term → top Qloo entity → landmark ranking with raw explainability, for tuning the UI. */
+export const debugRank = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ term: z.string().trim().min(1).max(80) }).parse(d))
+  .handler(async ({ data }): Promise<QlooOutcome<DebugRankResult>> => {
+    const calls: QlooCall[] = [];
+    return runQloo(calls, async () => {
+      const matches = await cached(`search:${data.term.toLowerCase()}`, () =>
+        qlooSearch({ query: data.term, take: 5 }, calls),
       );
-      const restaurants: Restaurant[] = places.slice(0, data.limit).map((p) => ({
-        qlooEntityId: p.entityId,
-        name: p.name,
-        district,
-        affinity: p.affinity,
-        explainability: p.explainability,
-        imageUrl: p.imageUrl,
-        address: p.address,
-        geocode: p.geocode,
-        priceLevel: p.priceLevel,
-        rating: p.rating,
-        cuisineTags: p.tags.map((t) => t.name).slice(0, 3),
-      }));
-      return { district, restaurantTagIds: tagIds, restaurants };
+      const taste = matches[0];
+      if (!taste) return { taste: null, picks: [], unmatchedLandmarkIds: [] };
+      const { picks, unmatchedLandmarkIds } = await rankLandmarks([taste.entityId], calls);
+      return {
+        taste: { entityId: taste.entityId, name: taste.name, types: taste.types },
+        picks,
+        unmatchedLandmarkIds,
+      };
+    });
+  });
+
+/** What Qloo knows about restaurants in one district (popularity only, no taste signal). */
+export const probeDistrictRestaurants = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ district: District }).parse(d))
+  .handler(async ({ data }): Promise<QlooOutcome<RestaurantsResult>> => {
+    const calls: QlooCall[] = [];
+    return runQloo(calls, async () => {
+      const tagIds = await restaurantTagIds(calls);
+      const places = await cached(`probe:${data.district}:${tagIds.join("|")}`, () =>
+        qlooPlacesNear(
+          { locationQuery: `${data.district}, Istanbul`, tagIds, take: 6, explain: false },
+          calls,
+        ),
+      );
+      return {
+        district: data.district,
+        restaurantTagIds: tagIds,
+        restaurants: places.map((p) => toRestaurant(p, data.district)),
+      };
     });
   });

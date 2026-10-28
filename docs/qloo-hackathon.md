@@ -22,7 +22,9 @@ Four surfaces, each in its thinnest viable slice:
 - `src/lib/qloo.server.ts` — server-only transport (`X-Api-Key` header, 10 s timeout, one bounded retry on 429) and typed wrappers: `qlooSearch`, `qlooRankShortlist` (`/v2/insights` + `filter.results.entities`, what the official harness's `qloo_rank` does), `qlooPlacesNear`, `qlooFindTags`. Every call can append a redacted entry to a trace.
 - `src/lib/qloo.schemas.ts` — lenient response schemas and the normalised `QlooEntity` type (safe for the client bundle).
 - `src/lib/qloo.functions.ts` — server functions behind Supabase auth: `resolveTaste`, `recommendPlaces`, `findRestaurantsNearby`. Each returns `{ ok, data | error, calls }` so the UI can show provenance or degrade honestly.
-- `src/lib/istanbul-landmarks.ts` — each landmark carries `district` (sent to Qloo as `"<district>, Istanbul"`) and `qloo.entityId` (filled from `scripts/qloo-map-landmarks.mjs`; `null` = no confident match, no Qloo badge).
+- `src/lib/istanbul-landmarks.ts` — each landmark carries `district` (sent to Qloo as `"<district>, Istanbul"`) and `aliases` (English and Turkish names used for Qloo `/search`).
+- `src/lib/qloo-landmarks.server.ts` — maps landmarks to Qloo place entities at runtime: a candidate is accepted only if its name matches an alias and Qloo locates it in Istanbul. The outcome (including "no match") is cached in the `landmark_qloo_map` table (RLS on, server only), so Qloo identifiers and responses never live in this repository. Unmatched landmarks never get a Qloo badge.
+- `/app/qloo-status` (signed-in, not linked) — live diagnostics: credential present, first `/search`, landmark map with candidates, one-taste ranking with raw explainability, restaurant coverage per district.
 
 Configuration (server only — see `.env.example`):
 
@@ -34,7 +36,7 @@ Probe scripts (Node ≥ 22, no dependencies, key from `.env.local`):
 
 ```bash
 node --env-file=.env.local scripts/qloo-smoke.mjs              # first call: host + credential check
-node --env-file=.env.local scripts/qloo-map-landmarks.mjs      # candidate entities for the 16 landmarks
+node --env-file=.env.local scripts/qloo-map-landmarks.mjs      # preview /search candidates per landmark alias (prints only)
 node --env-file=.env.local scripts/qloo-restaurants-probe.mjs  # restaurant coverage per neighbourhood
 ```
 

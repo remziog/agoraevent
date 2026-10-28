@@ -1,4 +1,11 @@
-// G05 — find Qloo entities for the 16 curated landmarks and print a review table.
+// Preview Qloo place candidates for the 16 curated landmarks (local, read-only).
+//
+// The app maps landmarks on its own at runtime and caches the result in the
+// landmark_qloo_map table (see src/lib/qloo-landmarks.server.ts and the
+// /app/qloo-status page). This script only prints what /search returns for each
+// alias so the matching rule can be reviewed; it writes nothing, and its output
+// (Qloo data) must not be committed.
+//
 // Requires Node >= 23.6 (type stripping is on by default) or Node 22.6+ with
 // `--experimental-strip-types`, because it imports the TypeScript landmark list.
 //   node --env-file=.env.local scripts/qloo-map-landmarks.mjs
@@ -7,27 +14,24 @@ import { ISTANBUL_LANDMARKS } from "../src/lib/istanbul-landmarks.ts";
 
 const rows = [];
 for (const lm of ISTANBUL_LANDMARKS) {
-  const r = await qlooGet("/search", { query: `${lm.title} Istanbul`, take: 3 });
-  if (r.status !== 200) {
-    rows.push({ id: lm.id, title: lm.title, status: r.status });
-    continue;
-  }
-  const candidates = resultArray(r.json).slice(0, 3).map(compact);
-  if (candidates.length === 0) rows.push({ id: lm.id, title: lm.title, candidate: "(none)" });
-  for (const [i, c] of candidates.entries()) {
-    rows.push({
-      id: i === 0 ? lm.id : "",
-      title: i === 0 ? lm.title : "",
-      rank: i + 1,
-      candidate: c.name,
-      entity_id: c.entity_id,
-      types: (c.types ?? []).join(" "),
-      popularity: c.popularity,
-    });
+  for (const query of lm.aliases.slice(0, 2)) {
+    const r = await qlooGet("/search", { query, types: "urn:entity:place", take: 3 });
+    if (r.status !== 200) {
+      rows.push({ id: lm.id, query, status: r.status });
+      continue;
+    }
+    const candidates = resultArray(r.json).slice(0, 3).map(compact);
+    if (candidates.length === 0) rows.push({ id: lm.id, query, candidate: "(none)" });
+    for (const [i, c] of candidates.entries()) {
+      rows.push({
+        id: i === 0 ? lm.id : "",
+        query: i === 0 ? query : "",
+        rank: i + 1,
+        candidate: c.name,
+        address: c.address,
+        popularity: c.popularity,
+      });
+    }
   }
 }
 printTable(rows);
-console.log(
-  "\nReview the table, then set `qloo.entityId` + `confidence` in src/lib/istanbul-landmarks.ts.",
-);
-console.log("Only `exact`/`likely` matches get a Qloo badge; leave ambiguous ones as `none`.");

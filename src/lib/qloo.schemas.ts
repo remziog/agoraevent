@@ -39,6 +39,15 @@ export const QlooEntitySchema = z
     popularity: z.number().optional(),
     affinity: z.number().optional(),
     disambiguation: z.string().optional(),
+    location: z
+      .object({
+        lat: z.number().optional(),
+        lon: z.number().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+      })
+      .passthrough()
+      .optional(),
     query: z
       .object({
         affinity: z.number().optional(),
@@ -103,6 +112,8 @@ export type QlooEntity = {
   description?: string;
   imageUrl?: string;
   address?: string;
+  /** Address plus the text fields of `properties.geocode` (city, region, country) — used to check "is this in Istanbul?". */
+  locationText?: string;
   geocode?: { latitude: number; longitude: number };
   priceLevel?: number;
   rating?: number;
@@ -132,6 +143,15 @@ export function normalizeEntity(raw: QlooEntityRaw): QlooEntity | null {
   const image = props?.image;
   const imageUrl = typeof image === "string" ? image : image?.url;
   const geo = props?.geocode;
+  const loc = raw.location;
+  const lat = geo?.latitude ?? loc?.lat ?? loc?.latitude;
+  const lon = geo?.longitude ?? loc?.lon ?? loc?.longitude;
+  const geoText = geo
+    ? Object.values(geo as Record<string, unknown>).filter(
+        (v): v is string => typeof v === "string",
+      )
+    : [];
+  const locationText = [props?.address, ...geoText].filter(Boolean).join(" · ") || undefined;
   const types = raw.types ?? (raw.type ? [raw.type] : []);
   return {
     entityId,
@@ -140,13 +160,15 @@ export function normalizeEntity(raw: QlooEntityRaw): QlooEntity | null {
     popularity: raw.popularity,
     affinity: raw.affinity ?? raw.query?.affinity,
     disambiguation: raw.disambiguation,
-    explainability: raw.query?.explainability as JsonValue | undefined,
+    explainability:
+      raw.query?.explainability === undefined ? undefined : boundJson(raw.query.explainability),
     description: props?.short_description ?? props?.description,
     imageUrl,
     address: props?.address,
+    locationText,
     geocode:
-      geo && typeof geo.latitude === "number" && typeof geo.longitude === "number"
-        ? { latitude: geo.latitude, longitude: geo.longitude }
+      typeof lat === "number" && typeof lon === "number"
+        ? { latitude: lat, longitude: lon }
         : undefined,
     priceLevel: props?.price_level,
     rating: props?.business_rating,
@@ -160,6 +182,80 @@ export function normalizeTag(raw: QlooTagRaw): QlooTag | null {
   const id = raw.id ?? raw.tag_id;
   if (!id) return null;
   return { id, name: raw.name, type: raw.type ?? raw.subtype };
+}
+
+/** Bound an arbitrary JSON payload (depth, array length, keys, string length) before it crosses the wire or reaches a model. */
+export function boundJson(value: unknown, depth = 0): JsonValue {
+  if (value === null || typeof value === "number" || typeof value === "boolean") return value;
+  if (typeof value === "string") return value.length > 300 ? `${value.slice(0, 300)}…` : value;
+  if (depth >= 6) return "[…]";
+  if (Array.isArray(value)) return value.slice(0, 12).map((v) => boundJson(v, depth + 1));
+  if (typeof value === "object") {
+    const out: { [key: string]: JsonValue } = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>).slice(0, 30)) {
+      if (v !== undefined) out[k] = boundJson(v, depth + 1);
+    }
+    return out;
+  }
+  return null;
+}
+
+export type TasteDriver = { entityId: string; name: string; weight?: number };
+
+/**
+ * Which of the user's confirmed taste entities Qloo's `feature.explainability`
+ * credits for a result, strongest first. Structure-agnostic on purpose: it only
+ * reports an entity when the payload names one of `taste` by id, so it can
+ * under-report but never invents a reason.
+ */
+export function explainDrivers(
+  explainability: JsonValue | undefined,
+  taste: readonly { entityId: string; name: string }[],
+): TasteDriver[] {
+  if (explainability === undefined || explainability === null) return [];
+  const names = new Map(taste.map((t) => [t.entityId, t.name]));
+  const weights = new Map<string, number | undefined>();
+  const credit = (id: string, weight?: number) => {
+    const prev = weights.get(id);
+    weights.set(
+      id,
+      weight === undefined ? prev : Math.max(prev ?? Number.NEGATIVE_INFINITY, weight),
+    );
+  };
+  const visit = (node: JsonValue, depth: number) => {
+    if (depth > 8 || node === null) return;
+    if (typeof node === "string") {
+      if (names.has(node)) credit(node);
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const child of node) visit(child, depth + 1);
+      return;
+    }
+    if (typeof node !== "object") return;
+    const record = node as { [key: string]: JsonValue };
+    const idValue = [record.entity_id, record.id, record.entity].find(
+      (v): v is string => typeof v === "string" && names.has(v),
+    );
+    if (idValue) {
+      const weight = [
+        record.score,
+        record.weight,
+        record.affinity,
+        record.contribution,
+        record.value,
+      ].find((v): v is number => typeof v === "number");
+      credit(idValue, weight);
+    }
+    for (const [key, child] of Object.entries(record)) {
+      if (names.has(key)) credit(key, typeof child === "number" ? child : undefined);
+      visit(child, depth + 1);
+    }
+  };
+  visit(explainability, 0);
+  return [...weights.entries()]
+    .map(([entityId, weight]) => ({ entityId, name: names.get(entityId) ?? entityId, weight }))
+    .sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
 }
 
 /** Qloo wraps results as `{ results: [...] }` (search) or `{ results: { entities: [...] } }` (insights). */
