@@ -21,10 +21,14 @@ export type Landmark = {
   // for taste-ranked restaurants near the landmark. Never the user's GPS.
   district: string;
   // Names Agora searches Qloo with (English first, then Turkish). A match is
-  // accepted only if the name agrees and Qloo places it in Istanbul; the result
-  // is cached in the landmark_qloo_map table, never in this repository. A
-  // landmark without a confident match is shown without a Qloo badge.
+  // accepted only if the name agrees and Qloo places it at this location; the
+  // result is cached in the landmark_qloo_map table, never in this repository.
+  // A landmark without a confident match is shown without a Qloo badge.
   aliases: string[];
+  // "place" (default): a building or square with a pin. "area": a neighbourhood
+  // or an experience (a ferry ride) — Qloo matching accepts only an exact name,
+  // so a business that borrows the name is never taken for the area itself.
+  kind?: "place" | "area";
 };
 
 const nowIso = () => new Date().toISOString();
@@ -192,6 +196,7 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-istiklal",
+    kind: "area",
     district: "Beyoğlu",
     aliases: ["Istiklal Avenue", "İstiklal Caddesi", "Istiklal Street"],
     title: "İstiklal Avenue",
@@ -258,6 +263,7 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-bosphorus-cruise",
+    kind: "area",
     district: "Eminönü",
     aliases: ["Bosphorus Cruise", "Şehir Hatları"],
     title: "Bosphorus Ferry",
@@ -346,6 +352,7 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-kadikoy",
+    kind: "area",
     district: "Kadıköy",
     aliases: ["Moda", "Kadıköy"],
     title: "Kadıköy & Moda",

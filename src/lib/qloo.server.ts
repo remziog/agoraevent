@@ -17,14 +17,11 @@
 // results shown with their source, uncertain matches confirmed by the user.
 import "@tanstack/react-start/server-only";
 
-import { z } from "zod";
 import {
-  normalizeEntity,
   normalizeTag,
+  parseEntityList,
   pickResultArray,
   QLOO_ENTITY_PLACE,
-  QlooEntitySchema,
-  QlooTagSchema,
   type QlooCall,
   type QlooEntity,
   type QlooTag,
@@ -190,11 +187,11 @@ export async function qlooGet(
 }
 
 function parseEntities(payload: unknown, entry?: QlooCall): QlooEntity[] {
-  const parsed = z.array(QlooEntitySchema).safeParse(pickResultArray(payload, "entities"));
-  if (!parsed.success) return [];
-  const entities = parsed.data.map(normalizeEntity).filter((e): e is QlooEntity => e !== null);
+  const { entities, upstreamCount, rejectedCount } = parseEntityList(payload);
   if (entry) {
     entry.resultCount = entities.length;
+    entry.upstreamCount = upstreamCount;
+    if (rejectedCount > 0) entry.rejectedCount = rejectedCount;
     entry.topResults = entities.slice(0, 3).map((e) => ({ name: e.name, entityId: e.entityId }));
   }
   return entities;
@@ -247,7 +244,13 @@ export async function qlooRankShortlist(
     },
     { log },
   );
-  return parseEntities(payload, lastEntry(log));
+  const entry = lastEntry(log);
+  const entities = parseEntities(payload, entry);
+  // Diagnose "0 landmarks" precisely: upstream items vs. parsed vs. in our shortlist.
+  const shortlist = new Set(input.resultEntityIds);
+  const matched = entities.filter((e) => shortlist.has(e.entityId));
+  if (entry) entry.matchedCount = matched.length;
+  return matched;
 }
 
 /**
@@ -301,11 +304,13 @@ export async function qlooFindTags(
     },
     { log },
   );
-  const parsed = z.array(QlooTagSchema).safeParse(pickResultArray(payload, "tags"));
-  if (!parsed.success) return [];
-  const tags = parsed.data.map(normalizeTag).filter((t): t is QlooTag => t !== null);
+  const items = pickResultArray(payload, "tags");
+  const tags = items.map(normalizeTag).filter((t): t is QlooTag => t !== null);
   const entry = lastEntry(log);
-  if (entry) entry.resultCount = tags.length;
+  if (entry) {
+    entry.resultCount = tags.length;
+    entry.upstreamCount = items.length;
+  }
   return tags;
 }
 

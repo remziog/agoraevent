@@ -119,9 +119,11 @@ function QlooStatusPage() {
             </Button>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mapped}/{landmarks.length} matched. A match needs the right name and a Qloo location in
-            Istanbul; the rest are shown in Agora without a Qloo badge. Results are cached in the
-            database.
+            {mapped}/{landmarks.length} matched. A match needs the right name and the same
+            location (Qloo coordinates within a few km of the pin, or an address naming the
+            landmark's own neighbourhood — not merely "Istanbul"); areas accept only an exact
+            name. The rest are shown in Agora without a Qloo badge. Results are cached in the
+            database and re-checked when the matching rules change.
           </p>
           {mapMutation.data && !mapMutation.data.ok && (
             <ErrorLine text={ERROR_TEXT[mapMutation.data.error]} />
@@ -273,7 +275,9 @@ function LandmarkRow({ row }: { row: LandmarkStatusRow }) {
         <ul className="mt-2 space-y-1 rounded-xl bg-muted/50 p-3 text-xs">
           {row.candidates.map((c) => (
             <li key={c.entityId}>
-              {c.name} — name {c.nameMatch}, {c.inIstanbul ? "in Istanbul" : "not in Istanbul"}
+              {c.name} — name {c.nameMatch},{" "}
+              {c.inIstanbul ? "same place" : "not this place"}
+              {c.distanceKm !== undefined ? ` (${c.distanceKm} km from the pin)` : " (no coordinates from Qloo)"}
               {c.location ? ` · ${c.location}` : ""}
             </li>
           ))}
@@ -298,7 +302,11 @@ function Calls({ calls }: { calls: QlooCall[] }) {
             {Object.entries(c.params)
               .map(([k, v]) => `${k}=${v}`)
               .join("&")}
-            {c.resultCount !== undefined ? ` → ${c.resultCount}` : ""}
+            {c.upstreamCount !== undefined || c.resultCount !== undefined
+              ? ` → ${c.upstreamCount ?? c.resultCount} upstream · ${c.resultCount ?? 0} parsed${
+                  c.rejectedCount ? ` · ${c.rejectedCount} unreadable` : ""
+                }${c.matchedCount !== undefined ? ` · ${c.matchedCount} in shortlist` : ""}`
+              : ""}
             {c.error ? ` (${c.error})` : ""}
           </li>
         ))}

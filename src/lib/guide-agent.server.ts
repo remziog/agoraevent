@@ -11,8 +11,11 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+
+const gateway = (apiKey: string) => createLovableAiGatewayProvider(apiKey);
 import type {
   GatheringEvent,
+  GuideExecution,
   GuidePick,
   GuidePlan,
   GuideTraceStep,
@@ -27,10 +30,15 @@ import { qlooErrorCode } from "./qloo.server";
 import { rankLandmarks, restaurantsNear } from "./qloo-guide.server";
 
 /** Tried in order; the gateway's catalogue changes, so a rejected model falls through to the next. */
-const MODELS = ["google/gemini-3-flash-preview", "google/gemini-2.5-flash"];
+const MODELS = (process.env.AGORA_AGENT_MODEL
+  ? [process.env.AGORA_AGENT_MODEL]
+  : []
+).concat(["google/gemini-3-flash-preview", "google/gemini-2.5-flash"]);
 const AGENT_TIMEOUT_MS = 30_000;
 const PICKS = 3;
 const GATHERING_RADIUS_KM = 3;
+/** Shown, clearly labelled as editorial, when Qloo returns no ranking. Hero landmarks with authored stories. */
+const EDITORIAL_LANDMARK_IDS = ["lm-basilica-cistern", "lm-hagia-sophia", "lm-galata-tower"];
 
 const landmarkById = new Map(ISTANBUL_LANDMARKS.map((l) => [l.id, l]));
 
@@ -51,8 +59,11 @@ function distanceKm(
 
 type Db = SupabaseClient<Database>;
 
-/** Agora's own community events within a few km of the landmark in the next 7 days (not Qloo data). */
-async function gatheringsNear(db: Db, landmark: Landmark): Promise<GatheringEvent[]> {
+/**
+ * Agora's own community events in the next 7 days (not Qloo data): within a few
+ * km of the landmark when one is given, otherwise the next few city-wide.
+ */
+async function gatheringsNear(db: Db, landmark: Landmark | null): Promise<GatheringEvent[]> {
   const now = new Date();
   const inAWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const { data, error } = await db
@@ -73,19 +84,22 @@ async function gatheringsNear(db: Db, landmark: Landmark): Promise<GatheringEven
       startsAt: e.starts_at,
       venue: e.venue,
       organizer: (e.organizations as { name?: string } | null)?.name ?? null,
-      distanceKm: distanceKm(landmark, {
-        latitude: e.latitude as number,
-        longitude: e.longitude as number,
-      }),
+      distanceKm: landmark
+        ? distanceKm(landmark, {
+            latitude: e.latitude as number,
+            longitude: e.longitude as number,
+          })
+        : 0,
       sample: (e.tags ?? []).includes("demo"),
     }))
-    .filter((e) => e.distanceKm <= GATHERING_RADIUS_KM)
-    .slice(0, 3)
+    .filter((e) => !landmark || e.distanceKm <= GATHERING_RADIUS_KM)
+    .slice(0, landmark ? 3 : 5)
     .map((e) => ({ ...e, distanceKm: Math.round(e.distanceKm * 10) / 10 }));
 }
 
 type Collected = {
   ranked: LandmarkPick[] | null;
+  rankingCounts?: GuideExecution["rankingCounts"];
   unmatched: string[];
   restaurants: Map<string, RestaurantsResult>;
   gatherings: Map<string, GatheringEvent[]>;
@@ -145,9 +159,24 @@ function makeTools(db: Db, taste: TasteEntity[], collected: Collected, trace: Gu
       const { picks, unmatchedLandmarkIds } = await rankLandmarks(tasteIds, calls);
       collected.ranked = picks;
       collected.unmatched = unmatchedLandmarkIds;
+      const insights = calls.find((c) => c.endpoint === "/v2/insights");
+      if (insights) {
+        collected.rankingCounts = {
+          upstream: insights.upstreamCount ?? insights.resultCount ?? 0,
+          parsed: insights.resultCount ?? 0,
+          matched: insights.matchedCount ?? picks.length,
+        };
+      }
+      const counts = collected.rankingCounts;
+      const detail =
+        picks.length === 0 && counts
+          ? counts.upstream === 0
+            ? " — Qloo answered with an empty list"
+            : ` — Qloo sent ${counts.upstream} item(s), ${counts.parsed} readable, ${counts.matched} of Agora's landmarks`
+          : "";
       return {
         value: picks,
-        label: `Qloo ranked ${picks.length} landmarks for your taste (${unmatchedLandmarkIds.length} not in Qloo's graph)`,
+        label: `Qloo ranked ${picks.length} landmarks for your taste (${unmatchedLandmarkIds.length} not in Qloo's graph)${detail}`,
       };
     });
 
@@ -161,15 +190,17 @@ function makeTools(db: Db, taste: TasteEntity[], collected: Collected, trace: Gu
       };
     });
 
-  const gatherings = (landmarkId: string) =>
+  const gatherings = (landmarkId: string | null) =>
     timed("gatherings_near", { landmarkId }, "agora", async () => {
-      const landmark = landmarkById.get(landmarkId);
-      if (!landmark) throw new Error("unknown landmark");
-      const events = await gatheringsNear(db, landmark);
-      collected.gatherings.set(landmarkId, events);
+      const landmark = landmarkId ? landmarkById.get(landmarkId) : null;
+      if (landmarkId && !landmark) throw new Error("unknown landmark");
+      const events = await gatheringsNear(db, landmark ?? null);
+      collected.gatherings.set(landmarkId ?? "*", events);
       return {
         value: events,
-        label: `${events.length} Agora gathering(s) within ${GATHERING_RADIUS_KM} km this week`,
+        label: landmark
+          ? `${events.length} Agora gathering(s) within ${GATHERING_RADIUS_KM} km this week`
+          : `${events.length} Agora gathering(s) across Istanbul this week`,
       };
     });
 
@@ -335,20 +366,26 @@ export async function runGuideAgent(input: {
   };
   const { tools, rank, restaurants, gatherings } = makeTools(db, taste, collected, trace);
 
+  const execution: GuideExecution = {
+    ranking: "failed",
+    agentAttempted: false,
+    agentOutcome: "not_configured",
+    fallbackUsed: false,
+  };
   let mode: GuidePlan["mode"] = "fixed";
   let model: string | undefined;
-  let notice: string | undefined;
 
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) {
-    notice = "The AI agent is not configured on this server, so Agora used its fixed plan.";
+    execution.agentOutcome = "not_configured";
   } else {
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    execution.agentAttempted = true;
     for (const candidate of MODELS) {
       const started = Date.now();
+      execution.agentModel = candidate;
       try {
         const agent = new ToolLoopAgent({
-          model: gateway(candidate),
+          model: gateway(apiKey)(candidate),
           instructions: instructions(taste, mood),
           tools,
           stopWhen: [hasToolCall("submit_plan"), stepCountIs(10)],
@@ -357,27 +394,37 @@ export async function runGuideAgent(input: {
           prompt: "Plan my visit.",
           abortSignal: AbortSignal.timeout(AGENT_TIMEOUT_MS),
         });
-        trace.push({
-          kind: "agent",
-          name: "agent",
-          label: `Agent finished in ${result.steps.length} step(s) with ${candidate}`,
-          ms: Date.now() - started,
-          source: "ai",
-        });
+        execution.agentSteps = result.steps.length;
         if (collected.submitted) {
           mode = "agent";
           model = candidate;
+          execution.agentOutcome = "plan";
+          trace.push({
+            kind: "agent",
+            name: "agent",
+            label: `Agent (${candidate}) submitted a plan after ${result.steps.length} step(s)`,
+            ms: Date.now() - started,
+            source: "ai",
+          });
         } else {
-          notice =
-            "The agent stopped without submitting a plan, so Agora completed it with its fixed plan.";
+          execution.agentOutcome = "no_plan";
+          trace.push({
+            kind: "agent",
+            name: "agent",
+            label: `Agent (${candidate}) ran ${result.steps.length} step(s) but submitted no plan`,
+            ms: Date.now() - started,
+            source: "ai",
+          });
         }
         break;
       } catch (error) {
         const message = error instanceof Error ? error.message.slice(0, 160) : "unknown error";
+        const timedOut = error instanceof Error && /abort|timeout/i.test(error.name + message);
+        execution.agentOutcome = timedOut ? "timeout" : "failed";
         trace.push({
           kind: "agent",
           name: "agent",
-          label: `Agent with ${candidate} failed: ${message}`,
+          label: `Agent with ${candidate} ${timedOut ? "timed out" : `failed: ${message}`}`,
           ms: Date.now() - started,
           source: "ai",
         });
@@ -392,14 +439,21 @@ export async function runGuideAgent(input: {
         if (Date.now() - started > 8_000) break;
       }
     }
-    if (mode === "fixed" && !notice) {
-      notice = "The AI agent did not answer in time, so Agora used its fixed plan.";
-    }
   }
 
   // Ground truth: Qloo's ranking. Recompute if the agent never got that far (cached per isolate).
-  if (collected.ranked === null) await rank();
+  if (collected.ranked === null) {
+    try {
+      await rank();
+    } catch (error) {
+      execution.rankingError = qlooErrorCode(error);
+      // Nothing can be ranked without Qloo; the caller reports the error code honestly.
+      throw error;
+    }
+  }
   const ranked = collected.ranked ?? [];
+  execution.ranking = ranked.length > 0 ? "ranked" : "empty";
+  execution.rankingCounts = collected.rankingCounts;
   const qlooRankOf = new Map(ranked.map((p, i) => [p.landmarkId, i + 1]));
 
   // Picks: the agent's choice if it is valid, otherwise Qloo's top three.
@@ -422,6 +476,7 @@ export async function runGuideAgent(input: {
     const p = byLandmark.get(c.landmarkId);
     return {
       landmarkId: c.landmarkId,
+      source: "qloo",
       qlooRank: qlooRankOf.get(c.landmarkId) ?? 0,
       affinity: p?.affinity,
       drivers: explainDrivers(p?.explainability, taste).map((d) => d.name),
@@ -433,10 +488,42 @@ export async function runGuideAgent(input: {
     };
   });
 
-  // Dining and gatherings for the first pick, looked up now if the agent did not.
+  // No Qloo ranking: keep the journey alive with Agora's editorial landmarks,
+  // clearly labelled, never with a Qloo badge.
+  if (picks.length === 0) {
+    for (const id of EDITORIAL_LANDMARK_IDS) {
+      if (!landmarkById.has(id)) continue;
+      picks.push({ landmarkId: id, source: "editorial", qlooRank: 0, drivers: [] });
+    }
+    trace.push({
+      kind: "note",
+      name: "editorial_fallback",
+      label: "No Qloo ranking → showing Agora's editorial landmarks (not personalised)",
+      source: "agora",
+    });
+  }
+
+  // Fallback bookkeeping: the fixed plan completed whatever the agent did not.
+  if (mode !== "agent") {
+    execution.fallbackUsed = true;
+    execution.fallbackReason =
+      execution.agentOutcome === "not_configured"
+        ? "The AI agent is not configured on this server."
+        : execution.agentOutcome === "no_plan"
+          ? execution.ranking === "empty"
+            ? "The agent ran but had no Qloo ranking to plan from."
+            : "The agent stopped without submitting a plan."
+          : execution.agentOutcome === "timeout"
+            ? "The AI agent did not answer in time."
+            : "The AI agent failed.";
+  }
+
+  // Dining (Qloo, taste-ranked in the district) and gatherings (Agora) for the
+  // first pick — editorial or Qloo-ranked — looked up now if the agent did not.
   const first = picks[0]?.landmarkId;
   let dining: GuidePlan["dining"] = null;
   let gatheringsOut: GuidePlan["gatherings"] = null;
+  let diningNotice: string | undefined;
   if (first) {
     try {
       const r = collected.restaurants.get(first) ?? (await restaurants(first));
@@ -451,26 +538,32 @@ export async function runGuideAgent(input: {
         ),
       };
     } catch {
-      notice = notice ?? "Qloo did not return restaurants for this neighbourhood just now.";
+      diningNotice = "Qloo did not return restaurants for this neighbourhood just now.";
     }
     try {
-      const events = collected.gatherings.get(first) ?? (await gatherings(first));
-      gatheringsOut = { landmarkId: first, events };
+      const anchor = picks[0].source === "qloo" ? first : null;
+      const events = collected.gatherings.get(anchor ?? "*") ?? (await gatherings(anchor));
+      gatheringsOut = { landmarkId: anchor, events };
     } catch {
       gatheringsOut = null;
     }
   }
 
-  if (picks.length === 0) {
-    notice =
-      ranked.length === 0
-        ? "Qloo could not rank any of Agora's landmarks for these favourites. Try different ones."
-        : notice;
-  }
+  // One notice, derived from the execution status (never two messages saying the same thing).
+  const counts = execution.rankingCounts;
+  const notice =
+    execution.ranking === "empty"
+      ? counts && counts.upstream > 0 && counts.matched === 0
+        ? `Qloo answered, but none of the ${counts.upstream} place(s) it sent are Agora's landmarks, so nothing could be ranked for these favourites. Below: Agora's editorial landmarks (not personalised) and real gatherings this week.`
+        : "Qloo returned no ranking for these favourites. Below: Agora's editorial landmarks (not personalised) and real gatherings this week."
+      : execution.fallbackUsed
+        ? `${execution.fallbackReason} Agora completed the plan with its fixed steps.`
+        : diningNotice;
 
   return {
     mode,
     model,
+    execution,
     taste,
     mood,
     picks,
@@ -478,7 +571,7 @@ export async function runGuideAgent(input: {
     gatherings: gatheringsOut,
     unmatchedLandmarkIds: collected.unmatched,
     summary: mode === "agent" ? collected.submitted?.summary : undefined,
-    notice,
+    notice: notice ?? diningNotice,
     trace,
   };
 }
