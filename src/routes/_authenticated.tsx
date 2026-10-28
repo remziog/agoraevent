@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_authenticated")({
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile?.onboarded) throw redirect({ to: "/onboarding" });
+    if (!profile?.onboarded) throw redirect({ to: "/onboarding", search: { next: location.href } });
     onboardedByUser.set(user.id, true);
   },
   component: () => <Outlet />,

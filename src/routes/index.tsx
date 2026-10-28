@@ -1,10 +1,14 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { ArrowRight } from "lucide-react";
 import { Logo, LogoMark } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SiteFooter } from "@/components/SiteFooter";
 import { IS_NATIVE_APP, SITE_URL } from "@/lib/site";
+import { supabase } from "@/integrations/supabase/client";
+import { takeAfterLogin } from "@/lib/safe-redirect";
 
 const OG_IMAGE = `${SITE_URL}/og-landing.jpg`;
 
@@ -60,6 +64,17 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  // Back from Google sign-in (the OAuth broker returns to "/"): continue to
+  // where the person was going, e.g. /app/guide.
+  useEffect(() => {
+    const target = takeAfterLogin();
+    if (!target) return;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ href: target, replace: true });
+    });
+  }, [navigate]);
 
   const pillars = [
     { t: t("landing.pillar1Title"), d: t("landing.pillar1Desc") },
@@ -85,6 +100,16 @@ function Landing() {
       <main>
         {/* Hero */}
         <section className="mx-auto max-w-4xl px-4 pb-20 pt-12 text-center sm:px-6 sm:pt-16">
+          <Link
+            to="/app/guide"
+            className="group mx-auto mb-8 inline-flex items-center gap-3 rounded-full border border-primary/40 bg-card/70 py-1.5 pl-1.5 pr-4 text-sm transition hover:border-primary"
+          >
+            <span className="rounded-full bg-primary px-2.5 py-1 text-[11px] uppercase tracking-widest text-primary-foreground">
+              {t("landing.guideBadge")}
+            </span>
+            <span className="font-medium">{t("landing.guideTitle")}</span>
+            <ArrowRight className="h-4 w-4 text-primary transition group-hover:translate-x-0.5" />
+          </Link>
           <p className="mb-6 text-xs uppercase tracking-[0.28em] text-muted-foreground">
             {t("landing.kicker")}
           </p>

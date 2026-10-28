@@ -11,17 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { IS_NATIVE_APP } from "@/lib/site";
+import { rememberAfterLogin, safeRedirect } from "@/lib/safe-redirect";
 
 const loginSearch = z.object({ redirect: z.string().optional() });
-
-// Only allow same-origin paths as a post-login destination (no "//evil.com",
-// no absolute URLs) so the `redirect` param can't be used for open redirects.
-function safeRedirect(target: string | undefined): string | null {
-  if (!target) return null;
-  if (!target.startsWith("/") || target.startsWith("//") || target.startsWith("/\\")) return null;
-  if (target.startsWith("/login") || target.startsWith("/signup")) return null;
-  return target;
-}
 
 export const Route = createFileRoute("/login")({
   validateSearch: (s) => loginSearch.parse(s),
@@ -35,8 +27,8 @@ export const Route = createFileRoute("/login")({
       .eq("id", auth.user.id)
       .maybeSingle();
 
-    if (!profile?.onboarded) throw redirect({ to: "/onboarding" });
     const target = safeRedirect(search.redirect);
+    if (!profile?.onboarded) throw redirect({ to: "/onboarding", search: { next: target ?? undefined } });
     if (target) throw redirect({ href: target });
     throw redirect({ to: "/app" });
   },
@@ -76,11 +68,11 @@ function LoginPage() {
           .eq("id", auth.user.id)
           .maybeSingle()
       : { data: null };
+    const target = safeRedirect(redirectTarget);
     if (!profile?.onboarded) {
-      navigate({ to: "/onboarding" });
+      navigate({ to: "/onboarding", search: { next: target ?? undefined } });
       return;
     }
-    const target = safeRedirect(redirectTarget);
     if (target) navigate({ href: target });
     else navigate({ to: "/app" });
   }
@@ -103,6 +95,8 @@ function LoginPage() {
   async function onOAuth(provider: "google") {
     setOauthLoading(provider);
     setFormError(null);
+    // The OAuth broker returns to the site root; the landing page resumes from here.
+    rememberAfterLogin(safeRedirect(redirectTarget) ?? "/app");
     const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
     });
