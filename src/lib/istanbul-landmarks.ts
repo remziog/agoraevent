@@ -17,6 +17,14 @@ export type Landmark = {
   description: string;
   hours: string;
   photos: string[];
+  // Neighbourhood used as Qloo's `filter.location.query` ("<district>, Istanbul")
+  // for taste-ranked restaurants near the landmark. Never the user's GPS.
+  district: string;
+  // Names Agora searches Qloo with (English first, then Turkish). A match is
+  // accepted only if the name agrees and Qloo places it in Istanbul; the result
+  // is cached in the landmark_qloo_map table, never in this repository. A
+  // landmark without a confident match is shown without a Qloo badge.
+  aliases: string[];
 };
 
 const nowIso = () => new Date().toISOString();
@@ -30,6 +38,8 @@ const wiki = (file: string, width = 800) =>
 export const ISTANBUL_LANDMARKS: Landmark[] = [
   {
     id: "lm-hagia-sophia",
+    district: "Sultanahmet",
+    aliases: ["Hagia Sophia", "Ayasofya", "Hagia Sophia Grand Mosque"],
     title: "Hagia Sophia",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -50,6 +60,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-blue-mosque",
+    district: "Sultanahmet",
+    aliases: ["Blue Mosque", "Sultan Ahmed Mosque", "Sultanahmet Camii"],
     title: "Sultan Ahmed (Blue) Mosque",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -70,6 +82,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-topkapi",
+    district: "Sultanahmet",
+    aliases: ["Topkapi Palace", "Topkapı Sarayı", "Topkapi Palace Museum"],
     title: "Topkapı Palace",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -90,6 +104,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-basilica-cistern",
+    district: "Sultanahmet",
+    aliases: ["Basilica Cistern", "Yerebatan Sarnıcı"],
     title: "Basilica Cistern",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -110,6 +126,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-grand-bazaar",
+    district: "Beyazıt",
+    aliases: ["Grand Bazaar", "Kapalıçarşı", "Kapali Carsi"],
     title: "Grand Bazaar",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -130,6 +148,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-spice-bazaar",
+    district: "Eminönü",
+    aliases: ["Spice Bazaar", "Egyptian Bazaar", "Mısır Çarşısı"],
     title: "Spice Bazaar",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -150,6 +170,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-galata-tower",
+    district: "Karaköy",
+    aliases: ["Galata Tower", "Galata Kulesi"],
     title: "Galata Tower",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -170,6 +192,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-istiklal",
+    district: "Beyoğlu",
+    aliases: ["Istiklal Avenue", "İstiklal Caddesi", "Istiklal Street"],
     title: "İstiklal Avenue",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -190,6 +214,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-taksim",
+    district: "Beyoğlu",
+    aliases: ["Taksim Square", "Taksim Meydanı"],
     title: "Taksim Square",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -210,6 +236,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-dolmabahce",
+    district: "Beşiktaş",
+    aliases: ["Dolmabahce Palace", "Dolmabahçe Sarayı"],
     title: "Dolmabahçe Palace",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -230,6 +258,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-bosphorus-cruise",
+    district: "Eminönü",
+    aliases: ["Bosphorus Cruise", "Şehir Hatları"],
     title: "Bosphorus Ferry",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -250,6 +280,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-maiden-tower",
+    district: "Üsküdar",
+    aliases: ["Maiden's Tower", "Kız Kulesi"],
     title: "Maiden's Tower (Kız Kulesi)",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -270,6 +302,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-suleymaniye",
+    district: "Fatih",
+    aliases: ["Suleymaniye Mosque", "Süleymaniye Camii"],
     title: "Süleymaniye Mosque",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -290,6 +324,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-chora",
+    district: "Edirnekapı",
+    aliases: ["Chora Church", "Kariye Camii", "Chora Museum"],
     title: "Chora Church (Kariye)",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -310,6 +346,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-kadikoy",
+    district: "Kadıköy",
+    aliases: ["Moda", "Kadıköy"],
     title: "Kadıköy & Moda",
     starts_at: nowIso(),
     city: "Istanbul",
@@ -330,6 +368,8 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lm-ortakoy",
+    district: "Ortaköy",
+    aliases: ["Ortakoy Mosque", "Büyük Mecidiye Camii"],
     title: "Ortaköy Mosque",
     starts_at: nowIso(),
     city: "Istanbul",
