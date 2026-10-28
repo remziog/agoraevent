@@ -124,6 +124,21 @@ function Discover() {
 
       <main className="mx-auto max-w-5xl px-6 py-8">
         <h1 className="sr-only">Discover your night</h1>
+        <Link
+          to="/app/guide"
+          className="group mb-8 flex flex-col gap-3 rounded-3xl border border-primary/30 bg-[radial-gradient(circle_at_15%_20%,_color-mix(in_oklab,_var(--primary)_14%,_transparent),_transparent_60%)] p-6 transition hover:border-primary sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span>
+            <span className="text-xs uppercase tracking-[0.3em] text-primary">New · powered by Qloo</span>
+            <span className="mt-1 block font-display text-2xl leading-tight sm:text-3xl">Your Istanbul, by taste</span>
+            <span className="mt-1 block text-sm text-muted-foreground">
+              Three things you love → the landmarks, stories and tables that fit you.
+            </span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground sm:self-center">
+            Open the taste guide <ArrowUp className="h-3.5 w-3.5 rotate-45" />
+          </span>
+        </Link>
         {/* Compass */}
         <CompassFace
           needleAngle={needle}
