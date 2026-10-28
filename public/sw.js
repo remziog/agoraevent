@@ -1,11 +1,15 @@
 /* Agora service worker — minimal app-shell + runtime cache.
  * Strategy:
- *  - HTML navigations: NetworkFirst with 3s timeout, fall back to cached shell.
+ *  - HTML navigations: NetworkFirst; the cached shell is used only when the
+ *    network actually fails (offline), never on a slow response. A timeout
+ *    fallback served a pre-deploy shell whose asset hashes no longer existed
+ *    right after a Publish, which left the page blank once (28 Oct).
  *  - Static assets (js/css/img/font): StaleWhileRevalidate.
  *  - Google Static Maps + concert-weekend pre-saved data: CacheFirst (long-lived).
  * Never use CacheFirst on HTML — that would lock devices on a stale build.
+ * Bump VERSION on strategy changes so old caches are dropped on activate.
  */
-const VERSION = "agora-v1";
+const VERSION = "agora-v2";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const MAP_CACHE = `${VERSION}-maps`;
@@ -52,13 +56,10 @@ function isMapTile(url) {
   );
 }
 
-async function networkFirst(request, cacheName, timeoutMs = 3000) {
+async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   try {
-    const network = await Promise.race([
-      fetch(request),
-      new Promise((_, r) => setTimeout(() => r(new Error("timeout")), timeoutMs)),
-    ]);
+    const network = await fetch(request);
     if (network && network.ok) cache.put(request, network.clone()).catch(() => {});
     return network;
   } catch {
