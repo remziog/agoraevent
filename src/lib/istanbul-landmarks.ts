@@ -131,7 +131,7 @@ export const ISTANBUL_LANDMARKS: Landmark[] = [
   {
     id: "lm-grand-bazaar",
     district: "Beyazıt",
-    aliases: ["Grand Bazaar", "Kapalıçarşı", "Kapali Carsi"],
+    aliases: ["Kapalıçarşı", "Grand Bazaar", "Kapalıçarşı Mercan Kapısı"],
     title: "Grand Bazaar",
     starts_at: nowIso(),
     city: "Istanbul",

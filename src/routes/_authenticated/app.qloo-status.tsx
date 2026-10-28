@@ -214,7 +214,8 @@ function QlooStatusPage() {
           {probeMutation.data?.ok && (
             <div className="mt-4 text-sm">
               <p className="text-muted-foreground">
-                Tag filter: {probeMutation.data.data.restaurantTagIds.join(", ") || "none"} ·{" "}
+                Scope: {probeMutation.data.data.scope} · Tag filter:{" "}
+                {probeMutation.data.data.restaurantTagIds.join(", ") || "none"} ·{" "}
                 {probeMutation.data.data.restaurants.length} result(s)
               </p>
               <ul className="mt-2 space-y-1">

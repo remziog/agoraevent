@@ -256,16 +256,33 @@ export const probeDistrictRestaurants = createServerFn({ method: "POST" })
     const calls: QlooCall[] = [];
     return runQloo(calls, async () => {
       const tagIds = await restaurantTagIds(calls);
-      const places = await cached(`probe:${data.district}:${tagIds.join("|")}`, () =>
-        qlooPlacesNear(
-          { locationQuery: `${data.district}, Istanbul`, tagIds, take: 6, explain: false },
-          calls,
-        ),
-      );
+      // Same strategy as the guide: each tag candidate in turn, then honestly empty.
+      for (const tagId of tagIds.length > 0 ? tagIds : [null]) {
+        const places = await cached(`probe:${data.district}:${tagId ?? "-"}`, () =>
+          qlooPlacesNear(
+            {
+              locationQuery: `${data.district}, Istanbul`,
+              tagIds: tagId ? [tagId] : undefined,
+              take: 6,
+              explain: false,
+            },
+            calls,
+          ),
+        );
+        if (places.length > 0) {
+          return {
+            district: data.district,
+            restaurantTagIds: tagId ? [tagId] : [],
+            scope: tagId ? ("restaurants" as const) : ("places" as const),
+            restaurants: places.map((p) => toRestaurant(p, data.district)),
+          };
+        }
+      }
       return {
         district: data.district,
         restaurantTagIds: tagIds,
-        restaurants: places.map((p) => toRestaurant(p, data.district)),
+        scope: "none" as const,
+        restaurants: [],
       };
     });
   });

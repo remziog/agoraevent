@@ -15,7 +15,9 @@ delete process.env.QLOO_RESTAURANT_TAGS;
 
 const { ISTANBUL_LANDMARKS } = await import("../src/lib/istanbul-landmarks");
 const { runGuideAgent } = await import("../src/lib/guide-agent.server");
-const { nameMatch, samePlace, MAP_RULES_VERSION } = await import("../src/lib/qloo-landmarks.server");
+const { nameMatch, samePlace, MAP_RULES_VERSION } =
+  await import("../src/lib/qloo-landmarks.server");
+const { pickRestaurantTags } = await import("../src/lib/qloo-guide.server");
 
 const TASTE = [
   { entityId: "sig-radiohead", name: "Radiohead", type: "artist" },
@@ -129,10 +131,22 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   }
 
   if (url.pathname === "/v2/tags") {
+    // The live answer put a product/service tag first; the place-scoped one must win.
     return json({
       results: {
         tags: [
-          { id: "urn:tag:genre:place:restaurant", name: "Restaurant", type: "urn:tag:genre:place" },
+          {
+            id: "urn:tag:product_service:qloo:restaurant_dining",
+            name: "Restaurant Dining",
+            type: "urn:tag:product_service",
+            parents: [{ type: "urn:entity:brand" }],
+          },
+          {
+            id: "urn:tag:genre:place:restaurant",
+            name: "Restaurant",
+            type: "urn:tag:genre:place",
+            parents: [{ type: "urn:entity:place" }],
+          },
         ],
       },
     });
@@ -247,11 +261,19 @@ test("matching rules: one-word aliases need an exact name; coordinates decide id
   assert.equal(nameMatch("Moda", ["Moda", "Kadıköy"]), "exact");
   assert.equal(nameMatch("Galata Tower Museum", ["Galata Tower", "Galata Kulesi"]), "contains");
   assert.equal(nameMatch("Ortakoy Mosque", ["Ortakoy Mosque", "Büyük Mecidiye Camii"]), "exact");
-  const ortakoy = { latitude: 41.0475, longitude: 29.0268, district: "Ortaköy", kind: "place" as const };
+  const ortakoy = {
+    latitude: 41.0475,
+    longitude: 29.0268,
+    district: "Ortaköy",
+    kind: "place" as const,
+  };
   // Same name, 55 km away, address says "Istanbul" → not the same place.
   assert.equal(
     samePlace(
-      { geocode: { latitude: 41.06, longitude: 28.37 }, locationText: "Selimpaşa · Silivri · Istanbul" },
+      {
+        geocode: { latitude: 41.06, longitude: 28.37 },
+        locationText: "Selimpaşa · Silivri · Istanbul",
+      },
       ortakoy,
     ).ok,
     false,
@@ -260,6 +282,36 @@ test("matching rules: one-word aliases need an exact name; coordinates decide id
   // No coordinates: the address must name the neighbourhood/district, not just the city.
   assert.equal(samePlace({ locationText: "Istanbul, Türkiye" }, ortakoy).ok, false);
   assert.equal(samePlace({ locationText: "Mecidiye, Beşiktaş/İstanbul" }, ortakoy).ok, true);
+});
+
+test("restaurant tag: place-scoped, exact 'restaurant' first; product/service tags last", () => {
+  const picked = pickRestaurantTags([
+    {
+      id: "urn:tag:product_service:qloo:restaurant_dining",
+      name: "Restaurant Dining",
+      parentTypes: ["urn:entity:brand"],
+    },
+    {
+      id: "urn:tag:keyword:place:fine_dining",
+      name: "Fine dining restaurant",
+      parentTypes: ["urn:entity:place"],
+    },
+    { id: "urn:tag:genre:place:restaurant", name: "Restaurant", parentTypes: ["urn:entity:place"] },
+  ]);
+  assert.deepEqual(
+    picked.map((t) => t.id),
+    ["urn:tag:genre:place:restaurant", "urn:tag:keyword:place:fine_dining"],
+  );
+  // Without parent metadata nothing is scoped away, but product/service tags still rank last.
+  const loose = pickRestaurantTags([
+    {
+      id: "urn:tag:product_service:qloo:restaurant_dining",
+      name: "Restaurant Dining",
+      parentTypes: [],
+    },
+    { id: "urn:tag:genre:place:restaurant", name: "Restaurant", parentTypes: [] },
+  ]);
+  assert.equal(loose[0].id, "urn:tag:genre:place:restaurant");
 });
 
 test("fixed plan: maps landmarks, ranks, finds restaurants and gatherings, never leaks a secret", async () => {
@@ -298,7 +350,11 @@ test("fixed plan: maps landmarks, ranks, finds restaurants and gatherings, never
   ]);
   assert.equal(mapRows.length, ISTANBUL_LANDMARKS.length, "every outcome is cached in the table");
   const ortakoyRow = mapRows.find((r) => r.landmark_id === "lm-ortakoy");
-  assert.equal(ortakoyRow?.entity_id, "ent-lm-ortakoy", "the namesake in Silivri is replaced by the mosque at the pin");
+  assert.equal(
+    ortakoyRow?.entity_id,
+    "ent-lm-ortakoy",
+    "the namesake in Silivri is replaced by the mosque at the pin",
+  );
   assert.ok(String(ortakoyRow?.note).startsWith(`[v${MAP_RULES_VERSION}]`));
 
   // The unreadable item in Qloo's answer is dropped, the rest is ranked.
@@ -306,6 +362,8 @@ test("fixed plan: maps landmarks, ranks, finds restaurants and gatherings, never
 
   assert.equal(plan.dining?.landmarkId, "lm-hagia-sophia");
   assert.equal(plan.dining?.district, "Sultanahmet");
+  assert.equal(plan.dining?.scope, "restaurants");
+  assert.deepEqual(plan.dining?.restaurantTagIds, ["urn:tag:genre:place:restaurant"]);
   assert.equal(plan.dining?.restaurants[0].name, "Meyhane Example");
   assert.deepEqual(plan.dining?.drivers["rest-1"], ["Blade Runner"]);
 
@@ -320,7 +378,9 @@ test("fixed plan: maps landmarks, ranks, finds restaurants and gatherings, never
 
   // Qloo calls: 13 matched landmarks × 1 search + 3 unmatched × 2 aliases = 19, then rank, tags, places.
   assert.deepEqual(qlooCallsByPath(), { "/search": 19, "/v2/insights": 2, "/v2/tags": 1 });
-  const rankCall = plan.trace.find((t) => t.name === "rank_landmarks")?.qloo?.find((c) => c.endpoint === "/v2/insights");
+  const rankCall = plan.trace
+    .find((t) => t.name === "rank_landmarks")
+    ?.qloo?.find((c) => c.endpoint === "/v2/insights");
   assert.equal(rankCall?.upstreamCount, 14);
   assert.equal(rankCall?.resultCount, 13);
   assert.equal(rankCall?.rejectedCount, 1);

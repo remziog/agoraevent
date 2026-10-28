@@ -29,7 +29,7 @@ import { qlooSearch } from "./qloo.server";
 const RETRY_NONE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
 const RESOLVE_CONCURRENCY = 3;
 /** Bump when the matching rules change: cached rows from older rules are re-resolved. */
-export const MAP_RULES_VERSION = 2;
+export const MAP_RULES_VERSION = 3;
 const VERSION_PREFIX = `[v${MAP_RULES_VERSION}] `;
 /** A place candidate with coordinates must be this close to the landmark. */
 const PLACE_RADIUS_KM = 2.5;
@@ -166,8 +166,8 @@ export function pick(
 
 async function resolveOne(landmark: Landmark, calls: QlooCall[]): Promise<LandmarkQlooRow> {
   const seen: LandmarkCandidate[] = [];
-  // English alias first, then the Turkish one: at most two searches per landmark.
-  for (const query of landmark.aliases.slice(0, 2)) {
+  // At most three searches per landmark (English, Turkish, a known Qloo spelling).
+  for (const query of landmark.aliases.slice(0, 3)) {
     const entities = await qlooSearch({ query, types: [QLOO_ENTITY_PLACE], take: 5 }, calls);
     for (const entity of entities) {
       if (!seen.some((c) => c.entityId === entity.entityId))

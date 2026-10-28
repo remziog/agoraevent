@@ -136,11 +136,15 @@ test("parseEntityList keeps every readable item and counts the unreadable ones (
   });
 });
 
-test("normalizeTag needs an id and a name", () => {
-  assert.deepEqual(normalizeTag({ tag_id: "urn:tag:x", name: "X", subtype: "urn:tag:genre" }), {
-    id: "urn:tag:x",
-    name: "X",
-    type: "urn:tag:genre",
-  });
+test("normalizeTag needs an id and a name, and reads parent entity types", () => {
+  assert.deepEqual(
+    normalizeTag({
+      tag_id: "urn:tag:x",
+      name: "X",
+      subtype: "urn:tag:genre",
+      parents: [{ type: "urn:entity:place", name: "Place" }, { type: "urn:entity:place" }, null],
+    }),
+    { id: "urn:tag:x", name: "X", type: "urn:tag:genre", parentTypes: ["urn:entity:place"] },
+  );
   assert.equal(normalizeTag({ id: "urn:tag:y" }), null);
 });
