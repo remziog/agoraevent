@@ -128,3 +128,9 @@ test("no exact match: nothing is promoted to a match", () => {
   assert.equal(split.matches.length, 0);
   assert.equal(split.alternatives.length, 1);
 });
+
+test("rules fallback maps Turkish interest words to the English tags organisers use", async () => {
+  const { fallbackTags } = await import("../src/lib/discovery.ts");
+  assert.deepEqual(fallbackTags(F01), ["electronic-music", "techno", "music", "live-music"]);
+  assert.deepEqual(fallbackTags("indie film and wine night"), ["indie", "film", "wine"]);
+});

@@ -474,6 +474,51 @@ export function extractConstraints(prompt: string, now: Date): Extracted {
   return out;
 }
 
+/** Turkish interest words → the English tags organisers use. Used by the rules fallback only. */
+const TR_TAGS: Record<string, string[]> = {
+  muzik: ["music", "live-music"],
+  elektronik: ["electronic-music", "techno"],
+  tekno: ["techno"],
+  caz: ["jazz"],
+  rock: ["rock"],
+  konser: ["live-music", "concert"],
+  film: ["film"],
+  sinema: ["film", "cinema"],
+  dizi: ["tv", "film"],
+  kitap: ["books", "reading"],
+  okuma: ["books", "reading"],
+  kosu: ["running", "run"],
+  kosmak: ["running", "run"],
+  yuzme: ["swim", "swimming"],
+  bisiklet: ["cycling"],
+  yoga: ["yoga"],
+  spor: ["sport", "sports"],
+  dans: ["dance", "dancing"],
+  tiyatro: ["theatre"],
+  fotograf: ["photography"],
+  yuruyus: ["walk", "hiking"],
+  kahve: ["coffee"],
+  yemek: ["food", "dinner"],
+  sarap: ["wine"],
+  oyun: ["games", "board-games"],
+  tirmanis: ["climbing", "boulder"],
+  sanat: ["art"],
+  tarih: ["history"],
+  mimari: ["architecture"],
+  sohbet: ["conversation", "talk"],
+  plak: ["vinyl"],
+};
+
+/** Rules-only tags: folded words plus English equivalents of common Turkish interest words. */
+export function fallbackTags(prompt: string): string[] {
+  const words = interestWords(prompt);
+  const out: string[] = [];
+  for (const w of words) {
+    for (const tag of TR_TAGS[w] ?? [w]) if (!out.includes(tag)) out.push(tag);
+  }
+  return out.slice(0, 10);
+}
+
 /** Interest words left after removing constraint grammar; empty for a pure follow-up like "yarın da olur ama bütçe aynı". */
 export function interestWords(prompt: string): string[] {
   const districtWords = new Set(DISTRICTS.flatMap((d) => d.aliases));
