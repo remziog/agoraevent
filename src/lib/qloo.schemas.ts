@@ -35,7 +35,13 @@ export type QlooEntity = {
   tags: { id: string; name: string; type?: string }[];
 };
 
-export type QlooTag = { id: string; name: string; type?: string };
+export type QlooTag = {
+  id: string;
+  name: string;
+  type?: string;
+  /** Entity types this tag applies to (from `parents[].type`), e.g. "urn:entity:place". */
+  parentTypes: string[];
+};
 
 /** Entity types Qloo's /search accepts in `types` (from the official harness's type table). */
 export const QLOO_SEARCH_TYPES = {
@@ -185,7 +191,16 @@ export function normalizeTag(input: unknown): QlooTag | null {
   const id = asString(raw.id) ?? asString(raw.tag_id);
   const name = asString(raw.name);
   if (!id || !name) return null;
-  return { id, name, type: asString(raw.type) ?? asString(raw.subtype) };
+  const parentTypes = Array.isArray(raw.parents)
+    ? Array.from(
+        new Set(
+          raw.parents
+            .map((p) => asString(asRecord(p)?.type))
+            .filter((t): t is string => typeof t === "string"),
+        ),
+      )
+    : [];
+  return { id, name, type: asString(raw.type) ?? asString(raw.subtype), parentTypes };
 }
 
 /** Bound an arbitrary JSON payload (depth, array length, keys, string length) before it crosses the wire or reaches a model. */

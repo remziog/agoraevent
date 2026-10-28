@@ -57,6 +57,8 @@ export type RestaurantsResult = {
   district: string;
   /** Tag ids used as `filter.tags`, for the trace. */
   restaurantTagIds: string[];
+  /** "restaurants": a restaurant tag filter produced results; "places": no tag was available; "none": Qloo returned nothing. */
+  scope: "restaurants" | "places" | "none";
   restaurants: Restaurant[];
 };
 

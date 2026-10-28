@@ -307,7 +307,8 @@
       "qloo_auth": "Qloo didn't accept Agora's credential just now.",
       "qloo_rate_limited": "Qloo is busy right now (rate limit). Try again in a minute.",
       "qloo_unavailable": "Qloo didn't answer just now. Try again in a moment."
-    }
+    },
+    "placesNearby": "Places nearby, matched to you"
   },
   "story": {
     "legend": "Legend",

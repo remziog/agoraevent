@@ -363,7 +363,8 @@
     "unrankedKicker": "Zevk rehberi · Qloo sıralama döndürmedi",
     "unrankedTitle": "Qloo toparlanırken İstanbul.",
     "useExample": "Örneği kullan",
-    "withinKm": "{{name}} mekânına 3 km mesafede"
+    "withinKm": "{{name}} mekânına 3 km mesafede",
+    "placesNearby": "Yakındaki mekânlar, sana göre"
   },
   "nav": {
     "discover": "Keşfet",

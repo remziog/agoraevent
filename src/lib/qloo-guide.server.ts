@@ -12,7 +12,7 @@ import type {
   RestaurantsResult,
 } from "./guide.types";
 import { ISTANBUL_LANDMARKS } from "./istanbul-landmarks";
-import type { QlooCall, QlooEntity, QlooTag } from "./qloo.schemas";
+import { QLOO_ENTITY_PLACE, type QlooCall, type QlooEntity, type QlooTag } from "./qloo.schemas";
 import { getLandmarkQlooMap } from "./qloo-landmarks.server";
 import {
   cached,
@@ -63,18 +63,45 @@ export async function rankLandmarks(
   return { picks, unmatchedLandmarkIds, map };
 }
 
-/** Restaurant tag discovery: `/v2/tags` semantic search, cached per isolate. */
+/**
+ * Restaurant tag discovery, the way the official harness resolves a tag for a
+ * target type: `/v2/tags` semantic search (take 20), keep tags whose
+ * `parents[].type` includes `urn:entity:place` when that metadata exists,
+ * prefer an exact "restaurant" name, then a place genre/category tag. The
+ * first version took the first "restaurant" hit of five, which was
+ * `urn:tag:product_service:…:restaurant_dining` — not a place tag — and every
+ * district came back empty.
+ */
 export async function restaurantTagIds(calls: QlooCall[]): Promise<string[]> {
   const configured = (process.env.QLOO_RESTAURANT_TAGS ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
   if (configured.length > 0) return configured;
-  const tags = await cached<QlooTag[]>("tags:restaurant", () =>
-    qlooFindTags({ query: "restaurant", take: 5 }, calls),
+  const tags = await cached<QlooTag[]>("tags:restaurant:v2", () =>
+    qlooFindTags({ query: "restaurant", take: 20 }, calls),
   );
-  const best = tags.find((t) => /restaurant/i.test(t.name)) ?? tags[0];
-  return best ? [best.id] : [];
+  return pickRestaurantTags(tags).map((t) => t.id);
+}
+
+const norm = (s: string) => s.trim().toLowerCase();
+
+/** Pure selection so it can be unit-tested. Returns up to 2 tag candidates, best first. */
+export function pickRestaurantTags(tags: readonly QlooTag[]): QlooTag[] {
+  const withParents = tags.filter((t) => t.parentTypes.length > 0);
+  const scoped =
+    withParents.length > 0 ? tags.filter((t) => t.parentTypes.includes(QLOO_ENTITY_PLACE)) : tags;
+  const pool = scoped.length > 0 ? scoped : tags;
+  const score = (t: QlooTag) =>
+    (norm(t.name) === "restaurant" ? 100 : 0) +
+    (/^urn:tag:(genre|category):place:/.test(t.id) ? 40 : 0) +
+    (/^urn:tag:[^:]+:place:/.test(t.id) ? 20 : 0) +
+    (/restaurant/i.test(t.name) ? 10 : 0) +
+    (/^urn:tag:product_service:/.test(t.id) ? -50 : 0);
+  return [...pool]
+    .filter((t) => score(t) > 0 || /restaurant/i.test(t.name))
+    .sort((a, b) => score(b) - score(a))
+    .slice(0, 2);
 }
 
 export function toRestaurant(p: QlooEntity, district: string): Restaurant {
@@ -93,7 +120,12 @@ export function toRestaurant(p: QlooEntity, district: string): Restaurant {
   };
 }
 
-/** Taste-ranked restaurants in a landmark's neighbourhood (district name, never GPS). */
+/**
+ * Taste-ranked restaurants in a landmark's neighbourhood (district name, never
+ * GPS). Tag candidates are tried one at a time; when none yields a place the
+ * result is honestly empty (`scope: "none"`) — Agora never pads it with
+ * unrelated places under a "restaurants" heading.
+ */
 export async function restaurantsNear(
   landmarkId: string,
   signalEntityIds: readonly string[],
@@ -105,15 +137,27 @@ export async function restaurantsNear(
   const district = landmark.district;
   const tagIds = await restaurantTagIds(calls);
   const signal = [...signalEntityIds].sort();
-  const places = await cached(`places:${district}:${tagIds.join("|")}:${signal.join(",")}`, () =>
-    qlooPlacesNear(
-      { locationQuery: `${district}, Istanbul`, tagIds, signalEntityIds: signal, take: 10 },
-      calls,
-    ),
-  );
-  return {
-    district,
-    restaurantTagIds: tagIds,
-    restaurants: places.slice(0, limit).map((p) => toRestaurant(p, district)),
-  };
+  const locationQuery = `${district}, Istanbul`;
+  for (const tagId of tagIds.length > 0 ? tagIds : [null]) {
+    const places = await cached(`places:${district}:${tagId ?? "-"}:${signal.join(",")}`, () =>
+      qlooPlacesNear(
+        {
+          locationQuery,
+          tagIds: tagId ? [tagId] : undefined,
+          signalEntityIds: signal,
+          take: 10,
+        },
+        calls,
+      ),
+    );
+    if (places.length > 0) {
+      return {
+        district,
+        restaurantTagIds: tagId ? [tagId] : [],
+        scope: tagId ? "restaurants" : "places",
+        restaurants: places.slice(0, limit).map((p) => toRestaurant(p, district)),
+      };
+    }
+  }
+  return { district, restaurantTagIds: tagIds, scope: "none", restaurants: [] };
 }

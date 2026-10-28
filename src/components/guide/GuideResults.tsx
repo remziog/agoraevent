@@ -115,7 +115,11 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
           <SectionTitle
             icon={<UtensilsCrossed className="h-3.5 w-3.5" aria-hidden />}
             eyebrow={t("guide.near", { name: diningLandmark.title, defaultValue: "Near {{name}}" })}
-            title={t("guide.eatNearby", "Eat nearby, matched to you")}
+            title={
+              plan.dining.scope === "places"
+                ? t("guide.placesNearby", "Places nearby, matched to you")
+                : t("guide.eatNearby", "Eat nearby, matched to you")
+            }
           />
           {plan.dining.restaurants.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">
