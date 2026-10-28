@@ -2,17 +2,34 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { listMyRsvps } from "@/lib/events.functions";
 import { AppHeader } from "@/components/AppHeader";
+import { formatWhenLocalized } from "@/components/guide/guide-format";
 
 export const Route = createFileRoute("/_authenticated/app/calendar")({
   component: CalendarPage,
 });
 
 function CalendarPage() {
+  const { t, i18n } = useTranslation();
   const fetchRsvps = useServerFn(listMyRsvps);
-  const q = useQuery({ queryKey: ["rsvps", "mine"], queryFn: () => fetchRsvps() });
+  // Always re-read on mount: an RSVP made on another screen must show here at
+  // once, and "loading" is kept apart from "empty" (F-05).
+  const q = useQuery({
+    queryKey: ["rsvps", "mine"],
+    queryFn: () => fetchRsvps(),
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+  const locale = i18n.language.startsWith("tr")
+    ? "tr-TR"
+    : i18n.language.startsWith("de")
+      ? "de-DE"
+      : i18n.language.startsWith("ru")
+        ? "ru-RU"
+        : "en-GB";
 
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
@@ -31,8 +48,20 @@ function CalendarPage() {
     return map;
   }, [events]);
 
-  const monthLabel = cursor.toLocaleString([], { month: "long", year: "numeric" });
-  const firstDow = new Date(cursor.getFullYear(), cursor.getMonth(), 1).getDay();
+  const monthLabel = cursor.toLocaleString(locale, { month: "long", year: "numeric" });
+  const weekdays = useMemo(() => {
+    // Monday-first labels in the selected language.
+    const base = new Date(Date.UTC(2024, 0, 1)); // a Monday
+    return Array.from({ length: 7 }, (_, i) =>
+      new Date(base.getTime() + i * 86400e3).toLocaleDateString(locale, {
+        weekday: "short",
+        timeZone: "UTC",
+      }),
+    );
+  }, [locale]);
+  const loading = q.isLoading;
+  const refreshing = q.isFetching && !q.isLoading;
+  const firstDow = (new Date(cursor.getFullYear(), cursor.getMonth(), 1).getDay() + 6) % 7; // Monday = 0
   const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
 
   const cells: Array<{ date: Date | null }> = [];
@@ -45,14 +74,10 @@ function CalendarPage() {
   const now = today.getTime();
   const upcoming = events
     .filter((r) => new Date(r.events.starts_at).getTime() >= now)
-    .sort(
-      (a, b) => +new Date(a.events.starts_at) - +new Date(b.events.starts_at),
-    );
+    .sort((a, b) => +new Date(a.events.starts_at) - +new Date(b.events.starts_at));
   const past = events
     .filter((r) => new Date(r.events.starts_at).getTime() < now)
-    .sort(
-      (a, b) => +new Date(b.events.starts_at) - +new Date(a.events.starts_at),
-    );
+    .sort((a, b) => +new Date(b.events.starts_at) - +new Date(a.events.starts_at));
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,19 +86,27 @@ function CalendarPage() {
         <div className="flex items-baseline justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-primary">
-              <CalendarIcon className="mr-1 inline h-3 w-3" />
-              Your calendar
+              <CalendarIcon className="mr-1 inline h-3 w-3" aria-hidden />
+              {t("calendar.kicker", "Your calendar")}
+              {refreshing && (
+                <span
+                  className="ml-2 inline-flex items-center gap-1 normal-case tracking-normal text-muted-foreground"
+                  role="status"
+                >
+                  <RefreshCw className="h-3 w-3 motion-safe:animate-spin" aria-hidden />{" "}
+                  {t("calendar.refreshing", "refreshing")}
+                </span>
+              )}
             </p>
             <h1 className="mt-1 font-display text-4xl">{monthLabel}</h1>
           </div>
           <div className="flex gap-1">
             <button
-              onClick={() =>
-                setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))
-              }
+              onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
               className="rounded-md border p-2 hover:bg-muted"
+              aria-label={t("calendar.prevMonth", "Previous month")}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden />
             </button>
             <button
               onClick={() => {
@@ -82,15 +115,14 @@ function CalendarPage() {
               }}
               className="rounded-md border px-3 py-2 text-xs hover:bg-muted"
             >
-              Today
+              {t("calendar.today", "Today")}
             </button>
             <button
-              onClick={() =>
-                setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
-              }
+              onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
               className="rounded-md border p-2 hover:bg-muted"
+              aria-label={t("calendar.nextMonth", "Next month")}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden />
             </button>
           </div>
         </div>
@@ -98,7 +130,7 @@ function CalendarPage() {
         {/* Month grid */}
         <div className="mt-6 overflow-hidden rounded-2xl border bg-card">
           <div className="grid grid-cols-7 border-b text-xs uppercase tracking-wider text-muted-foreground">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            {weekdays.map((d) => (
               <div key={d} className="px-2 py-2 text-center">
                 {d}
               </div>
@@ -110,8 +142,7 @@ function CalendarPage() {
                 return <div key={idx} className="aspect-square border-b border-r bg-muted/20" />;
               const key = `${cell.date.getFullYear()}-${cell.date.getMonth()}-${cell.date.getDate()}`;
               const dayEvents = eventsByDay.get(key) ?? [];
-              const isToday =
-                cell.date.toDateString() === today.toDateString();
+              const isToday = cell.date.toDateString() === today.toDateString();
               return (
                 <div
                   key={idx}
@@ -121,9 +152,7 @@ function CalendarPage() {
                 >
                   <div
                     className={`text-xs ${
-                      isToday
-                        ? "font-display font-bold text-primary"
-                        : "text-muted-foreground"
+                      isToday ? "font-display font-bold text-primary" : "text-muted-foreground"
                     }`}
                   >
                     {cell.date.getDate()}
@@ -140,9 +169,7 @@ function CalendarPage() {
                       </Link>
                     ))}
                     {dayEvents.length > 2 && (
-                      <p className="text-[10px] text-muted-foreground">
-                        +{dayEvents.length - 2}
-                      </p>
+                      <p className="text-[10px] text-muted-foreground">+{dayEvents.length - 2}</p>
                     )}
                   </div>
                 </div>
@@ -153,12 +180,34 @@ function CalendarPage() {
 
         {/* Lists */}
         <div className="mt-10 grid gap-6 md:grid-cols-2">
-          <section>
-            <h2 className="font-display text-2xl">Upcoming</h2>
+          <section aria-busy={loading}>
+            <h2 className="font-display text-2xl">{t("calendar.upcoming", "Upcoming")}</h2>
             <div className="mt-3 space-y-2">
-              {upcoming.length === 0 && (
+              {loading && (
+                <div className="space-y-2" aria-live="polite">
+                  <div className="h-16 animate-pulse rounded-xl border bg-card/40" />
+                  <p className="text-center text-xs text-muted-foreground">
+                    {t("common.loading", "Loading…")}
+                  </p>
+                </div>
+              )}
+              {!loading && q.isError && (
+                <p
+                  className="rounded-xl border border-destructive/40 p-6 text-center text-sm text-destructive"
+                  role="alert"
+                >
+                  {t("calendar.loadError", "Couldn't load your calendar.")}{" "}
+                  <button className="underline" onClick={() => q.refetch()}>
+                    {t("common.tryAgain", "Try again")}
+                  </button>
+                </p>
+              )}
+              {!loading && !q.isError && upcoming.length === 0 && (
                 <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-                  Nothing on the books. Find your next night out.
+                  {t("calendar.empty", "Nothing on the books.")}{" "}
+                  <Link to="/app" className="text-primary underline-offset-4 hover:underline">
+                    {t("calendar.findNext", "Find your next gathering.")}
+                  </Link>
                 </p>
               )}
               {upcoming.map((r) => (
@@ -170,25 +219,19 @@ function CalendarPage() {
                 >
                   <p className="font-medium">{r.events.title}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {new Date(r.events.starts_at).toLocaleString([], {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}{" "}
-                    · {r.events.organizations?.name ?? r.events.city}
+                    {formatWhenLocalized(r.events.starts_at, i18n.language)} ·{" "}
+                    {r.events.organizations?.name ?? r.events.city}
                   </p>
                 </Link>
               ))}
             </div>
           </section>
           <section>
-            <h2 className="font-display text-2xl">Already lived</h2>
+            <h2 className="font-display text-2xl">{t("calendar.past", "Already lived")}</h2>
             <div className="mt-3 space-y-2">
-              {past.length === 0 && (
+              {!loading && past.length === 0 && (
                 <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-                  Your story starts with your first event.
+                  {t("calendar.pastEmpty", "Your story starts with your first gathering.")}
                 </p>
               )}
               {past.slice(0, 12).map((r) => (
@@ -201,10 +244,14 @@ function CalendarPage() {
                   <div>
                     <p className="font-medium">{r.events.title}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {new Date(r.events.starts_at).toLocaleDateString()}
+                      {new Date(r.events.starts_at).toLocaleDateString(locale, {
+                        timeZone: "Europe/Istanbul",
+                      })}
                     </p>
                   </div>
-                  <span className="text-xs text-primary">Add memory →</span>
+                  <span className="text-xs text-primary">
+                    {t("calendar.addMemory", "Add memory →")}
+                  </span>
                 </Link>
               ))}
             </div>

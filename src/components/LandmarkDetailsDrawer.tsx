@@ -13,6 +13,7 @@ import { LocationPreviewDialog } from "@/components/LocationPreviewDialog";
 import { LandmarkStory } from "@/components/LandmarkStory";
 import { Clock, MapPin, Navigation, ImageOff } from "lucide-react";
 import type { Landmark } from "@/lib/istanbul-landmarks";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   landmark: (Landmark & { id: string }) | null;
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export function LandmarkDetailsDrawer({ landmark, open, onOpenChange, startWith }: Props) {
+  const { t } = useTranslation();
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[88vh]">
@@ -43,14 +45,23 @@ export function LandmarkDetailsDrawer({ landmark, open, onOpenChange, startWith 
             {/* Photos */}
             <div className="px-4">
               {landmark.photos.length > 0 ? (
-                <div className="-mx-1 flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory">
-                  {landmark.photos.map((src, i) => (
-                    <LandmarkPhoto key={src} src={src} alt={`${landmark.title} — photo ${i + 1}`} />
-                  ))}
-                </div>
+                <>
+                  <div className="-mx-1 flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory">
+                    {landmark.photos.map((src, i) => (
+                      <LandmarkPhoto
+                        key={src}
+                        src={src}
+                        alt={`${landmark.title} — photo ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {t("common.photoCredit", "Photo: Wikimedia Commons")}
+                  </p>
+                </>
               ) : (
                 <div className="flex h-40 items-center justify-center rounded-xl border border-dashed text-xs text-muted-foreground">
-                  No photos available
+                  {t("landmark.noPhotos", "No photos available")}
                 </div>
               )}
             </div>
@@ -64,7 +75,7 @@ export function LandmarkDetailsDrawer({ landmark, open, onOpenChange, startWith 
                   <Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   <div>
                     <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                      Opening hours
+                      {t("landmark.hours", "Opening hours")}
                     </p>
                     <p>{landmark.hours}</p>
                   </div>
@@ -73,7 +84,7 @@ export function LandmarkDetailsDrawer({ landmark, open, onOpenChange, startWith 
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   <div>
                     <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                      Location
+                      {t("landmark.location", "Location")}
                     </p>
                     <p>
                       {landmark.venue}, {landmark.city}
@@ -101,14 +112,14 @@ export function LandmarkDetailsDrawer({ landmark, open, onOpenChange, startWith 
                 place={landmark}
                 trigger={
                   <Button className="flex-1 gap-1.5">
-                    <Navigation className="h-4 w-4" />
-                    Take me there
+                    <Navigation className="h-4 w-4" aria-hidden />
+                    {t("event.takeMeThere", "Take me there")}
                   </Button>
                 }
               />
               <DrawerClose asChild>
                 <Button variant="outline" className="flex-1">
-                  Close
+                  {t("common.close", "Close")}
                 </Button>
               </DrawerClose>
             </DrawerFooter>

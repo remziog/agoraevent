@@ -2,13 +2,21 @@
 //
 // Each landmark is searched once with Qloo /search (types=urn:entity:place),
 // English name first, then the Turkish one. A candidate is accepted only when
-//   - its name matches one of the landmark's aliases, and
-//   - Qloo places it in Istanbul (address/geocode text names the city or one of
-//     its districts, or its coordinates are within 3 km of the landmark).
+//   - its name matches one of the landmark's aliases (a one-word alias must
+//     match exactly, so "Moda" never accepts "Moda Kayıkhane"), and
+//   - it is geographically the same place: when Qloo gives coordinates they
+//     must be within a few km of the landmark (an "Ortaköy Mosque" in Silivri,
+//     55 km away, is rejected even though its address says "Istanbul"); when
+//     Qloo gives no coordinates, the address text must name the landmark's own
+//     neighbourhood or district, not merely the city.
+//   - area/experience entries (a neighbourhood, a ferry ride) accept only an
+//     exact name match, so a business that borrows the name is never used.
 // The outcome — including "none" — is cached in public.landmark_qloo_map (RLS,
 // service role only), so Qloo identifiers never live in the public repository
 // and the lookup does not repeat on every request. "none" is retried after
-// three days. A landmark without a confident match never gets a Qloo badge.
+// three days; rows written by an older rule set (see MAP_RULES_VERSION) are
+// re-resolved so a bad cached match cannot survive a rule fix. A landmark
+// without a confident match never gets a Qloo badge.
 import "@tanstack/react-start/server-only";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -20,23 +28,33 @@ import { qlooSearch } from "./qloo.server";
 
 const RETRY_NONE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
 const RESOLVE_CONCURRENCY = 3;
+/** Bump when the matching rules change: cached rows from older rules are re-resolved. */
+export const MAP_RULES_VERSION = 2;
+const VERSION_PREFIX = `[v${MAP_RULES_VERSION}] `;
+/** A place candidate with coordinates must be this close to the landmark. */
+const PLACE_RADIUS_KM = 2.5;
+/** Area/experience entries (a neighbourhood, a ferry) may sit further from the pin. */
+const AREA_RADIUS_KM = 6;
 
-const ISTANBUL_HINTS = [
-  "istanbul",
-  "fatih",
-  "beyoglu",
-  "besiktas",
-  "uskudar",
-  "kadikoy",
-  "sultanahmet",
-  "eminonu",
-  "karakoy",
-  "galata",
-  "ortakoy",
-  "beyazit",
-  "edirnekapi",
-  "taksim",
-];
+/**
+ * Neighbourhood/district names (diacritics folded) that count as "the same
+ * place" as each landmark district when Qloo gives an address but no
+ * coordinates. "istanbul" alone is deliberately absent: the province spans
+ * 5,000 km², so it says nothing about identity.
+ */
+const DISTRICT_HINTS: Record<string, string[]> = {
+  Sultanahmet: ["sultanahmet", "sultan ahmet", "cankurtaran", "alemdar", "binbirdirek", "fatih"],
+  Beyazıt: ["beyazit", "kapalicarsi", "mercan", "fatih"],
+  Eminönü: ["eminonu", "rustempasa", "rustem pasa", "hobyar", "fatih"],
+  Karaköy: ["karakoy", "galata", "bereketzade", "beyoglu"],
+  Beyoğlu: ["beyoglu", "taksim", "istiklal", "gumussuyu", "kocatepe", "tomtom", "asmali mescit"],
+  Beşiktaş: ["besiktas", "visnezade", "dolmabahce", "kabatas"],
+  Ortaköy: ["ortakoy", "mecidiye", "besiktas"],
+  Üsküdar: ["uskudar", "salacak", "uskuedar"],
+  Fatih: ["suleymaniye", "vefa", "fatih"],
+  Edirnekapı: ["edirnekapi", "kariye", "ayvansaray", "karagumruk", "fatih"],
+  Kadıköy: ["kadikoy", "moda", "caferaga", "yeldegirmeni"],
+};
 const STOP_WORDS = new Set(["the", "of", "and", "a", "an", "de", "la", "le"]);
 
 /** Lowercase, strip diacritics (İ→i, ş→s, ç→c, ö→o, ü→u, ğ→g, ı→i), keep letters and digits. */
@@ -56,7 +74,10 @@ function tokens(value: string): string[] {
     .filter((t) => t.length > 1 && !STOP_WORDS.has(t));
 }
 
-function nameMatch(candidate: string, aliases: readonly string[]): LandmarkCandidate["nameMatch"] {
+export function nameMatch(
+  candidate: string,
+  aliases: readonly string[],
+): LandmarkCandidate["nameMatch"] {
   const cand = tokens(candidate);
   if (cand.length === 0) return "none";
   let best: LandmarkCandidate["nameMatch"] = "none";
@@ -64,10 +85,13 @@ function nameMatch(candidate: string, aliases: readonly string[]): LandmarkCandi
     const al = tokens(alias);
     if (al.length === 0) continue;
     if (cand.join(" ") === al.join(" ")) return "exact";
+    // A single-word alias ("Moda", "Galata") inside a longer name is not evidence
+    // of identity — "Moda Kayıkhane" is a restaurant, not the neighbourhood.
+    if (al.length < 2) continue;
     if (al.every((t) => cand.includes(t))) best = "contains";
     else if (best === "none") {
       const shared = al.filter((t) => cand.includes(t)).length;
-      if (al.length >= 2 && shared / al.length >= 0.66) best = "partial";
+      if (shared / al.length >= 0.66) best = "partial";
     }
   }
   return best;
@@ -88,30 +112,53 @@ function distanceKm(
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-function inIstanbul(entity: QlooEntity, landmark: Landmark): boolean {
-  if (entity.geocode && distanceKm(entity.geocode, landmark) <= 3) return true;
+/**
+ * Is this Qloo entity the same place as the landmark? Coordinates decide when
+ * Qloo provides them (a namesake 55 km away is rejected even if its address
+ * says "Istanbul"); otherwise the address text must name the landmark's own
+ * neighbourhood or district.
+ */
+export function samePlace(
+  entity: Pick<QlooEntity, "geocode" | "locationText" | "disambiguation">,
+  landmark: Pick<Landmark, "latitude" | "longitude" | "district" | "kind">,
+): { ok: boolean; distanceKm?: number } {
+  const radius = landmark.kind === "area" ? AREA_RADIUS_KM : PLACE_RADIUS_KM;
+  if (entity.geocode) {
+    const d = distanceKm(entity.geocode, landmark);
+    return { ok: d <= radius, distanceKm: Math.round(d * 10) / 10 };
+  }
   const text = foldName([entity.locationText, entity.disambiguation].filter(Boolean).join(" "));
-  return ISTANBUL_HINTS.some((hint) => text.includes(hint));
+  const hints = DISTRICT_HINTS[landmark.district] ?? [foldName(landmark.district)];
+  return { ok: hints.some((hint) => text.includes(hint)) };
 }
 
 function toCandidate(entity: QlooEntity, landmark: Landmark): LandmarkCandidate {
+  const place = samePlace(entity, landmark);
   return {
     entityId: entity.entityId,
     name: entity.name,
     location: entity.locationText?.slice(0, 160),
-    inIstanbul: inIstanbul(entity, landmark),
+    inIstanbul: place.ok,
+    distanceKm: place.distanceKm,
     nameMatch: nameMatch(entity.name, landmark.aliases),
   };
 }
 
 const MATCH_RANK = { exact: 3, contains: 2, partial: 1, none: 0 } as const;
 
-function pick(
+export function pick(
   candidates: LandmarkCandidate[],
+  kind: Landmark["kind"] = "place",
 ): { best: LandmarkCandidate; confidence: LandmarkMatchConfidence } | null {
   const usable = candidates
     .filter((c) => c.inIstanbul && c.nameMatch !== "none")
-    .sort((a, b) => MATCH_RANK[b.nameMatch] - MATCH_RANK[a.nameMatch]);
+    // Areas and experiences (a neighbourhood, a ferry ride) only on an exact name.
+    .filter((c) => kind !== "area" || c.nameMatch === "exact")
+    .sort(
+      (a, b) =>
+        MATCH_RANK[b.nameMatch] - MATCH_RANK[a.nameMatch] ||
+        (a.distanceKm ?? 99) - (b.distanceKm ?? 99),
+    );
   const best = usable[0];
   if (!best) return null;
   return { best, confidence: best.nameMatch === "exact" ? "exact" : "likely" };
@@ -126,7 +173,7 @@ async function resolveOne(landmark: Landmark, calls: QlooCall[]): Promise<Landma
       if (!seen.some((c) => c.entityId === entity.entityId))
         seen.push(toCandidate(entity, landmark));
     }
-    const chosen = pick(seen);
+    const chosen = pick(seen, landmark.kind);
     if (chosen) {
       return {
         landmarkId: landmark.id,
@@ -134,12 +181,15 @@ async function resolveOne(landmark: Landmark, calls: QlooCall[]): Promise<Landma
         entityName: chosen.best.name,
         entityAddress: chosen.best.location ?? null,
         confidence: chosen.confidence,
-        note: `matched "${query}"`,
+        note: `${VERSION_PREFIX}matched "${query}"${
+          chosen.best.distanceKm !== undefined ? ` · ${chosen.best.distanceKm} km from the pin` : ""
+        }`,
         candidates: seen.slice(0, 8),
         resolvedAt: new Date().toISOString(),
       };
     }
   }
+  const far = seen.filter((c) => c.nameMatch !== "none" && !c.inIstanbul);
   return {
     landmarkId: landmark.id,
     entityId: null,
@@ -147,9 +197,19 @@ async function resolveOne(landmark: Landmark, calls: QlooCall[]): Promise<Landma
     entityAddress: null,
     confidence: "none",
     note:
-      seen.length === 0
+      VERSION_PREFIX +
+      (seen.length === 0
         ? "Qloo returned no place for these names"
-        : "No candidate both matched the name and was located in Istanbul",
+        : far.length > 0
+          ? `Name matched but not the same place (${far
+              .slice(0, 2)
+              .map(
+                (c) => `${c.name}${c.distanceKm !== undefined ? ` ${c.distanceKm} km away` : ""}`,
+              )
+              .join("; ")})`
+          : landmark.kind === "area"
+            ? "No exact name match for this area (businesses borrowing the name are not accepted)"
+            : "No candidate both matched the name and was located at this place"),
     candidates: seen.slice(0, 8),
     resolvedAt: new Date().toISOString(),
   };
@@ -213,6 +273,8 @@ export async function getLandmarkQlooMap(calls: QlooCall[]): Promise<Map<string,
   const pending = ISTANBUL_LANDMARKS.filter((l) => {
     const row = map.get(l.id);
     if (!row) return true;
+    // Written by an older rule set → re-check (e.g. a namesake accepted on city text alone).
+    if (!row.note?.startsWith(VERSION_PREFIX)) return true;
     return row.confidence === "none" && now - Date.parse(row.resolvedAt) > RETRY_NONE_AFTER_MS;
   });
   if (pending.length === 0) return map;

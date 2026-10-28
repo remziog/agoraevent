@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Pause, Play, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import type { Landmark } from "@/lib/istanbul-landmarks";
-import { getLandmarkStory, type StorySection } from "@/lib/landmark-stories";
-
-const KIND_LABEL: Record<StorySection["kind"], string> = {
-  history: "History",
-  legend: "Legend",
-};
+import { getLandmarkStory } from "@/lib/landmark-stories";
 
 function speechAvailable() {
   return typeof window !== "undefined" && "speechSynthesis" in window;
@@ -25,6 +21,7 @@ export function LandmarkStory({
   landmark: Pick<Landmark, "id" | "description" | "title">;
   startWith?: string;
 }) {
+  const { t } = useTranslation();
   const story = useMemo(() => getLandmarkStory(landmark), [landmark]);
   const sections = useMemo(() => {
     if (!startWith) return story.sections;
@@ -65,7 +62,7 @@ export function LandmarkStory({
       }
       const section = sections[index];
       const utterance = new SpeechSynthesisUtterance(
-        `${KIND_LABEL[section.kind]}. ${section.title}. ${section.text}`,
+        `${section.kind === "legend" ? "Legend" : "History"}. ${section.title}. ${section.text}`,
       );
       utterance.lang = voice?.lang ?? "en-GB";
       if (voice) utterance.voice = voice;
@@ -86,7 +83,7 @@ export function LandmarkStory({
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-primary">
           <BookOpen className="h-3.5 w-3.5" />
-          {story.authored ? "The story" : "Short intro"}
+          {story.authored ? t("story.theStory", "The story") : t("story.shortIntro", "Short intro")}
         </p>
         {speechAvailable() && (
           <Button
@@ -95,9 +92,14 @@ export function LandmarkStory({
             variant={playing ? "default" : "outline"}
             className="gap-1.5 rounded-full"
             onClick={playing ? stop : play}
+            aria-pressed={playing}
           >
-            {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-            {playing ? "Stop" : "Listen"}
+            {playing ? (
+              <Pause className="h-3.5 w-3.5" aria-hidden />
+            ) : (
+              <Play className="h-3.5 w-3.5" aria-hidden />
+            )}
+            {playing ? t("story.stop", "Stop") : t("story.listen", "Listen")}
           </Button>
         )}
       </div>
@@ -118,11 +120,13 @@ export function LandmarkStory({
               }`}
             >
               {section.kind === "legend" && <Sparkles className="mr-1 inline h-3 w-3" />}
-              {KIND_LABEL[section.kind]}
+              {section.kind === "legend"
+                ? t("story.legend", "Legend")
+                : t("story.history", "History")}
             </span>
             {startWith === section.title && i === 0 && (
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Chosen for your taste
+                {t("story.chosenForTaste", "Chosen for your taste")}
               </span>
             )}
           </div>
@@ -133,7 +137,7 @@ export function LandmarkStory({
 
       {story.sources && story.sources.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Sources:{" "}
+          {t("story.sources", "Sources")}:{" "}
           {story.sources.map((src, i) => (
             <span key={src}>
               {i > 0 ? " · " : ""}
@@ -147,7 +151,7 @@ export function LandmarkStory({
               </a>
             </span>
           ))}
-          . Legends are traditions, not history.
+          . {t("story.legendNote", "Legends are traditions, not history.")}
         </p>
       )}
     </div>

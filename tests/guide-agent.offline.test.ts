@@ -15,6 +15,7 @@ delete process.env.QLOO_RESTAURANT_TAGS;
 
 const { ISTANBUL_LANDMARKS } = await import("../src/lib/istanbul-landmarks");
 const { runGuideAgent } = await import("../src/lib/guide-agent.server");
+const { nameMatch, samePlace, MAP_RULES_VERSION } = await import("../src/lib/qloo-landmarks.server");
 
 const TASTE = [
   { entityId: "sig-radiohead", name: "Radiohead", type: "artist" },
@@ -28,6 +29,8 @@ let mapRows: Record<string, unknown>[] = [];
 let qlooStatusOverride: number | null = null;
 /** When set, api.qloo.com answers 401 and only hackathon.api.qloo.com accepts the key. */
 let rejectDefaultHost = false;
+/** When set, /v2/insights shortlist rankings answer with an empty list (a real "Qloo ranked nothing"). */
+let emptyRanking = false;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -99,6 +102,24 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
         ],
       });
     }
+    if (lm.id === "lm-ortakoy") {
+      // The live bug (AG-02): a same-named mosque in Silivri whose address says
+      // "Istanbul" comes first; only the one at the pin may be accepted.
+      return json({
+        results: [
+          {
+            entity_id: "ent-ortakoy-silivri",
+            name: "Ortakoy Mosque",
+            types: ["urn:entity:place"],
+            properties: {
+              address: "Selimpaşa 34590 Silivri/Istanbul - Europe Türkiye",
+              geocode: { latitude: 41.06, longitude: 28.37, city: "Istanbul" },
+            },
+          },
+          placeFor(lm),
+        ],
+      });
+    }
     return json({
       results: [
         placeFor(lm),
@@ -120,10 +141,14 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.pathname === "/v2/insights") {
     const shortlist = url.searchParams.get("filter.results.entities");
     if (shortlist) {
-      const entities = shortlist.split(",").map((id, i) => ({
+      if (emptyRanking) return json({ results: { entities: [] } });
+      const entities: unknown[] = shortlist.split(",").map((id, i) => ({
         entity_id: id,
         name: id,
         types: ["urn:entity:place"],
+        // Fields Qloo sends as null or as strings must not break parsing.
+        disambiguation: null,
+        popularity: "0.5",
         query: {
           affinity: 1 - i * 0.05,
           explainability: {
@@ -134,6 +159,8 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
           },
         },
       }));
+      // One unreadable item (no name) used to discard the whole answer (F-02).
+      entities.push({ entity_id: "ent-broken", name: null });
       return json({ results: { entities } });
     }
     assert.ok(url.searchParams.get("filter.location.query")?.endsWith(", Istanbul"));
@@ -215,12 +242,49 @@ const qlooCallsByPath = () =>
     .filter((r) => r.host !== "supabase.test")
     .reduce<Record<string, number>>((acc, r) => ((acc[r.path] = (acc[r.path] ?? 0) + 1), acc), {});
 
+test("matching rules: one-word aliases need an exact name; coordinates decide identity", () => {
+  assert.equal(nameMatch("Moda Kayıkhane", ["Moda", "Kadıköy"]), "none");
+  assert.equal(nameMatch("Moda", ["Moda", "Kadıköy"]), "exact");
+  assert.equal(nameMatch("Galata Tower Museum", ["Galata Tower", "Galata Kulesi"]), "contains");
+  assert.equal(nameMatch("Ortakoy Mosque", ["Ortakoy Mosque", "Büyük Mecidiye Camii"]), "exact");
+  const ortakoy = { latitude: 41.0475, longitude: 29.0268, district: "Ortaköy", kind: "place" as const };
+  // Same name, 55 km away, address says "Istanbul" → not the same place.
+  assert.equal(
+    samePlace(
+      { geocode: { latitude: 41.06, longitude: 28.37 }, locationText: "Selimpaşa · Silivri · Istanbul" },
+      ortakoy,
+    ).ok,
+    false,
+  );
+  assert.equal(samePlace({ geocode: { latitude: 41.048, longitude: 29.027 } }, ortakoy).ok, true);
+  // No coordinates: the address must name the neighbourhood/district, not just the city.
+  assert.equal(samePlace({ locationText: "Istanbul, Türkiye" }, ortakoy).ok, false);
+  assert.equal(samePlace({ locationText: "Mecidiye, Beşiktaş/İstanbul" }, ortakoy).ok, true);
+});
+
 test("fixed plan: maps landmarks, ranks, finds restaurants and gatherings, never leaks a secret", async () => {
+  // A row written by the old rules (the Silivri namesake accepted as EXACT) must be re-resolved.
+  mapRows = [
+    {
+      landmark_id: "lm-ortakoy",
+      entity_id: "ent-ortakoy-silivri",
+      entity_name: "Ortakoy Mosque",
+      entity_address: "Selimpaşa 34590 Silivri/Istanbul",
+      confidence: "exact",
+      note: 'matched "Ortakoy Mosque"',
+      candidates: [],
+      resolved_at: new Date().toISOString(),
+    },
+  ];
   const plan = await runGuideAgent({ db: fakeDb as never, taste: TASTE });
 
   assert.equal(plan.mode, "fixed");
+  assert.equal(plan.execution.agentOutcome, "not_configured");
+  assert.equal(plan.execution.ranking, "ranked");
+  assert.equal(plan.execution.fallbackUsed, true);
   assert.match(plan.notice ?? "", /not configured/);
   assert.equal(plan.picks.length, 3);
+  assert.equal(plan.picks[0].source, "qloo");
   assert.equal(plan.picks[0].landmarkId, "lm-hagia-sophia"); // first mapped id → highest mocked affinity
   assert.equal(plan.picks[0].qlooRank, 1);
   assert.deepEqual(plan.picks[0].drivers, ["Radiohead", "Blade Runner"]);
@@ -233,6 +297,12 @@ test("fixed plan: maps landmarks, ranks, finds restaurants and gatherings, never
     "lm-taksim",
   ]);
   assert.equal(mapRows.length, ISTANBUL_LANDMARKS.length, "every outcome is cached in the table");
+  const ortakoyRow = mapRows.find((r) => r.landmark_id === "lm-ortakoy");
+  assert.equal(ortakoyRow?.entity_id, "ent-lm-ortakoy", "the namesake in Silivri is replaced by the mosque at the pin");
+  assert.ok(String(ortakoyRow?.note).startsWith(`[v${MAP_RULES_VERSION}]`));
+
+  // The unreadable item in Qloo's answer is dropped, the rest is ranked.
+  assert.deepEqual(plan.execution.rankingCounts, { upstream: 14, parsed: 13, matched: 13 });
 
   assert.equal(plan.dining?.landmarkId, "lm-hagia-sophia");
   assert.equal(plan.dining?.district, "Sultanahmet");
@@ -250,6 +320,11 @@ test("fixed plan: maps landmarks, ranks, finds restaurants and gatherings, never
 
   // Qloo calls: 13 matched landmarks × 1 search + 3 unmatched × 2 aliases = 19, then rank, tags, places.
   assert.deepEqual(qlooCallsByPath(), { "/search": 19, "/v2/insights": 2, "/v2/tags": 1 });
+  const rankCall = plan.trace.find((t) => t.name === "rank_landmarks")?.qloo?.find((c) => c.endpoint === "/v2/insights");
+  assert.equal(rankCall?.upstreamCount, 14);
+  assert.equal(rankCall?.resultCount, 13);
+  assert.equal(rankCall?.rejectedCount, 1);
+  assert.equal(rankCall?.matchedCount, 13);
   assert.ok(
     requests
       .filter((r) => r.host !== "supabase.test")
@@ -268,6 +343,27 @@ test("second run: landmark map comes from the table, ranking from the cache — 
   const plan = await runGuideAgent({ db: fakeDb as never, taste: TASTE });
   assert.equal(plan.picks.length, 3);
   assert.deepEqual(qlooCallsByPath(), before);
+});
+
+test("empty Qloo ranking: no dead end — editorial landmarks (unbadged), Qloo restaurants, city-wide gatherings", async () => {
+  emptyRanking = true;
+  try {
+    const plan = await runGuideAgent({
+      db: fakeDb as never,
+      taste: [{ entityId: "sig-nobody", name: "Nobody Known" }],
+    });
+    assert.equal(plan.execution.ranking, "empty");
+    assert.deepEqual(plan.execution.rankingCounts, { upstream: 0, parsed: 0, matched: 0 });
+    assert.equal(plan.picks.length, 3);
+    assert.ok(plan.picks.every((p) => p.source === "editorial" && p.qlooRank === 0));
+    assert.match(plan.notice ?? "", /editorial/);
+    assert.equal(plan.gatherings?.landmarkId, null, "city-wide when there is no Qloo pick");
+    assert.equal(plan.gatherings?.events.length, 2);
+    assert.equal(plan.dining?.restaurants.length, 2, "restaurants are still Qloo-ranked by taste");
+    assert.ok(plan.trace.some((t) => t.name === "editorial_fallback"));
+  } finally {
+    emptyRanking = false;
+  }
 });
 
 test("Qloo auth failure propagates as QlooAuthError (planVisit maps it to qloo_auth)", async () => {

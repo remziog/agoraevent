@@ -13,7 +13,17 @@ export type QlooOutcome<T> =
   | { ok: true; data: T; calls: QlooCall[] }
   | { ok: false; error: QlooErrorCode; calls: QlooCall[] };
 
-export type TasteCandidate = { term: string; matches: QlooEntity[] };
+/** Which guide field a term came from; decides the Qloo entity types searched first. */
+export type TasteField = "music" | "film" | "book";
+
+export type TasteCandidate = {
+  term: string;
+  field?: TasteField;
+  /** Candidates of the field's own kind (artist for music, film/series, book/author). */
+  matches: QlooEntity[];
+  /** Candidates of other kinds (an album, a café named after the film…), shown separately. */
+  others: QlooEntity[];
+};
 
 export type LandmarkPick = {
   landmarkId: string;
@@ -56,7 +66,10 @@ export type LandmarkCandidate = {
   entityId: string;
   name: string;
   location?: string;
+  /** Same place as the landmark (coordinates within a few km, or the address names its neighbourhood). */
   inIstanbul: boolean;
+  /** Distance from the landmark pin when Qloo gave coordinates. */
+  distanceKm?: number;
   nameMatch: "exact" | "contains" | "partial" | "none";
 };
 
@@ -78,7 +91,13 @@ export type TasteEntity = { entityId: string; name: string; type?: string };
 
 export type GuidePick = {
   landmarkId: string;
-  /** 1-based position in Qloo's ranking of the curated landmarks. */
+  /**
+   * "qloo": Qloo ranked this landmark for the favourites (qlooRank ≥ 1).
+   * "editorial": Agora's own hero landmark shown because Qloo returned no
+   * ranking — never labelled as a Qloo result.
+   */
+  source: "qloo" | "editorial";
+  /** 1-based position in Qloo's ranking of the curated landmarks (0 for editorial picks). */
   qlooRank: number;
   affinity?: number;
   /** Favourites Qloo's explainability credits for this landmark (may be empty). */
@@ -111,15 +130,37 @@ export type GuideTraceStep = {
   source?: "qloo" | "agora" | "ai";
 };
 
+/**
+ * One execution status for the whole run, so the headline, the notice and the
+ * "How Agora decided" panel never contradict each other.
+ */
+export type GuideExecution = {
+  /** Qloo's landmark ranking: results came back / Qloo answered but ranked none / the call failed. */
+  ranking: "ranked" | "empty" | "failed";
+  rankingError?: QlooErrorCode;
+  /** Items Qloo sent in the ranking answer, how many were readable, how many were our landmarks. */
+  rankingCounts?: { upstream: number; parsed: number; matched: number };
+  /** Was a model run attempted (false without an AI credential)? */
+  agentAttempted: boolean;
+  agentModel?: string;
+  agentSteps?: number;
+  agentOutcome: "plan" | "no_plan" | "failed" | "timeout" | "not_configured";
+  /** The fixed plan filled in what the agent did not deliver. */
+  fallbackUsed: boolean;
+  fallbackReason?: string;
+};
+
 export type GuidePlan = {
   /** "agent": the tool-calling agent produced the plan. "fixed": Agora's fixed plan (agent unavailable). */
   mode: "agent" | "fixed";
   model?: string;
+  execution: GuideExecution;
   taste: TasteEntity[];
   mood?: string;
   picks: GuidePick[];
   dining: (RestaurantsResult & { landmarkId: string; drivers: Record<string, string[]> }) | null;
-  gatherings: { landmarkId: string; events: GatheringEvent[] } | null;
+  /** Agora gatherings near the first pick, or city-wide when there is no Qloo pick (landmarkId null). */
+  gatherings: { landmarkId: string | null; events: GatheringEvent[] } | null;
   unmatchedLandmarkIds: string[];
   /** Agent's one-line summary (AI). */
   summary?: string;

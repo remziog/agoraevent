@@ -19,15 +19,70 @@ import type {
   TasteCandidate,
 } from "./guide.types";
 import { ISTANBUL_LANDMARKS } from "./istanbul-landmarks";
-import { QLOO_ENTITY_PLACE, type QlooCall } from "./qloo.schemas";
+import {
+  QLOO_ENTITY_PLACE,
+  QLOO_SEARCH_TYPES,
+  type QlooCall,
+  type QlooEntity,
+} from "./qloo.schemas";
 import {
   cached,
   qlooAcceptedBaseUrl,
   qlooConfiguredBaseUrl,
   qlooErrorCode,
+  QlooError,
   qlooPlacesNear,
   qlooSearch,
 } from "./qloo.server";
+import type { TasteField } from "./guide.types";
+
+/** Entity types searched first for each guide field (official /search `types` values). */
+export const FIELD_TYPES: Record<TasteField, readonly string[]> = {
+  music: [QLOO_SEARCH_TYPES.artist],
+  film: [QLOO_SEARCH_TYPES.movie, QLOO_SEARCH_TYPES.tv_show],
+  book: [QLOO_SEARCH_TYPES.book, QLOO_SEARCH_TYPES.author],
+};
+
+const TERM_RE = z.string().trim().min(1).max(80);
+const TermInput = z.union([
+  TERM_RE,
+  z.object({ term: TERM_RE, field: z.enum(["music", "film", "book"]).optional() }),
+]);
+
+/**
+ * Candidates for one term: the field's own kinds first (one typed /search), the
+ * untyped search only when the typed one found nothing (or the host rejected
+ * the `types` filter). Other kinds are returned separately so an album or a
+ * café named after a film is never the default choice (F-04).
+ */
+async function candidatesFor(
+  term: string,
+  field: TasteField | undefined,
+  calls: QlooCall[],
+): Promise<TasteCandidate> {
+  const key = term.toLowerCase();
+  const types = field ? FIELD_TYPES[field] : undefined;
+  let typed: QlooEntity[] = [];
+  let typedFailed = false;
+  if (types) {
+    try {
+      typed = await cached(`search:${field}:${key}`, () =>
+        qlooSearch({ query: term, types, take: 5 }, calls),
+      );
+    } catch (error) {
+      if (error instanceof QlooError && error.status === 400) typedFailed = true;
+      else throw error;
+    }
+  }
+  if (typed.length > 0 && !typedFailed) {
+    return { term, field, matches: typed, others: [] };
+  }
+  const all = await cached(`search:${key}`, () => qlooSearch({ query: term, take: 5 }, calls));
+  if (!types) return { term, field, matches: all, others: [] };
+  const own = all.filter((e) => e.types.some((t) => types.includes(t)));
+  const others = all.filter((e) => !own.includes(e));
+  return { term, field, matches: own, others };
+}
 import { getLandmarkQlooMap, readLandmarkQlooMap } from "./qloo-landmarks.server";
 import {
   rankLandmarks,
@@ -52,19 +107,19 @@ const District = z
  */
 export const resolveTaste = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ terms: z.array(z.string().trim().min(1).max(80)).min(1).max(10) }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ terms: z.array(TermInput).min(1).max(10) }).parse(d))
   .handler(async ({ data }): Promise<QlooOutcome<TasteCandidate[]>> => {
     const calls: QlooCall[] = [];
     return runQloo(calls, async () => {
-      const unique = Array.from(new Set(data.terms.map((t) => t.trim()))).slice(0, 10);
+      const seen = new Set<string>();
       const candidates: TasteCandidate[] = [];
-      for (const term of unique) {
-        const matches = await cached(`search:${term.toLowerCase()}`, () =>
-          qlooSearch({ query: term, take: 5 }, calls),
-        );
-        candidates.push({ term, matches });
+      for (const input of data.terms.slice(0, 10)) {
+        const term = typeof input === "string" ? input.trim() : input.term.trim();
+        const field = typeof input === "string" ? undefined : input.field;
+        const dedupe = `${field ?? ""}:${term.toLowerCase()}`;
+        if (seen.has(dedupe)) continue;
+        seen.add(dedupe);
+        candidates.push(await candidatesFor(term, field, calls));
       }
       return candidates;
     });

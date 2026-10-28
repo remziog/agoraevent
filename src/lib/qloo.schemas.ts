@@ -1,6 +1,5 @@
-// Shared Qloo types and lenient response schemas. Safe for the client bundle:
+// Shared Qloo types and tolerant response readers. Safe for the client bundle:
 // no credentials, no network. The server-only transport lives in qloo.server.ts.
-import { z } from "zod";
 
 /** JSON-serialisable value — TanStack Start server functions can only return these. */
 export type JsonValue =
@@ -14,90 +13,6 @@ export type JsonValue =
 /** Entity types we use. Full list: GET /v2/tags/types or the Qloo docs. */
 export const QLOO_ENTITY_PLACE = "urn:entity:place";
 export const QLOO_ENTITY_LOCALITY = "urn:entity:locality";
-
-const Geocode = z
-  .object({
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
-  })
-  .passthrough();
-
-const Image = z.union([z.string(), z.object({ url: z.string().optional() }).passthrough()]);
-
-/**
- * Only the fields Agora reads. `passthrough()` keeps the rest of Qloo's payload so
- * the redacted "request → result" trace can show it without us guessing the schema.
- */
-export const QlooEntitySchema = z
-  .object({
-    entity_id: z.string().optional(),
-    id: z.string().optional(),
-    name: z.string(),
-    type: z.string().optional(),
-    subtype: z.string().optional(),
-    types: z.array(z.string()).optional(),
-    popularity: z.number().optional(),
-    affinity: z.number().optional(),
-    disambiguation: z.string().optional(),
-    location: z
-      .object({
-        lat: z.number().optional(),
-        lon: z.number().optional(),
-        latitude: z.number().optional(),
-        longitude: z.number().optional(),
-      })
-      .passthrough()
-      .optional(),
-    query: z
-      .object({
-        affinity: z.number().optional(),
-        explainability: z.unknown().optional(),
-      })
-      .passthrough()
-      .optional(),
-    properties: z
-      .object({
-        description: z.string().optional(),
-        short_description: z.string().optional(),
-        image: Image.optional(),
-        address: z.string().optional(),
-        geocode: Geocode.optional(),
-        price_level: z.number().optional(),
-        business_rating: z.number().optional(),
-        website: z.string().optional(),
-        phone: z.string().optional(),
-        keywords: z.array(z.unknown()).optional(),
-      })
-      .passthrough()
-      .optional(),
-    tags: z
-      .array(
-        z
-          .object({
-            id: z.string().optional(),
-            tag_id: z.string().optional(),
-            name: z.string().optional(),
-            type: z.string().optional(),
-          })
-          .passthrough(),
-      )
-      .optional(),
-  })
-  .passthrough();
-
-export type QlooEntityRaw = z.infer<typeof QlooEntitySchema>;
-
-export const QlooTagSchema = z
-  .object({
-    id: z.string().optional(),
-    tag_id: z.string().optional(),
-    name: z.string(),
-    type: z.string().optional(),
-    subtype: z.string().optional(),
-  })
-  .passthrough();
-
-export type QlooTagRaw = z.infer<typeof QlooTagSchema>;
 
 /** Normalised entity used by the UI and the agent tools. */
 export type QlooEntity = {
@@ -122,6 +37,24 @@ export type QlooEntity = {
 
 export type QlooTag = { id: string; name: string; type?: string };
 
+/** Entity types Qloo's /search accepts in `types` (from the official harness's type table). */
+export const QLOO_SEARCH_TYPES = {
+  artist: "urn:entity:artist",
+  book: "urn:entity:book",
+  brand: "urn:entity:brand",
+  movie: "urn:entity:movie",
+  person: "urn:entity:person",
+  place: "urn:entity:place",
+  podcast: "urn:entity:podcast",
+  tv_show: "urn:entity:tv_show",
+  videogame: "urn:entity:videogame",
+  locality: "urn:entity:locality",
+  actor: "urn:entity:actor",
+  album: "urn:entity:album",
+  author: "urn:entity:author",
+  director: "urn:entity:director",
+} as const;
+
 /**
  * One redacted Qloo call for the "how Agora decided" trace and the Devpost
  * request → result explanation. Never contains the API key.
@@ -133,57 +66,126 @@ export type QlooCall = {
   params: Record<string, string>;
   status: number;
   ms: number;
+  /** Usable results after parsing (entities with an id and a name, or tags with an id). */
   resultCount?: number;
+  /** Items in Qloo's raw result array, before parsing. Differs from resultCount when items were unreadable. */
+  upstreamCount?: number;
+  /** Items dropped while parsing (no id / no name). */
+  rejectedCount?: number;
+  /** For shortlist rankings: how many parsed results belong to the shortlist Agora sent. */
+  matchedCount?: number;
   topResults?: { name: string; entityId: string }[];
   error?: string;
 };
 
-export function normalizeEntity(raw: QlooEntityRaw): QlooEntity | null {
-  const entityId = raw.entity_id ?? raw.id;
-  if (!entityId) return null;
-  const props = raw.properties;
+// --- Tolerant readers -------------------------------------------------------
+// Qloo's payload differs between endpoints and hosts (nulls instead of missing
+// fields, strings where numbers are expected, extra shapes). Validating the
+// whole array with a strict schema made ONE odd item discard EVERY result —
+// which is what turned a successful /v2/insights answer into "0 landmarks"
+// in the taste guide. Each entity is now read on its own with field-level
+// tolerance: only an id and a name are required.
+
+const asRecord = (v: unknown): Record<string, unknown> | undefined =>
+  v !== null && typeof v === "object" && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : undefined;
+const asString = (v: unknown): string | undefined =>
+  typeof v === "string" && v.trim().length > 0 ? v : undefined;
+const asNumber = (v: unknown): number | undefined => {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v))) return Number(v);
+  return undefined;
+};
+const asStringArray = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+
+export function normalizeEntity(input: unknown): QlooEntity | null {
+  const raw = asRecord(input);
+  if (!raw) return null;
+  const entityId = asString(raw.entity_id) ?? asString(raw.id);
+  const name = asString(raw.name);
+  if (!entityId || !name) return null;
+
+  const props = asRecord(raw.properties);
+  const query = asRecord(raw.query);
   const image = props?.image;
-  const imageUrl = typeof image === "string" ? image : image?.url;
-  const geo = props?.geocode;
-  const loc = raw.location;
-  const lat = geo?.latitude ?? loc?.lat ?? loc?.latitude;
-  const lon = geo?.longitude ?? loc?.lon ?? loc?.longitude;
-  const geoText = geo
-    ? Object.values(geo as Record<string, unknown>).filter(
-        (v): v is string => typeof v === "string",
-      )
+  const imageUrl = asString(image) ?? asString(asRecord(image)?.url);
+  const geo = asRecord(props?.geocode);
+  const loc = asRecord(raw.location);
+  const lat = asNumber(geo?.latitude) ?? asNumber(loc?.lat) ?? asNumber(loc?.latitude);
+  const lon = asNumber(geo?.longitude) ?? asNumber(loc?.lon) ?? asNumber(loc?.longitude);
+  const geoText = geo ? Object.values(geo).filter((v): v is string => typeof v === "string") : [];
+  const address = asString(props?.address);
+  const locationText = [address, ...geoText].filter(Boolean).join(" · ") || undefined;
+  const types = asStringArray(raw.types);
+  const singleType = asString(raw.type);
+  if (types.length === 0 && singleType) types.push(singleType);
+  const subtype = asString(raw.subtype);
+  if (subtype && !types.includes(subtype)) types.push(subtype);
+  const tags = Array.isArray(raw.tags)
+    ? raw.tags
+        .map((t) => {
+          const r = asRecord(t);
+          return {
+            id: asString(r?.id) ?? asString(r?.tag_id) ?? "",
+            name: asString(r?.name) ?? "",
+            type: asString(r?.type),
+          };
+        })
+        .filter((t) => t.id && t.name)
     : [];
-  const locationText = [props?.address, ...geoText].filter(Boolean).join(" · ") || undefined;
-  const types = raw.types ?? (raw.type ? [raw.type] : []);
+
   return {
     entityId,
-    name: raw.name,
+    name,
     types,
-    popularity: raw.popularity,
-    affinity: raw.affinity ?? raw.query?.affinity,
-    disambiguation: raw.disambiguation,
+    popularity: asNumber(raw.popularity),
+    affinity: asNumber(raw.affinity) ?? asNumber(query?.affinity),
+    disambiguation: asString(raw.disambiguation),
     explainability:
-      raw.query?.explainability === undefined ? undefined : boundJson(raw.query.explainability),
-    description: props?.short_description ?? props?.description,
+      query?.explainability === undefined || query?.explainability === null
+        ? undefined
+        : boundJson(query.explainability),
+    description: asString(props?.short_description) ?? asString(props?.description),
     imageUrl,
-    address: props?.address,
+    address,
     locationText,
-    geocode:
-      typeof lat === "number" && typeof lon === "number"
-        ? { latitude: lat, longitude: lon }
-        : undefined,
-    priceLevel: props?.price_level,
-    rating: props?.business_rating,
-    tags: (raw.tags ?? [])
-      .map((t) => ({ id: t.id ?? t.tag_id ?? "", name: t.name ?? "", type: t.type }))
-      .filter((t) => t.id && t.name),
+    geocode: lat !== undefined && lon !== undefined ? { latitude: lat, longitude: lon } : undefined,
+    priceLevel: asNumber(props?.price_level),
+    rating: asNumber(props?.business_rating),
+    tags,
   };
 }
 
-export function normalizeTag(raw: QlooTagRaw): QlooTag | null {
-  const id = raw.id ?? raw.tag_id;
-  if (!id) return null;
-  return { id, name: raw.name, type: raw.type ?? raw.subtype };
+/** Result of reading an entity list: how many items Qloo sent vs. how many were usable. */
+export type ParsedEntities = {
+  entities: QlooEntity[];
+  /** Items in Qloo's result array before any parsing. */
+  upstreamCount: number;
+  /** Items dropped because they had no id or no name. */
+  rejectedCount: number;
+};
+
+export function parseEntityList(payload: unknown): ParsedEntities {
+  const items = pickResultArray(payload, "entities");
+  const entities: QlooEntity[] = [];
+  let rejectedCount = 0;
+  for (const item of items) {
+    const e = normalizeEntity(item);
+    if (e) entities.push(e);
+    else rejectedCount++;
+  }
+  return { entities, upstreamCount: items.length, rejectedCount };
+}
+
+export function normalizeTag(input: unknown): QlooTag | null {
+  const raw = asRecord(input);
+  if (!raw) return null;
+  const id = asString(raw.id) ?? asString(raw.tag_id);
+  const name = asString(raw.name);
+  if (!id || !name) return null;
+  return { id, name, type: asString(raw.type) ?? asString(raw.subtype) };
 }
 
 /** Bound an arbitrary JSON payload (depth, array length, keys, string length) before it crosses the wire or reaches a model. */

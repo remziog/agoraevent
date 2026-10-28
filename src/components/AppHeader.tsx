@@ -8,14 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { XpChip } from "@/components/XpChip";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   async function signOut() {
     await supabase.auth.signOut();
-    toast.success("Signed out");
+    toast.success(t("nav.signedOut", "Signed out"));
     navigate({ to: "/" });
   }
 
@@ -23,16 +25,16 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
   const navLinks =
     variant === "member"
       ? [
-          { to: "/app", label: "Discover" },
-          { to: "/app/guide", label: "Taste guide" },
-          { to: "/app/calendar", label: "Calendar" },
-          { to: "/app/memories", label: "Memories" },
-          { to: "/app/profile", label: "Taste" },
-          { to: "/biz", label: "Host" },
+          { to: "/app", label: t("nav.discover", "Discover") },
+          { to: "/app/guide", label: t("nav.guide", "Taste guide") },
+          { to: "/app/calendar", label: t("nav.calendar", "Calendar") },
+          { to: "/app/memories", label: t("nav.memories", "Memories") },
+          { to: "/app/profile", label: t("nav.taste", "Taste") },
+          { to: "/biz", label: t("nav.host", "Host") },
         ]
       : [
-          { to: "/biz", label: "Dashboard" },
-          { to: "/app", label: "Discover" },
+          { to: "/biz", label: t("nav.dashboard", "Dashboard") },
+          { to: "/app", label: t("nav.discover", "Discover") },
         ];
 
   return (
@@ -59,13 +61,18 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
           {variant === "member" && <XpChip />}
           <LanguageSwitcher />
           <Button size="sm" variant="ghost" onClick={signOut}>
-            Sign out
+            {t("common.signOut", "Sign out")}
           </Button>
         </div>
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button size="icon" variant="ghost" className="sm:hidden" aria-label="Open menu">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="sm:hidden"
+              aria-label={t("nav.openMenu", "Open menu")}
+            >
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
@@ -83,6 +90,18 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
                 </Link>
               ))}
               <div className="my-3 h-px bg-border" />
+              {/* Language is reachable on narrow screens too (UI-02). */}
+              <div className="flex items-center justify-between px-3 py-2">
+                <span className="text-sm text-muted-foreground">
+                  {t("language.label", "Language")}
+                </span>
+                <LanguageSwitcher />
+              </div>
+              {variant === "member" && (
+                <div className="px-3 py-2">
+                  <XpChip />
+                </div>
+              )}
               <button
                 onClick={() => {
                   setOpen(false);
@@ -90,7 +109,7 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
                 }}
                 className="rounded-md px-3 py-3 text-left text-base text-muted-foreground hover:bg-muted"
               >
-                Sign out
+                {t("common.signOut", "Sign out")}
               </button>
             </div>
           </SheetContent>

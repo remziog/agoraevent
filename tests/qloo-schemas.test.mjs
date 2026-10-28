@@ -7,6 +7,8 @@ import {
   boundJson,
   explainDrivers,
   normalizeEntity,
+  normalizeTag,
+  parseEntityList,
   pickResultArray,
 } from "../src/lib/qloo.schemas.ts";
 
@@ -79,4 +81,66 @@ test("pickResultArray handles both Qloo envelope shapes", () => {
   assert.deepEqual(pickResultArray({ results: { entities: [3] } }, "entities"), [3]);
   assert.deepEqual(pickResultArray({ results: { tags: [4] } }, "tags"), [4]);
   assert.deepEqual(pickResultArray(null, "entities"), []);
+});
+
+test("normalizeEntity tolerates nulls, numeric strings and odd shapes; only id + name are required", () => {
+  const e = normalizeEntity({
+    entity_id: "e9",
+    name: "Tolerant Place",
+    disambiguation: null,
+    popularity: "0.42",
+    subtype: "urn:entity:place",
+    properties: {
+      address: null,
+      image: { url: "https://img.example/x.jpg", extra: 1 },
+      price_level: "2",
+      geocode: { latitude: "41.01", longitude: 28.97, city: "Istanbul" },
+      keywords: { not: "an array" },
+    },
+    tags: [{ id: "t1", name: "Café" }, { name: "no id" }, null],
+  });
+  assert.equal(e?.popularity, 0.42);
+  assert.equal(e?.priceLevel, 2);
+  assert.equal(e?.imageUrl, "https://img.example/x.jpg");
+  assert.deepEqual(e?.geocode, { latitude: 41.01, longitude: 28.97 });
+  assert.deepEqual(e?.types, ["urn:entity:place"]);
+  assert.deepEqual(e?.tags, [{ id: "t1", name: "Café", type: undefined }]);
+  assert.equal(normalizeEntity({ entity_id: "x", name: null }), null);
+  assert.equal(normalizeEntity("nope"), null);
+});
+
+test("parseEntityList keeps every readable item and counts the unreadable ones (one bad item no longer empties the answer)", () => {
+  const parsed = parseEntityList({
+    results: {
+      entities: [
+        { entity_id: "a", name: "A" },
+        { entity_id: "b" },
+        { id: "c", name: "C", query: { affinity: 0.9 } },
+        null,
+      ],
+    },
+  });
+  assert.equal(parsed.upstreamCount, 4);
+  assert.equal(parsed.rejectedCount, 2);
+  assert.deepEqual(
+    parsed.entities.map((e) => [e.entityId, e.affinity]),
+    [
+      ["a", undefined],
+      ["c", 0.9],
+    ],
+  );
+  assert.deepEqual(parseEntityList({ results: { entities: [] } }), {
+    entities: [],
+    upstreamCount: 0,
+    rejectedCount: 0,
+  });
+});
+
+test("normalizeTag needs an id and a name", () => {
+  assert.deepEqual(normalizeTag({ tag_id: "urn:tag:x", name: "X", subtype: "urn:tag:genre" }), {
+    id: "urn:tag:x",
+    name: "X",
+    type: "urn:tag:genre",
+  });
+  assert.equal(normalizeTag({ id: "urn:tag:y" }), null);
 });
