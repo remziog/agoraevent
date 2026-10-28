@@ -138,7 +138,7 @@ function EventDetail() {
             />
             <div className="p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                <span>{event.category}</span>
+                <span lang="en">{event.category}</span>
                 {demo && (
                   <span className="rounded-full bg-muted px-2 py-0.5">
                     {t("common.demo", "Demo")}
