@@ -8,7 +8,18 @@
 // olur ama bütçe aynı") change only what they mention; nothing is relaxed
 // unless the person says so.
 
+/**
+ * What the person is asking for. "event": an Agora gathering (Agora data).
+ * "restaurant" / "place": somewhere to eat, drink or visit — ranked by Qloo
+ * for the person's taste. The intent decides which path answers, never a
+ * silent conversion of one into the other (DISC-29-01).
+ */
+export type Intent = "event" | "restaurant" | "place";
+
 export type Constraints = {
+  intent: Intent;
+  /** For "place": the kind of place in Qloo-searchable English ("bar", "cafe", "museum"), else null. */
+  placeKind: string | null;
   /** Interest tags, lowercase ("techno", "electronic-music", "film"). */
   tags: string[];
   /** Absolute window in Europe/Istanbul time. `assumed` = Agora's visible default, not the person's words. */
@@ -66,6 +77,8 @@ export type ScoredEvent<E extends DiscoveryEvent = DiscoveryEvent> = E & {
 };
 
 export const EMPTY_CONSTRAINTS: Constraints = {
+  intent: "event",
+  placeKind: null,
   tags: [],
   when: null,
   district: null,
@@ -302,7 +315,7 @@ const WHEN_PATTERNS: { re: RegExp; label: WhenLabel }[] = [
 ];
 
 const SMALL_RE =
-  /\b(kucuk (?:bir )?grup\w*|small group|intimate|samimi|az kisi\w*|kalabalik olmasin|kalabalik istemiyorum|not crowded|no crowds?|quiet)\b/;
+  /\b(kucuk (?:bir )?grup\w*|small group|intimate|samimi|az kisi\w*|kalabalik olmasin|kalabalik istemiyorum|not crowded|no crowds?|quiet|sakin|sessiz|(?:iki|uc|dort|bes|alti|[2-6]) kisi(?:lik|yiz|yle)?|for (?:two|three|four|five|six|[2-6])|table for)\b/;
 const LARGE_RE =
   /\b(kalabalik\w*|buyuk (?:bir )?grup\w*|big group|crowds?|crowded|loud|sweaty|festival)\b/;
 const SOCIAL_RE =
@@ -311,6 +324,55 @@ const RELAX_BUDGET_SAME_RE = /\b(butce ayni|same budget|butce degismesin)\b/;
 
 const BUDGET_RE =
   /(?:(?:en fazla|max(?:imum)?|up to|under|altinda|gecmeden|gecmesin|kadar)\s*)?(\d{2,6})\s*(tl|try|lira|₺)|(?:₺)\s*(\d{2,6})/;
+
+// ---------------------------------------------------------------------------
+// Intent: restaurant / place / event. Deterministic word lists (folded), so a
+// restaurant request is never silently answered with gatherings. An explicit
+// gathering word wins over a place word ("a concert in a bar" is a gathering);
+// otherwise a restaurant word wins over a generic place word ("dinner in a
+// meyhane" is a restaurant request with kind "meyhane").
+// ---------------------------------------------------------------------------
+
+/** Place words → the English kind Agora asks Qloo's tag search for. */
+const PLACE_KINDS: { re: RegExp; kind: string }[] = [
+  { re: /\b(meyhane\w*)\b/, kind: "meyhane" },
+  {
+    re: /\b(bar|bara|barda|barlar\w*|pub|pubs|puba|pubda|birahane\w*|kokteyl\w*|cocktail\w*)\b/,
+    kind: "bar",
+  },
+  { re: /\b(kafe\w*|cafe\w*|coffee( shop)?|kahve\w*|kahveci\w*)\b/, kind: "cafe" },
+  { re: /\b(muze\w*|museum\w*)\b/, kind: "museum" },
+  { re: /\b(galeri\w*|galler(y|ies)|sergi\w*|exhibition\w*)\b/, kind: "art gallery" },
+  { re: /\b(park\w*|bahce\w*|garden\w*)\b/, kind: "park" },
+  { re: /\b(sahaf\w*|kitapci\w*|bookshop\w*|bookstore\w*)\b/, kind: "bookstore" },
+  { re: /\b(plakci\w*|plak dukkan\w*|record (shop|store)\w*)\b/, kind: "record store" },
+  { re: /\b(kulup\w*|kulub\w*|club\w*|gece kulubu|nightclub\w*)\b/, kind: "night club" },
+  { re: /\b(hamam\w*|bath(house)?s?)\b/, kind: "hammam" },
+  { re: /\b(cay bahcesi|tea garden\w*)\b/, kind: "tea house" },
+  { re: /\b(pastane\w*|firin\w*|bakery|bakeries|tatli\w*|dessert\w*)\b/, kind: "bakery" },
+  { re: /\b(mekan\w*|venue\w*|yer|yerler\w*|spot|spots|place|places)\b/, kind: "place" },
+];
+
+const RESTAURANT_RE =
+  /\b(restoran\w*|restaurant\w*|lokanta\w*|yemek\w*|aksam yemegi|ogle yemegi|dinner\w*|lunch\w*|brunch\w*|kahvalti\w*|breakfast\w*|bistro\w*|ocakbasi\w*|kebap\w*|kebab\w*|balikci\w*|seafood|esnaf lokantasi|yiyelim|yemege|eat(ing)?|food\b|cuisine|mutfag\w*|meze\w*|pizza\w*|burger\w*|sushi\w*|ramen\w*|steak\w*|vegan\w*|vejetaryen\w*|vegetarian\w*)\b/;
+
+const EVENT_RE =
+  /\b(etkinlik\w*|event\w*|bulusma\w*|meetup\w*|gathering\w*|konser\w*|concert\w*|gig\w*|film kulub\w*|film club\w*|film gecesi|movie night|gosterim\w*|screening\w*|atolye\w*|workshop\w*|kosu\w*|run\b|running|yoga|parti\w*|party|partie\w*|festival\w*|okuma grubu|book club|kitap kulub\w*|sohbet\w*|dans gecesi|dj set|open mic|acik mikrofon|turnuva\w*|tournament\w*|antrenman\w*|training|yuruyus\w*|hike\w*|hiking|topluluk\w*|communit(y|ies)|katil\w*|join\b|insanlarla tanis\w*|yeni insanlar|meet (new )?people|new people)\b/;
+
+export type IntentExtract = { intent?: Intent; placeKind?: string | null };
+
+/** Which path should answer: a gathering, a restaurant or a kind of place. Returns nothing when the prompt doesn't say. */
+export function extractIntent(prompt: string): IntentExtract {
+  const text = ` ${fold(prompt)} `;
+  const event = EVENT_RE.test(text);
+  const restaurant = RESTAURANT_RE.test(text);
+  const place = PLACE_KINDS.find((p) => p.re.test(text));
+  if (event) return { intent: "event", placeKind: null };
+  if (restaurant)
+    return { intent: "restaurant", placeKind: place && place.kind !== "place" ? place.kind : null };
+  if (place) return { intent: "place", placeKind: place.kind === "place" ? null : place.kind };
+  return {};
+}
 
 /** Words that are part of the constraint grammar and never count as interest tags. */
 const CONSTRAINT_STOPWORDS = new Set(
@@ -425,6 +487,64 @@ const CONSTRAINT_STOPWORDS = new Set(
     "near",
     "around",
     "istanbul",
+    // intent grammar — handled by extractIntent, never an interest tag
+    "restoran",
+    "restaurant",
+    "lokanta",
+    "mekan",
+    "mekanlar",
+    "venue",
+    "yer",
+    "yerler",
+    "place",
+    "places",
+    "spot",
+    "oner",
+    "onerir",
+    "onersene",
+    "onerebilir",
+    "onerin",
+    "tavsiye",
+    "recommend",
+    "suggest",
+    "find",
+    "bul",
+    "bulalim",
+    "goster",
+    "show",
+    "sakin",
+    "sessiz",
+    "kisilik",
+    "iki",
+    "uc",
+    "dort",
+    "bes",
+    "alti",
+    "two",
+    "three",
+    "four",
+    "seviyorum",
+    "severim",
+    "sever",
+    "seviyoruz",
+    "love",
+    "loves",
+    "loved",
+    "likes",
+    "liked",
+    "fan",
+    "faniyim",
+    "dinliyorum",
+    "dinlerim",
+    "izledim",
+    "izlerim",
+    "okudum",
+    "okurum",
+    "listen",
+    "watched",
+    "read",
+    "enjoy",
+    "into",
   ].map(fold),
 );
 
@@ -437,6 +557,12 @@ export type Extracted = Partial<Constraints> & {
 export function extractConstraints(prompt: string, now: Date): Extracted {
   const text = ` ${fold(prompt)} `;
   const out: Extracted = {};
+
+  const intent = extractIntent(prompt);
+  if (intent.intent) {
+    out.intent = intent.intent;
+    out.placeKind = intent.placeKind ?? null;
+  }
 
   for (const { re, label } of WHEN_PATTERNS) {
     if (re.test(text)) {
@@ -546,6 +672,12 @@ export function mergeConstraints(
   const base = prev ?? EMPTY_CONSTRAINTS;
   const { keepBudget, ...fields } = extracted;
   const next: Constraints = { ...base };
+  if (fields.intent !== undefined) {
+    next.intent = fields.intent;
+    next.placeKind = fields.placeKind ?? null;
+  } else if (fields.placeKind !== undefined && fields.placeKind !== null) {
+    next.placeKind = fields.placeKind;
+  }
   if (fields.when !== undefined) next.when = fields.when;
   if (fields.district !== undefined) next.district = fields.district;
   if (fields.budgetMax !== undefined) next.budgetMax = fields.budgetMax;

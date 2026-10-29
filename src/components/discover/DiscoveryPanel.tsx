@@ -1,10 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowUp, CalendarDays, Coins, MapPin, Users, X } from "lucide-react";
+import { CalendarDays, Coins, MapPin, Sparkles, Users, UtensilsCrossed, X } from "lucide-react";
 import type { TFunction } from "i18next";
-import type { Constraints, WhenLabel } from "@/lib/discovery";
+import type { Constraints, Intent, WhenLabel } from "@/lib/discovery";
 import { windowFor } from "@/lib/discovery";
 import type { DiscoveryStatus, Turn } from "@/lib/discovery-store";
+
+const INTENT_OPTIONS: Intent[] = ["restaurant", "place", "event"];
+
+export function intentLabel(t: TFunction, c: Pick<Constraints, "intent" | "placeKind">): string {
+  if (c.intent === "restaurant") return t("discover.intent.restaurant", "Restaurant");
+  if (c.intent === "place")
+    return c.placeKind
+      ? t("discover.intent.placeKind", { kind: c.placeKind, defaultValue: "Place · {{kind}}" })
+      : t("discover.intent.place", "Place");
+  return t("discover.intent.event", "Gathering");
+}
 
 export function whenLabel(t: TFunction, when: Constraints["when"]): string {
   if (!when) return t("discover.when.any", "Any time");
@@ -36,14 +47,63 @@ export function ConstraintChips({
 }) {
   const { t } = useTranslation();
   const [whenOpen, setWhenOpen] = useState(false);
+  const [intentOpen, setIntentOpen] = useState(false);
   const chip =
-    "inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-background px-3 py-1.5 text-xs text-foreground disabled:opacity-50";
+    "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-primary/30 bg-background px-3 py-1.5 text-xs text-foreground disabled:opacity-50 sm:min-h-9";
 
   return (
     <div
       className="flex flex-wrap items-center gap-2"
       aria-label={t("discover.conditions", "Your conditions")}
     >
+      {/* What is being asked for — the one chip that decides who answers (Qloo or Agora). */}
+      <div className="relative">
+        <button
+          type="button"
+          className={`${chip} border-primary/60 bg-primary/5`}
+          disabled={disabled}
+          aria-expanded={intentOpen}
+          aria-haspopup="listbox"
+          onClick={() => setIntentOpen((o) => !o)}
+        >
+          {constraints.intent === "event" ? (
+            <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
+          ) : (
+            <UtensilsCrossed className="h-3.5 w-3.5 text-primary" aria-hidden />
+          )}
+          {intentLabel(t, constraints)}
+        </button>
+        {intentOpen && (
+          <ul
+            role="listbox"
+            aria-label={t("discover.pickIntent", "What are you looking for?")}
+            className="absolute left-0 top-full z-20 mt-1 min-w-44 rounded-xl border bg-background p-1 shadow-lg"
+          >
+            {INTENT_OPTIONS.map((intent) => (
+              <li key={intent} role="option" aria-selected={constraints.intent === intent}>
+                <button
+                  type="button"
+                  className="min-h-10 w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                  onClick={() => {
+                    setIntentOpen(false);
+                    if (intent === constraints.intent) return;
+                    onEdit(
+                      { intent, placeKind: null },
+                      t("discover.switchIntent", {
+                        kind: intentLabel(t, { intent, placeKind: null }).toLowerCase(),
+                        defaultValue: "Show me a {{kind}} instead",
+                      }),
+                    );
+                  }}
+                >
+                  {intentLabel(t, { intent, placeKind: null })}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <div className="relative">
         <button
           type="button"
@@ -166,7 +226,15 @@ export function ConstraintChips({
 }
 
 /** The conversation so far: the person's words and Agora's one-line answers. */
-export function TurnList({ turns, status }: { turns: Turn[]; status: DiscoveryStatus }) {
+export function TurnList({
+  turns,
+  status,
+  intent = "event",
+}: {
+  turns: Turn[];
+  status: DiscoveryStatus;
+  intent?: Intent;
+}) {
   const { t } = useTranslation();
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -203,73 +271,12 @@ export function TurnList({ turns, status }: { turns: Turn[]; status: DiscoverySt
           <span className="mb-0.5 block text-[10px] uppercase tracking-[0.25em] text-primary">
             Agora
           </span>
-          {t("discover.searching", "Checking real gatherings against your conditions…")}
+          {intent === "event"
+            ? t("discover.searching", "Checking real gatherings against your conditions…")
+            : t("discover.searchingQloo", "Asking Qloo to rank places for your taste…")}
         </li>
       )}
       <div ref={endRef} />
     </ol>
-  );
-}
-
-/** "Tell Agora…" — text is the required path; there is no microphone until a real speech provider is wired. */
-export function AskInput({
-  onSend,
-  disabled,
-  autoFocus,
-  placeholder,
-}: {
-  onSend: (text: string) => void;
-  disabled?: boolean;
-  autoFocus?: boolean;
-  placeholder?: string;
-}) {
-  const { t } = useTranslation();
-  const [value, setValue] = useState("");
-  function submit() {
-    const text = value.trim();
-    if (!text || disabled) return;
-    onSend(text);
-    setValue("");
-  }
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        submit();
-      }}
-      className="flex items-end gap-2 rounded-2xl border border-border bg-background/95 p-1.5 shadow-sm backdrop-blur focus-within:border-primary/60"
-    >
-      <label className="sr-only" htmlFor="agora-ask">
-        {t("discover.askLabel", "Tell Agora what you're looking for")}
-      </label>
-      <textarea
-        id="agora-ask"
-        value={value}
-        autoFocus={autoFocus}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            submit();
-          }
-        }}
-        placeholder={
-          placeholder ??
-          t("discover.askPlaceholder", "Tell Agora… e.g. “tomorrow works too, same budget”")
-        }
-        rows={1}
-        disabled={disabled}
-        enterKeyHint="send"
-        className="max-h-32 min-h-[2.5rem] w-full resize-none bg-transparent px-2 py-2 text-sm leading-snug placeholder:text-muted-foreground focus:outline-none"
-      />
-      <button
-        type="submit"
-        disabled={disabled || !value.trim()}
-        className="mb-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
-        aria-label={t("discover.send", "Send")}
-      >
-        <ArrowUp className="h-4 w-4" aria-hidden />
-      </button>
-    </form>
   );
 }

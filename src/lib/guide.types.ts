@@ -53,11 +53,16 @@ export type Restaurant = {
   cuisineTags: string[];
 };
 
+/** A Qloo place (restaurant, bar, museum…) ranked for the person's taste. */
+export type Place = Restaurant;
+
 export type RestaurantsResult = {
   district: string;
+  /** The kind of place that was asked for ("restaurant", "bar", "museum"); null = any place. */
+  kind?: string | null;
   /** Tag ids used as `filter.tags`, for the trace. */
   restaurantTagIds: string[];
-  /** "restaurants": a restaurant tag filter produced results; "places": no tag was available; "none": Qloo returned nothing. */
+  /** "restaurants": the kind's tag filter produced results; "places": no tag was available (untagged search); "none": Qloo returned nothing. */
   scope: "restaurants" | "places" | "none";
   restaurants: Restaurant[];
 };

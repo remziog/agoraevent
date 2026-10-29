@@ -2,13 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Check, MapPin, Users } from "lucide-react";
+import { CalendarDays, Check, Heart, HeartOff, MapPin, Users } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { EventVisual } from "@/components/EventVisual";
 import { Button } from "@/components/ui/button";
 import { formatWhenLocalized } from "@/components/guide/guide-format";
 import { getCommunity } from "@/lib/community.functions";
 import { eventDistrict } from "@/lib/discovery";
+import { useFollowToggle } from "@/lib/use-follow";
 
 export const Route = createFileRoute("/_authenticated/app/community/$id")({
   head: () => ({
@@ -24,6 +25,8 @@ function CommunityPage() {
   const q = useQuery({ queryKey: ["community", id], queryFn: () => get({ data: { id } }) });
   const c = q.data?.community;
   const mine = new Set(q.data?.myRsvps ?? []);
+  const following = Boolean(q.data?.following);
+  const follow = useFollowToggle();
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,6 +75,33 @@ function CommunityPage() {
                   {t("community.noDescription", "The organiser hasn't written a description yet.")}
                 </p>
               )}
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={following ? "secondary" : "default"}
+                  className="min-h-11"
+                  disabled={follow.isPending}
+                  aria-pressed={following}
+                  onClick={() => follow.mutate({ orgId: c.id, follow: !following })}
+                >
+                  {following ? (
+                    <>
+                      <HeartOff className="h-4 w-4" aria-hidden />{" "}
+                      {t("community.unfollow", "Unfollow")}
+                    </>
+                  ) : (
+                    <>
+                      <Heart className="h-4 w-4" aria-hidden /> {t("community.follow", "Follow")}
+                    </>
+                  )}
+                </Button>
+                <Link
+                  to="/app/communities"
+                  className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  {t("community.myCommunities", "My communities →")}
+                </Link>
+              </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 {t(
                   "community.honesty",

@@ -17,34 +17,52 @@ export const getCommunity = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw dbError(error);
-    if (!org) return { community: null, upcoming: [], pastCount: 0, myRsvps: [] as string[] };
+    if (!org)
+      return {
+        community: null,
+        upcoming: [],
+        pastCount: 0,
+        myRsvps: [] as string[],
+        following: false,
+      };
 
     const now = new Date().toISOString();
-    const [{ data: upcoming, error: upErr }, { count: pastCount }, { data: mine }] =
-      await Promise.all([
-        supabase
-          .from("events")
-          .select(
-            "id, title, starts_at, ends_at, venue, city, category, price, capacity, tags, latitude, longitude",
-          )
-          .eq("org_id", data.id)
-          .neq("category", "landmark")
-          .gte("starts_at", now)
-          .order("starts_at", { ascending: true })
-          .limit(20),
-        supabase
-          .from("events")
-          .select("id", { count: "exact", head: true })
-          .eq("org_id", data.id)
-          .neq("category", "landmark")
-          .lt("starts_at", now),
-        supabase.from("rsvps").select("event_id").eq("user_id", userId),
-      ]);
+    const [
+      { data: upcoming, error: upErr },
+      { count: pastCount },
+      { data: mine },
+      { data: follow },
+    ] = await Promise.all([
+      supabase
+        .from("events")
+        .select(
+          "id, title, starts_at, ends_at, venue, city, category, price, capacity, tags, latitude, longitude",
+        )
+        .eq("org_id", data.id)
+        .neq("category", "landmark")
+        .gte("starts_at", now)
+        .order("starts_at", { ascending: true })
+        .limit(20),
+      supabase
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .eq("org_id", data.id)
+        .neq("category", "landmark")
+        .lt("starts_at", now),
+      supabase.from("rsvps").select("event_id").eq("user_id", userId),
+      supabase
+        .from("community_follows")
+        .select("org_id")
+        .eq("user_id", userId)
+        .eq("org_id", data.id)
+        .maybeSingle(),
+    ]);
     if (upErr) throw dbError(upErr);
     return {
       community: org,
       upcoming: upcoming ?? [],
       pastCount: pastCount ?? 0,
       myRsvps: (mine ?? []).map((r) => r.event_id),
+      following: Boolean(follow),
     };
   });

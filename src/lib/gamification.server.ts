@@ -7,17 +7,19 @@ import "@tanstack/react-start/server-only";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { levelForXp } from "./gamification.functions";
+import { streakFromDates } from "./streak";
 
 /**
- * Award (or revert, with a negative delta) XP, update the streak, and grant
+ * Award (or revert, with a negative delta) XP, recompute the streak and grant
  * badges for a user.
  *
- * Streak rules: `eventDate` is the start of the event the user just RSVP'd to.
- * The streak grows only when the event is a *different* one from the last
- * counted event (same timestamp = same event re-RSVP'd → no change), and only
- * when it falls within two weeks of the previous one.
+ * Streak rules (STATE-29-01): the streak is never incremented by the action
+ * itself. It is recomputed from the gatherings the person currently has an
+ * RSVP for — distinct gatherings in a row, each within two weeks of the
+ * previous one — so join → cancel nets to exactly the state before. `eventDate`
+ * is kept for callers but no longer drives the number.
  */
-export async function awardXp(userId: string, delta: number, eventDate?: Date) {
+export async function awardXp(userId: string, delta: number, _eventDate?: Date) {
   const { data: existing } = await supabaseAdmin
     .from("user_stats")
     .select("*")
@@ -28,35 +30,28 @@ export async function awardXp(userId: string, delta: number, eventDate?: Date) {
   const newXp = Math.max(0, prevXp + delta);
   const { level } = levelForXp(newXp);
 
-  let currentStreak = existing?.current_streak ?? 0;
-  let longestStreak = existing?.longest_streak ?? 0;
-  let lastEventAt = existing?.last_event_at ? new Date(existing.last_event_at) : null;
-
-  if (eventDate && delta > 0) {
-    const oneWeekMs = 7 * 24 * 3600 * 1000;
-    const sameEvent = lastEventAt !== null && lastEventAt.getTime() === eventDate.getTime();
-    if (!sameEvent) {
-      if (!lastEventAt) {
-        currentStreak = 1;
-      } else {
-        const diff = Math.abs(eventDate.getTime() - lastEventAt.getTime());
-        if (diff <= oneWeekMs * 2) currentStreak = currentStreak + 1;
-        else currentStreak = 1;
-      }
-      longestStreak = Math.max(longestStreak, currentStreak);
-      lastEventAt = eventDate;
-    }
-  }
+  const { data: going } = await supabaseAdmin
+    .from("rsvps")
+    .select("events(starts_at, category)")
+    .eq("user_id", userId);
+  const starts = (going ?? [])
+    .map((r) => r.events as { starts_at: string; category: string } | null)
+    .filter(
+      (e): e is { starts_at: string; category: string } => Boolean(e) && e!.category !== "landmark",
+    )
+    .map((e) => e.starts_at);
+  const streak = streakFromDates(starts);
 
   await supabaseAdmin.from("user_stats").upsert({
     user_id: userId,
     xp: newXp,
     level,
-    current_streak: currentStreak,
-    longest_streak: longestStreak,
-    last_event_at: lastEventAt?.toISOString() ?? null,
+    current_streak: streak.current,
+    longest_streak: streak.longest,
+    last_event_at: streak.lastEventAt?.toISOString() ?? null,
     updated_at: new Date().toISOString(),
   });
+  const currentStreak = streak.current;
 
   // Evaluate badges
   const toGrant: string[] = [];
