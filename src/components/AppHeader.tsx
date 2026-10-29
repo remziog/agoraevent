@@ -71,7 +71,7 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
             <Button
               size="icon"
               variant="ghost"
-              className="sm:hidden"
+              className="h-11 w-11 sm:hidden"
               aria-label={t("nav.openMenu", "Open menu")}
             >
               <Menu className="h-5 w-5" />

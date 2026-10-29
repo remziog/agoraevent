@@ -3,7 +3,7 @@ import { Compass, Sparkles } from "lucide-react";
 import type { DiscoveryStatus } from "@/lib/discovery-store";
 import { AskBox, MicButton } from "@/components/discover/AskBox";
 import { useSpeechInput } from "@/lib/use-speech-input";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 /**
  * The four directions sit on the intercardinal points (NE, SE, SW, NW), in
@@ -62,8 +62,11 @@ export function CompassFace({
   const searching = status === "searching";
   const [voiceNote, setVoiceNote] = useState<string | null>(null);
   // Mobile: the microphone is the dial's centre; the text field sits below the dial.
+  // What was typed before stays; the transcript is appended to it.
+  const typedBefore = useRef("");
   const speech = useSpeechInput(i18n.language, (text, final) => {
-    setPrompt(text);
+    const prefix = typedBefore.current.trim();
+    setPrompt(prefix ? `${prefix} ${text}` : text);
     if (final) setVoiceNote(t("voice.heard", "Here's what I heard — edit it, then send."));
   });
 
@@ -81,6 +84,7 @@ export function CompassFace({
       speech.stop();
       return;
     }
+    typedBefore.current = prompt;
     setVoiceNote(t("voice.listening", "Listening… speak, then tap stop or just pause."));
     speech.start();
   }

@@ -256,3 +256,63 @@ test("direction prompts stay gatherings (no place word hijacks them)", async () 
     assert.equal(extractIntent(p).intent, "event", p);
   }
 });
+
+// --- Dates (DATE-17-01 / DATE-17-02) and edits (FLOW-17-01) ---
+
+test("DATE-17-01: 'yarın akşam' is tomorrow evening, never tonight", () => {
+  const now = new Date("2026-10-29T11:30:00Z"); // 14:30 TRT
+  for (const p of [
+    "Yarın akşam olsun.",
+    "yarın akşam Kadıköy",
+    "tomorrow evening works",
+    "Tomorrow night",
+  ]) {
+    const c = extractConstraints(p, now);
+    assert.equal(c.when?.label, "tomorrow-evening", p);
+    assert.equal(c.when?.from, "2026-10-30T17:00:00+03:00", p);
+    assert.equal(c.when?.to, "2026-10-30T23:59:00+03:00", p);
+  }
+  assert.equal(extractConstraints("Bu akşam olsun", now).when?.label, "tonight");
+  assert.equal(extractConstraints("yarın öğlen", now).when?.label, "tomorrow");
+});
+
+test("DATE-17-02: the window never starts before now (instants, not strings)", () => {
+  const now = new Date("2026-10-29T15:00:00Z"); // 18:00 TRT, after the 17:00 evening start
+  const w = windowFor("tonight", now);
+  assert.ok(Date.parse(w.from) >= now.getTime(), `${w.from} is before now`);
+  assert.equal(w.from, now.toISOString());
+  const early = new Date("2026-10-29T08:00:00Z"); // 11:00 TRT
+  assert.equal(windowFor("tonight", early).from, "2026-10-29T17:00:00+03:00");
+  const wk = windowFor("weekend", now);
+  assert.ok(Date.parse(wk.from) >= now.getTime());
+});
+
+test("FLOW-17-01: an edit that names only the district carries no intent default", async () => {
+  const { EditsSchema, ConstraintsSchema } = await import("../src/lib/discovery.schemas.ts");
+  const edit = EditsSchema.parse({ district: "Kadıköy" });
+  assert.deepEqual(Object.keys(edit), ["district"]);
+  assert.equal("intent" in edit, false);
+  // the full-constraints schema still fills the default for older clients
+  const full = ConstraintsSchema.parse({
+    tags: [],
+    when: null,
+    district: null,
+    budgetMax: null,
+    groupSize: null,
+    social: false,
+  });
+  assert.equal(full.intent, "event");
+  // merging the edit over a restaurant conversation keeps the restaurant intent
+  const prev = mergeConstraints(
+    null,
+    extractConstraints("Khruangbin seviyorum. Restoran öner.", NOW),
+    [],
+    false,
+  );
+  const merged = {
+    ...prev,
+    ...Object.fromEntries(Object.entries(edit).filter(([, v]) => v !== undefined)),
+  };
+  assert.equal(merged.intent, "restaurant");
+  assert.equal(merged.district, "Kadıköy");
+});

@@ -303,7 +303,19 @@
       "podcast": "podcast",
       "videogame": "video game",
       "brand": "brand"
-    }
+    },
+    "miss": {
+      "date": "different date",
+      "district": "different district",
+      "budget": "over budget",
+      "interest": "different interest",
+      "group": "group size"
+    },
+    "unverified": {
+      "price": "price not verified",
+      "capacity": "group size not listed"
+    },
+    "placesNotePopular": "Order = Qloo's popularity for this district (no favourite named). ★ = the business's own rating in Qloo's data. Agora makes no reservations."
   },
   "guide": {
     "exec": {

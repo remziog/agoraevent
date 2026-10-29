@@ -62,6 +62,8 @@ export type RestaurantsResult = {
   kind?: string | null;
   /** Tag ids used as `filter.tags`, for the trace. */
   restaurantTagIds: string[];
+  /** Tag ids sent as `filter.exclude.tags` (cafés, for restaurant answers), for the trace. */
+  excludedTagIds?: string[];
   /** "restaurants": the kind's tag filter produced results; "places": no tag was available (untagged search); "none": Qloo returned nothing. */
   scope: "restaurants" | "places" | "none";
   restaurants: Restaurant[];

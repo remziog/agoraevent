@@ -260,7 +260,8 @@ function addDays(
 export function windowFor(label: WhenLabel, now: Date): NonNullable<Constraints["when"]> {
   const t = istanbulDate(now);
   const nowIso = now.toISOString();
-  const clamp = (from: string) => (from < nowIso ? nowIso : from);
+  // Compare instants, not strings: "+03:00" and "Z" texts don't sort by time (DATE-17-02).
+  const clamp = (from: string) => (Date.parse(from) < now.getTime() ? nowIso : from);
   switch (label) {
     case "tonight": {
       return { from: clamp(iso(t.y, t.m, t.d, 17, 0)), to: iso(t.y, t.m, t.d, 23, 59), label };
@@ -302,10 +303,15 @@ export function windowFor(label: WhenLabel, now: Date): NonNullable<Constraints[
 // model only adds interest tags on top.
 // ---------------------------------------------------------------------------
 
+// Order matters (first match wins): the specific "tomorrow evening" before the
+// generic evening words, so "yarın akşam" is never read as tonight (DATE-17-01).
 const WHEN_PATTERNS: { re: RegExp; label: WhenLabel }[] = [
-  { re: /\b(bu aksam|bu gece|tonight|this evening|aksam)\b/, label: "tonight" },
-  { re: /\b(yarin aksam|tomorrow evening|tomorrow night)\b/, label: "tomorrow-evening" },
+  {
+    re: /\b(yarin aksam\w*|yarin gece|tomorrow evening|tomorrow night)\b/,
+    label: "tomorrow-evening",
+  },
   { re: /\b(yarin|tomorrow)\b/, label: "tomorrow" },
+  { re: /\b(bu aksam|bu gece|tonight|this evening|aksam)\b/, label: "tonight" },
   { re: /\b(bugun|today)\b/, label: "today" },
   {
     re: /\b(hafta sonu|haftasonu|weekend|cumartesi|pazar gunu|saturday|sunday)\b/,

@@ -437,10 +437,15 @@ export function PlaceResults({
         })}
       </div>
       <p className="text-xs text-muted-foreground">
-        {t(
-          "discover.placesNote",
-          "Order = Qloo's taste affinity for the favourites above. ★ = the business's own rating in Qloo's data. Agora makes no reservations.",
-        )}
+        {personal
+          ? t(
+              "discover.placesNote",
+              "Order = Qloo's taste affinity for the favourites above. ★ = the business's own rating in Qloo's data. Agora makes no reservations.",
+            )
+          : t(
+              "discover.placesNotePopular",
+              "Order = Qloo's popularity for this district (no favourite named). ★ = the business's own rating in Qloo's data. Agora makes no reservations.",
+            )}
       </p>
     </section>
   );

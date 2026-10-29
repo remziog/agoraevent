@@ -267,32 +267,75 @@ export async function placesNearDistrict(
 ): Promise<RestaurantsResult> {
   const { district } = input;
   const tagIds = input.kind ? await placeTagIds(input.kind, calls) : [];
+  // A dinner request should not come back as coffee shops: Qloo's restaurant
+  // tag also covers cafés, so those tags are excluded for "restaurant" only.
+  const excludeTagIds = input.kind === "restaurant" ? await cafeTagIds(calls) : [];
   const signal = [...input.signalEntityIds].sort();
   const locationQuery = `${district}, Istanbul`;
   // A kind with no tag is searched untagged once, labelled "places" (not "restaurants").
   for (const tagId of tagIds.length > 0 ? tagIds : [null]) {
-    const places = await cached(`places:${district}:${tagId ?? "-"}:${signal.join(",")}`, () =>
-      qlooPlacesNear(
-        {
-          locationQuery,
-          tagIds: tagId ? [tagId] : undefined,
-          signalEntityIds: signal,
-          take: 10,
-        },
-        calls,
-      ),
-    );
+    const key = `places:${district}:${tagId ?? "-"}:${excludeTagIds.join("|")}:${signal.join(",")}`;
+    const places = await cached(key, async () => {
+      try {
+        return await qlooPlacesNear(
+          {
+            locationQuery,
+            tagIds: tagId ? [tagId] : undefined,
+            excludeTagIds: excludeTagIds.length > 0 ? excludeTagIds : undefined,
+            signalEntityIds: signal,
+            take: 10,
+          },
+          calls,
+        );
+      } catch (error) {
+        // The host may not accept `filter.exclude.tags`: ask again without it rather than fail.
+        if (error instanceof QlooError && error.status === 400 && excludeTagIds.length > 0)
+          return qlooPlacesNear(
+            {
+              locationQuery,
+              tagIds: tagId ? [tagId] : undefined,
+              signalEntityIds: signal,
+              take: 10,
+            },
+            calls,
+          );
+        throw error;
+      }
+    });
     if (places.length > 0) {
       return {
         district,
         kind: input.kind,
         restaurantTagIds: tagId ? [tagId] : [],
+        excludedTagIds: excludeTagIds,
         scope: tagId ? "restaurants" : "places",
         restaurants: places.slice(0, input.limit).map((p) => toRestaurant(p, district)),
       };
     }
   }
-  return { district, kind: input.kind, restaurantTagIds: tagIds, scope: "none", restaurants: [] };
+  return {
+    district,
+    kind: input.kind,
+    restaurantTagIds: tagIds,
+    excludedTagIds: excludeTagIds,
+    scope: "none",
+    restaurants: [],
+  };
+}
+
+/** Place tags for cafés / coffee shops (exact-name preference), excluded from restaurant answers. */
+export async function cafeTagIds(calls: QlooCall[]): Promise<string[]> {
+  const ids = new Set<string>();
+  for (const word of ["coffee shop", "cafe"]) {
+    const tags = await cached<QlooTag[]>(`tags:place:${word}:v1`, () =>
+      qlooFindTags({ query: word, take: 20 }, calls),
+    );
+    for (const t of pickPlaceTags(tags, word)) {
+      // Only tags that are plainly cafés (never e.g. "Restaurant" matched through "cafe" mentions).
+      if (/coffee|cafe|café|kahve/i.test(t.name) && !/restaurant/i.test(t.name)) ids.add(t.id);
+    }
+  }
+  return Array.from(ids).slice(0, 4);
 }
 
 /** Taste-ranked restaurants in a landmark's neighbourhood — the guide's path, on top of the district one. */
