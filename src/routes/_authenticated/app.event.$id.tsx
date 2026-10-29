@@ -3,8 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Coins, Info, MapPin, Users } from "lucide-react";
+import { Bookmark, BookmarkCheck, CalendarDays, Coins, Info, MapPin, Users } from "lucide-react";
 import { getEvent, rsvpEvent } from "@/lib/events.functions";
+import { useSaveToggle, useSavedIds } from "@/lib/use-saved";
 import { eventDistrict } from "@/lib/discovery";
 import { AppHeader } from "@/components/AppHeader";
 import { EventVisual } from "@/components/EventVisual";
@@ -69,6 +70,10 @@ function EventDetail() {
   const [confirm, setConfirm] = useState<"join" | "cancel" | null>(null);
 
   const q = useQuery({ queryKey: ["event", id], queryFn: () => get({ data: { id } }) });
+  // Saving is a private bookmark on a separate path from the RSVP (never attendee lists, never XP).
+  const savedIds = useSavedIds();
+  const saveToggle = useSaveToggle();
+  const isSaved = Boolean(savedIds.data?.events.includes(id));
   const mutate = useMutation({
     mutationFn: (going: boolean) => rsvp({ data: { event_id: id, going } }),
     // The button stays busy until every screen that shows this RSVP (detail,
@@ -85,7 +90,9 @@ function EventDetail() {
       if (!wasGoing) toast.success(t("event.rsvpCancelled", "RSVP cancelled"));
       else
         toast.success(
-          res?.awarded ? t("event.savedXp", "Saved · +25 XP") : t("event.saved", "Saved"),
+          res?.awarded
+            ? t("event.goingXp", "You're going · +25 XP")
+            : t("event.goingConfirmed", "You're going"),
         );
     },
     onError: (e: Error) => toast.error(e.message),
@@ -263,14 +270,39 @@ function EventDetail() {
                       ? t("event.goingCancel", "You're going — cancel?")
                       : t("event.imGoing", "I'm going")}
                 </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  disabled={saveToggle.isPending}
+                  aria-pressed={isSaved}
+                  onClick={() =>
+                    saveToggle.mutate({ target: { kind: "event", refId: id }, saved: isSaved })
+                  }
+                >
+                  {isSaved ? (
+                    <>
+                      <BookmarkCheck className="h-4 w-4" aria-hidden />{" "}
+                      {t("save.saved", "Saved to my plans")}
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="h-4 w-4" aria-hidden />{" "}
+                      {t("save.save", "Save to my plans")}
+                    </>
+                  )}
+                </Button>
                 {going && (
                   <Button asChild variant="ghost" size="lg">
-                    <Link to="/app/calendar">
-                      {t("event.seeCalendar", "See it in your calendar")}
-                    </Link>
+                    <Link to="/app/plans">{t("event.seePlans", "See it in my plans")}</Link>
                   </Button>
                 )}
               </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {t(
+                  "save.note",
+                  "Saving is a private bookmark: it doesn't tell the organiser, doesn't count as going and earns no XP.",
+                )}
+              </p>
             </div>
           </article>
         )}

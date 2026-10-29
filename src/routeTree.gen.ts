@@ -30,10 +30,12 @@ import { Route as AuthenticatedBizEventsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBizCustomersRouteImport } from './routes/_authenticated/biz.customers'
 import { Route as AuthenticatedAppQlooStatusRouteImport } from './routes/_authenticated/app.qloo-status'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
+import { Route as AuthenticatedAppPlansRouteImport } from './routes/_authenticated/app.plans'
 import { Route as AuthenticatedAppMemoriesRouteImport } from './routes/_authenticated/app.memories'
 import { Route as AuthenticatedAppMapRouteImport } from './routes/_authenticated/app.map'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/app.integrations'
 import { Route as AuthenticatedAppGuideRouteImport } from './routes/_authenticated/app.guide'
+import { Route as AuthenticatedAppCommunitiesRouteImport } from './routes/_authenticated/app.communities'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AuthenticatedAppEventIdRouteImport } from './routes/_authenticated/app.event.$id'
@@ -146,6 +148,11 @@ const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   path: '/app/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAppPlansRoute = AuthenticatedAppPlansRouteImport.update({
+  id: '/app/plans',
+  path: '/app/plans',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAppMemoriesRoute =
   AuthenticatedAppMemoriesRouteImport.update({
     id: '/app/memories',
@@ -168,6 +175,12 @@ const AuthenticatedAppGuideRoute = AuthenticatedAppGuideRouteImport.update({
   path: '/app/guide',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAppCommunitiesRoute =
+  AuthenticatedAppCommunitiesRouteImport.update({
+    id: '/app/communities',
+    path: '/app/communities',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppCalendarRoute =
   AuthenticatedAppCalendarRouteImport.update({
     id: '/app/calendar',
@@ -206,10 +219,12 @@ export interface FileRoutesByFullPath {
   '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/app/communities': typeof AuthenticatedAppCommunitiesRoute
   '/app/guide': typeof AuthenticatedAppGuideRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/map': typeof AuthenticatedAppMapRoute
   '/app/memories': typeof AuthenticatedAppMemoriesRoute
+  '/app/plans': typeof AuthenticatedAppPlansRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/qloo-status': typeof AuthenticatedAppQlooStatusRoute
   '/biz/customers': typeof AuthenticatedBizCustomersRoute
@@ -236,10 +251,12 @@ export interface FileRoutesByTo {
   '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/app/communities': typeof AuthenticatedAppCommunitiesRoute
   '/app/guide': typeof AuthenticatedAppGuideRoute
   '/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/app/map': typeof AuthenticatedAppMapRoute
   '/app/memories': typeof AuthenticatedAppMemoriesRoute
+  '/app/plans': typeof AuthenticatedAppPlansRoute
   '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/qloo-status': typeof AuthenticatedAppQlooStatusRoute
   '/biz/customers': typeof AuthenticatedBizCustomersRoute
@@ -268,10 +285,12 @@ export interface FileRoutesById {
   '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/_authenticated/app/communities': typeof AuthenticatedAppCommunitiesRoute
   '/_authenticated/app/guide': typeof AuthenticatedAppGuideRoute
   '/_authenticated/app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/app/map': typeof AuthenticatedAppMapRoute
   '/_authenticated/app/memories': typeof AuthenticatedAppMemoriesRoute
+  '/_authenticated/app/plans': typeof AuthenticatedAppPlansRoute
   '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/qloo-status': typeof AuthenticatedAppQlooStatusRoute
   '/_authenticated/biz/customers': typeof AuthenticatedBizCustomersRoute
@@ -300,10 +319,12 @@ export interface FileRouteTypes {
     | '/api/guide-health'
     | '/concert/$slug'
     | '/app/calendar'
+    | '/app/communities'
     | '/app/guide'
     | '/app/integrations'
     | '/app/map'
     | '/app/memories'
+    | '/app/plans'
     | '/app/profile'
     | '/app/qloo-status'
     | '/biz/customers'
@@ -330,10 +351,12 @@ export interface FileRouteTypes {
     | '/api/guide-health'
     | '/concert/$slug'
     | '/app/calendar'
+    | '/app/communities'
     | '/app/guide'
     | '/app/integrations'
     | '/app/map'
     | '/app/memories'
+    | '/app/plans'
     | '/app/profile'
     | '/app/qloo-status'
     | '/biz/customers'
@@ -361,10 +384,12 @@ export interface FileRouteTypes {
     | '/api/guide-health'
     | '/concert/$slug'
     | '/_authenticated/app/calendar'
+    | '/_authenticated/app/communities'
     | '/_authenticated/app/guide'
     | '/_authenticated/app/integrations'
     | '/_authenticated/app/map'
     | '/_authenticated/app/memories'
+    | '/_authenticated/app/plans'
     | '/_authenticated/app/profile'
     | '/_authenticated/app/qloo-status'
     | '/_authenticated/biz/customers'
@@ -543,6 +568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/plans': {
+      id: '/_authenticated/app/plans'
+      path: '/app/plans'
+      fullPath: '/app/plans'
+      preLoaderRoute: typeof AuthenticatedAppPlansRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/app/memories': {
       id: '/_authenticated/app/memories'
       path: '/app/memories'
@@ -569,6 +601,13 @@ declare module '@tanstack/react-router' {
       path: '/app/guide'
       fullPath: '/app/guide'
       preLoaderRoute: typeof AuthenticatedAppGuideRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/app/communities': {
+      id: '/_authenticated/app/communities'
+      path: '/app/communities'
+      fullPath: '/app/communities'
+      preLoaderRoute: typeof AuthenticatedAppCommunitiesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/app/calendar': {
@@ -605,10 +644,12 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
+  AuthenticatedAppCommunitiesRoute: typeof AuthenticatedAppCommunitiesRoute
   AuthenticatedAppGuideRoute: typeof AuthenticatedAppGuideRoute
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppMapRoute: typeof AuthenticatedAppMapRoute
   AuthenticatedAppMemoriesRoute: typeof AuthenticatedAppMemoriesRoute
+  AuthenticatedAppPlansRoute: typeof AuthenticatedAppPlansRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppQlooStatusRoute: typeof AuthenticatedAppQlooStatusRoute
   AuthenticatedBizCustomersRoute: typeof AuthenticatedBizCustomersRoute
@@ -624,10 +665,12 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
+  AuthenticatedAppCommunitiesRoute: AuthenticatedAppCommunitiesRoute,
   AuthenticatedAppGuideRoute: AuthenticatedAppGuideRoute,
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppMapRoute: AuthenticatedAppMapRoute,
   AuthenticatedAppMemoriesRoute: AuthenticatedAppMemoriesRoute,
+  AuthenticatedAppPlansRoute: AuthenticatedAppPlansRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppQlooStatusRoute: AuthenticatedAppQlooStatusRoute,
   AuthenticatedBizCustomersRoute: AuthenticatedBizCustomersRoute,

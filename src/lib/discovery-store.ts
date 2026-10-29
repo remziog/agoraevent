@@ -1,12 +1,13 @@
-// The one discovery context shared by the compass (/app), the results page
-// (/app/map) and the conversation panel: constraints, turns, results and the
-// request sequence that keeps a slow old answer from overwriting a newer one.
-// Persisted per tab in sessionStorage; "New search" is the only reset.
+// The one discovery context shared by the compass (/app), the results stage
+// (/app/map) and the conversation panel: constraints, confirmed taste signals,
+// turns, results and the request sequence that keeps a slow old answer from
+// overwriting a newer one. Persisted per tab in sessionStorage; "New search"
+// is the only reset.
 import { useCallback, useSyncExternalStore } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { discoverEvents, type DiscoverResult } from "./events.functions";
+import { discover, type DiscoverResult, type TasteSignal } from "./events.functions";
 import type { Constraints } from "./discovery";
 
 export type Turn = {
@@ -14,14 +15,16 @@ export type Turn = {
   role: "user" | "agora";
   text: string;
   at: number;
-  kind?: "summary" | "error" | "note";
+  kind?: "summary" | "error" | "note" | "question";
 };
 
-export type DiscoveryStatus = "idle" | "searching" | "ready" | "empty" | "error";
+export type DiscoveryStatus = "idle" | "searching" | "ready" | "empty" | "question" | "error";
 
 export type DiscoveryState = {
   turns: Turn[];
   constraints: Constraints | null;
+  /** Favourites resolved to Qloo entities so far — carried into every later turn. */
+  signals: TasteSignal[];
   result: DiscoverResult | null;
   status: DiscoveryStatus;
   error: string | null;
@@ -29,18 +32,22 @@ export type DiscoveryState = {
   seq: number;
   /** The compass direction the person picked (for the needle), if any. */
   direction: string | null;
+  /** Last request text, for the stage header. */
+  lastPrompt: string | null;
 };
 
-const STORAGE_KEY = "agora:discovery:v1";
+const STORAGE_KEY = "agora:discovery:v2";
 
 const INITIAL: DiscoveryState = {
   turns: [],
   constraints: null,
+  signals: [],
   result: null,
   status: "idle",
   error: null,
   seq: 0,
   direction: null,
+  lastPrompt: null,
 };
 
 let state: DiscoveryState = load();
@@ -89,17 +96,30 @@ export function resetDiscovery() {
   set({ ...INITIAL, seq: state.seq + 1 });
 }
 
+/** Status derived from a result: a question to answer, something found, or nothing. */
+function statusFor(r: DiscoverResult): DiscoveryStatus {
+  if (r.question) return "question";
+  if (r.qlooError) return "error";
+  if (r.intent === "event") return r.matches.length > 0 ? "ready" : "empty";
+  return r.places && r.places.items.length > 0 ? "ready" : "empty";
+}
+
 export function useDiscovery() {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const discover = useServerFn(discoverEvents);
+  const call = useServerFn(discover);
   const { t } = useTranslation();
 
   const run = useCallback(
     async (input: {
       prompt: string;
       edits?: Partial<Constraints>;
+      answers?: { term: string; entityId: string | null }[];
       direction?: string | null;
       userText?: string;
+      /** "edit": a chip or option click — the text is a label, not a request to analyse. */
+      mode?: "ask" | "edit";
+      /** Keep the stage's request line (answers and edits refine the same request). */
+      keepPrompt?: boolean;
     }) => {
       const seq = state.seq + 1;
       const userTurn: Turn | null = input.userText
@@ -110,22 +130,41 @@ export function useDiscovery() {
         status: "searching",
         error: null,
         direction: input.direction === undefined ? s.direction : input.direction,
+        lastPrompt: input.keepPrompt
+          ? (s.lastPrompt ?? input.prompt)
+          : (input.userText ?? input.prompt),
         turns: userTurn ? [...s.turns, userTurn] : s.turns,
       }));
       try {
-        const result = await discover({
-          data: { prompt: input.prompt, previous: state.constraints, edits: input.edits },
+        const result = await call({
+          data: {
+            prompt: input.prompt,
+            previous: state.constraints,
+            edits: input.edits,
+            signals: state.signals,
+            answers: input.answers,
+            mode: input.mode ?? "ask",
+          },
         });
         // A newer request started while this one was in flight: drop this answer.
         if (seq !== state.seq) return null;
         const summary = summarize(t, result);
+        const status = statusFor(result);
         set((s) => ({
           result,
           constraints: result.constraints,
-          status: result.matches.length > 0 ? "ready" : "empty",
+          signals: result.signals,
+          status,
+          error: result.qlooError ?? null,
           turns: [
             ...s.turns,
-            { id: turnId(), role: "agora", text: summary, at: Date.now(), kind: "summary" },
+            {
+              id: turnId(),
+              role: "agora",
+              text: summary,
+              at: Date.now(),
+              kind: status === "question" ? "question" : status === "error" ? "error" : "summary",
+            },
           ],
         }));
         return result;
@@ -149,7 +188,7 @@ export function useDiscovery() {
         return null;
       }
     },
-    [discover, t],
+    [call, t],
   );
 
   /** A typed or spoken message, or a compass direction's prompt. */
@@ -161,15 +200,118 @@ export function useDiscovery() {
 
   /** A chip edit: re-run with the same conversation and an explicit constraint change. */
   const edit = useCallback(
-    (edits: Partial<Constraints>, label: string) => run({ prompt: label, edits, userText: label }),
+    (edits: Partial<Constraints>, label: string) =>
+      run({ prompt: label, edits, userText: label, mode: "edit", keepPrompt: true }),
     [run],
   );
 
-  return { state: snapshot, ask, edit, reset: resetDiscovery };
+  /** Answer to Agora's question (a district, or which favourite was meant); re-runs the last request. */
+  const answer = useCallback(
+    (input: {
+      district?: string;
+      answers?: { term: string; entityId: string | null }[];
+      label: string;
+    }) =>
+      run({
+        prompt: state.lastPrompt ?? input.label,
+        edits: input.district ? { district: input.district } : undefined,
+        answers: input.answers,
+        userText: input.label,
+        keepPrompt: true,
+      }),
+    [run],
+  );
+
+  /** Drop a confirmed favourite from the conversation (the next turn runs without it). */
+  const removeSignal = useCallback((entityId: string) => {
+    set((s) => ({ signals: s.signals.filter((x) => x.entityId !== entityId) }));
+  }, []);
+
+  return { state: snapshot, ask, edit, answer, removeSignal, reset: resetDiscovery };
 }
 
 function summarize(t: TFunction, r: DiscoverResult): string {
   const parts: string[] = [];
+  if (r.question?.kind === "district") {
+    parts.push(
+      t("discover.askDistrict", {
+        kind: kindWord(t, r),
+        defaultValue: "Which district should I look in for {{kind}}?",
+      }),
+    );
+    return parts.join(" ");
+  }
+  if (r.question?.kind === "taste") {
+    parts.push(
+      t("discover.askTaste", {
+        terms: r.question.items.map((i) => `“${i.term}”`).join(", "),
+        defaultValue: "Qloo knows more than one {{terms}} — which did you mean?",
+      }),
+    );
+    return parts.join(" ");
+  }
+  if (r.intent !== "event") {
+    if (r.qlooError) {
+      parts.push(
+        t(
+          "discover.qlooFailed",
+          "Qloo didn't answer just now, so I can't rank places — try again in a moment.",
+        ),
+      );
+      return parts.join(" ");
+    }
+    const places = r.places;
+    if (places && places.items.length > 0) {
+      parts.push(
+        places.signals.length > 0
+          ? t("discover.summaryPlaces", {
+              count: places.items.length,
+              kind: kindWord(t, r),
+              district: places.district,
+              names: places.signals.map((s) => s.name).join(", "),
+              defaultValue:
+                "Qloo ranked {{count}} {{kind}} in {{district}} for your taste ({{names}}).",
+            })
+          : t("discover.summaryPlacesPopular", {
+              count: places.items.length,
+              kind: kindWord(t, r),
+              district: places.district,
+              defaultValue:
+                "{{count}} {{kind}} in {{district}} by popularity — name an artist, film or book and Qloo will rank them for you.",
+            }),
+      );
+      if (places.scope === "places" && places.kind)
+        parts.push(
+          t("discover.summaryUntagged", {
+            kind: places.kind,
+            defaultValue: "Qloo has no “{{kind}}” filter, so these are places of any kind.",
+          }),
+        );
+    } else {
+      parts.push(
+        t("discover.summaryNoPlaces", {
+          kind: kindWord(t, r),
+          district: r.constraints.district ?? "",
+          defaultValue: "Qloo returned no {{kind}} in {{district}}. Try another district.",
+        }),
+      );
+    }
+    if (places && places.unknownTerms.length > 0)
+      parts.push(
+        t("discover.summaryUnknownTaste", {
+          terms: places.unknownTerms.join(", "),
+          defaultValue: "Qloo doesn't know {{terms}}, so I left it out.",
+        }),
+      );
+    if (r.matches.length > 0)
+      parts.push(
+        t("discover.summaryNearbyGatherings", {
+          count: r.matches.length,
+          defaultValue: "Also: {{count}} Agora gathering(s) nearby in the same window.",
+        }),
+      );
+    return parts.join(" ");
+  }
   if (r.matches.length > 0) {
     parts.push(
       t("discover.summaryMatches", {
@@ -211,4 +353,12 @@ function summarize(t: TFunction, r: DiscoverResult): string {
     );
   }
   return parts.join(" ");
+}
+
+/** "restaurants", "bars", "places" — the word for what was asked. */
+export function kindWord(t: TFunction, r: Pick<DiscoverResult, "intent" | "constraints">): string {
+  if (r.intent === "restaurant") return t("discover.kind.restaurant", "restaurants");
+  const k = r.constraints.placeKind;
+  if (!k) return t("discover.kind.place", "places");
+  return t(`discover.kind.${k.replace(/\s+/g, "-")}`, { defaultValue: `${k}s` });
 }

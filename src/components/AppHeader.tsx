@@ -25,8 +25,9 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
   const navLinks =
     variant === "member"
       ? [
-          { to: "/app", label: t("nav.discover", "Discover") },
-          { to: "/app/guide", label: t("nav.guide", "Taste guide") },
+          { to: "/app", label: t("nav.compass", "Compass") },
+          { to: "/app/plans", label: t("nav.plans", "My plans") },
+          { to: "/app/communities", label: t("nav.communities", "My communities") },
           { to: "/app/calendar", label: t("nav.calendar", "Calendar") },
           { to: "/app/memories", label: t("nav.memories", "Memories") },
           { to: "/app/profile", label: t("nav.taste", "Taste") },

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   BookOpen,
@@ -21,11 +21,15 @@ import { ISTANBUL_LANDMARKS, type Landmark } from "@/lib/istanbul-landmarks";
 import { getLandmarkStory } from "@/lib/landmark-stories";
 import { formatWhenLocalized, joinNames, mapsSearchUrl } from "./guide-format";
 import { GuideTrace } from "./GuideTrace";
+import { useDiscovery } from "@/lib/discovery-store";
+import { DISTRICTS, windowFor } from "@/lib/discovery";
 
 const landmarkById = new Map(ISTANBUL_LANDMARKS.map((l) => [l.id, l]));
 
 export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: () => void }) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const discovery = useDiscovery();
   const [openLandmark, setOpenLandmark] = useState<{
     landmark: Landmark;
     startWith?: string;
@@ -278,11 +282,36 @@ export function GuideResults({ plan, onRestart }: { plan: GuidePlan; onRestart: 
           <RotateCcw className="h-4 w-4" aria-hidden />{" "}
           {t("guide.tryOthers", "Try other favourites")}
         </Button>
-        <Button asChild variant="ghost" className="gap-2 rounded-full">
-          <Link to="/app">
-            <Compass className="h-4 w-4" aria-hidden />{" "}
-            {t("guide.exploreGatherings", "Explore gatherings")}
-          </Link>
+        {/* The guide's implicit window (next 7 days, near the first pick) becomes explicit,
+            editable compass conditions instead of a silent query. */}
+        <Button
+          variant="ghost"
+          className="gap-2 rounded-full"
+          disabled={discovery.state.status === "searching"}
+          onClick={() => {
+            const first = plan.picks[0] ? landmarkById.get(plan.picks[0].landmarkId) : undefined;
+            const district = first
+              ? (DISTRICTS.find((d) => d.name === first.district)?.name ?? null)
+              : null;
+            void discovery.edit(
+              {
+                intent: "event",
+                placeKind: null,
+                district,
+                when: windowFor("this-week", new Date()),
+              },
+              district
+                ? t("guide.exploreNear", {
+                    district,
+                    defaultValue: "Gatherings near {{district}} this week",
+                  })
+                : t("guide.exploreThisWeek", "Gatherings this week"),
+            );
+            navigate({ to: "/app/map", viewTransition: true });
+          }}
+        >
+          <Compass className="h-4 w-4" aria-hidden />{" "}
+          {t("guide.exploreGatherings", "Explore gatherings")}
         </Button>
       </div>
 

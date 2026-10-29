@@ -55,7 +55,7 @@
   --primary-foreground: oklch(0.98 0.01 80);
 
   --secondary: oklch(0.93 0.025 75);
-  --secondary-foreground: oklch(0.30 0.04 50);
+  --secondary-foreground: oklch(0.3 0.04 50);
 
   --muted: oklch(0.94 0.018 75);
   --muted-foreground: oklch(0.48 0.025 55);
@@ -85,7 +85,7 @@
   --secondary-foreground: oklch(0.96 0.015 80);
   --muted: oklch(0.28 0.02 50);
   --muted-foreground: oklch(0.72 0.02 70);
-  --accent: oklch(0.70 0.09 110);
+  --accent: oklch(0.7 0.09 110);
   --accent-foreground: oklch(0.18 0.02 50);
   --destructive: oklch(0.65 0.22 28);
   --destructive-foreground: oklch(0.98 0.01 80);
@@ -95,15 +95,79 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
   }
-  h1, h2, h3, .font-display {
+  h1,
+  h2,
+  h3,
+  .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
+  }
+}
+
+/* --- Stage transitions (compass → results → detail) -------------------------
+   The compass carries over between stages as one element (view transition
+   name shared by the big dial and the small pill); new content rises in with
+   a short stagger. Everything collapses to an instant cut under
+   prefers-reduced-motion. */
+.agora-compass {
+  view-transition-name: agora-compass;
+}
+
+::view-transition-old(agora-compass),
+::view-transition-new(agora-compass) {
+  animation-duration: 620ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  animation: 260ms ease-out both agora-fade-out;
+}
+::view-transition-new(root) {
+  animation: 520ms cubic-bezier(0.22, 1, 0.36, 1) both agora-rise;
+}
+
+@keyframes agora-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes agora-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stage-rise {
+  animation: 480ms cubic-bezier(0.22, 1, 0.36, 1) both agora-rise;
+}
+.stage-stagger > * {
+  animation: 520ms cubic-bezier(0.22, 1, 0.36, 1) both agora-rise;
+  animation-delay: calc(min(var(--i, 0), 8) * 55ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .stage-rise,
+  .stage-stagger > * {
+    animation: none !important;
   }
 }
