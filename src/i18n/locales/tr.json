@@ -332,7 +332,19 @@
     "summaryUntagged": "Qloo'da “{{kind}}” filtresi yok, bu yüzden bunlar her türden mekân.",
     "summaryNoPlaces": "Qloo {{district}} semtinde {{kind}} döndürmedi. Başka bir semt dene.",
     "summaryUnknownTaste": "Qloo {{terms}} tanımıyor, bu yüzden dışarıda bıraktım.",
-    "summaryNearbyGatherings": "Ayrıca: aynı zaman aralığında yakında {{count}} Agora buluşması var."
+    "summaryNearbyGatherings": "Ayrıca: aynı zaman aralığında yakında {{count}} Agora buluşması var.",
+    "miss": {
+      "date": "farklı tarih",
+      "district": "farklı semt",
+      "budget": "bütçe üstü",
+      "interest": "farklı ilgi",
+      "group": "grup büyüklüğü"
+    },
+    "unverified": {
+      "price": "fiyat doğrulanmadı",
+      "capacity": "grup büyüklüğü belirtilmemiş"
+    },
+    "placesNotePopular": "Sıra = bu semt için Qloo popülerliği (favori belirtilmedi). ★ = işletmenin Qloo verisindeki kendi puanı. Agora rezervasyon yapmaz."
   },
   "event": {
     "capacity": "en fazla {{n}} kişi",

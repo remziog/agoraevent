@@ -20,36 +20,11 @@ import {
   type Intent,
   type ScoredEvent,
 } from "./discovery";
+import { ConstraintsSchema, EditsSchema } from "./discovery.schemas";
 import type { Place, QlooErrorCode, RestaurantsResult, TasteField } from "./guide.types";
 import { explainDrivers, type QlooCall } from "./qloo.schemas";
 import { qlooErrorCode } from "./qloo.server";
 import { checkTaste, placesNearDistrict } from "./qloo-guide.server";
-
-const ConstraintsSchema = z.object({
-  intent: z.enum(["event", "restaurant", "place"]).default("event"),
-  placeKind: z.string().max(40).nullable().default(null),
-  tags: z.array(z.string().max(40)).max(12),
-  when: z
-    .object({
-      from: z.string().max(40),
-      to: z.string().max(40),
-      label: z.enum([
-        "tonight",
-        "today",
-        "tomorrow",
-        "tomorrow-evening",
-        "weekend",
-        "this-week",
-        "custom",
-      ]),
-      assumed: z.boolean().optional(),
-    })
-    .nullable(),
-  district: z.string().max(40).nullable(),
-  budgetMax: z.number().min(0).max(1_000_000).nullable(),
-  groupSize: z.enum(["small", "large"]).nullable(),
-  social: z.boolean(),
-});
 
 const TasteFieldSchema = z.enum(["music", "film", "book"]);
 
@@ -65,8 +40,8 @@ const DiscoverInput = z.object({
   prompt: z.string().trim().min(1).max(500),
   /** Constraints of the conversation so far; a follow-up only changes what it mentions. */
   previous: ConstraintsSchema.nullable().optional(),
-  /** Explicit edits from the chips (a date picked, the district cleared) — applied after the prompt. */
-  edits: ConstraintsSchema.partial().optional(),
+  /** Explicit edits from the chips (a date picked, the district cleared) — applied after the prompt; only the named fields. */
+  edits: EditsSchema.optional(),
   /** Taste signals confirmed earlier in this conversation (Qloo entities), kept across turns. */
   signals: z.array(SignalSchema).max(10).optional(),
   /** Answers to a taste question: which candidate the person meant (null = leave that term out). */
@@ -231,6 +206,8 @@ export type PlacesResult = {
   /** "restaurants": the kind's tag filter produced results; "places": untagged search; "none": Qloo returned nothing. */
   scope: RestaurantsResult["scope"];
   tagIds: string[];
+  /** Tags excluded from the answer (cafés for a restaurant request). */
+  excludedTagIds: string[];
   items: DiscoverPlace[];
   /** Signals the ranking used. Empty = popularity only (said so in the UI). */
   signals: TasteSignal[];
@@ -335,8 +312,13 @@ export const discover = createServerFn({ method: "POST" })
       words.length > 0,
     );
     if (data.edits) {
-      const { tags: editTags, ...rest } = data.edits;
-      constraints = { ...constraints, ...rest, ...(editTags ? { tags: editTags } : {}) };
+      // Only fields the edit actually names change (undefined never overwrites).
+      const defined = Object.fromEntries(
+        Object.entries(data.edits).filter(([, v]) => v !== undefined),
+      ) as Partial<Constraints>;
+      constraints = { ...constraints, ...defined };
+      if (defined.intent !== undefined && defined.placeKind === undefined)
+        constraints.placeKind = null;
     }
     // No date anywhere in the conversation: a visible, editable assumption, not a silent one.
     if (!constraints.when)
@@ -562,6 +544,7 @@ export const discover = createServerFn({ method: "POST" })
           kind,
           scope: result.scope,
           tagIds: result.restaurantTagIds,
+          excludedTagIds: result.excludedTagIds ?? [],
           items,
           signals,
           unknownTerms,

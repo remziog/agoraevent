@@ -185,6 +185,9 @@ function ResultsView() {
                 size="sm"
                 className="min-h-11 gap-1"
                 aria-pressed={showMap}
+                aria-label={
+                  showMap ? t("discover.hideMap", "Hide map") : t("discover.showMap", "Show map")
+                }
                 onClick={() => setShowMap((v) => !v)}
               >
                 <MapIcon className="h-4 w-4" aria-hidden />
@@ -197,6 +200,7 @@ function ResultsView() {
               variant="secondary"
               size="sm"
               className="min-h-11 gap-1"
+              aria-label={t("discover.newSearch", "New search")}
               onClick={() => {
                 reset();
                 navigate({ to: "/app", viewTransition: true });

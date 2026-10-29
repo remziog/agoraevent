@@ -131,6 +131,22 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   }
 
   if (url.pathname === "/v2/tags") {
+    // Café / coffee-shop lookups (excluded from restaurant answers): one place tag each.
+    const q = url.searchParams.get("filter.query") ?? "";
+    if (/coffee|cafe/i.test(q)) {
+      return json({
+        results: {
+          tags: [
+            {
+              id: `urn:tag:genre:place:${q.replace(/\s+/g, "_")}`,
+              name: q === "cafe" ? "Cafe" : "Coffee Shop",
+              type: "urn:tag:genre:place",
+              parents: [{ type: "urn:entity:place" }],
+            },
+          ],
+        },
+      });
+    }
     // The live answer put a product/service tag first; the place-scoped one must win.
     return json({
       results: {
@@ -179,6 +195,11 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     }
     assert.ok(url.searchParams.get("filter.location.query")?.endsWith(", Istanbul"));
     assert.equal(url.searchParams.get("filter.tags"), "urn:tag:genre:place:restaurant");
+    // Cafés are excluded from a restaurant answer (dinner ≠ coffee).
+    assert.equal(
+      url.searchParams.get("filter.exclude.tags"),
+      "urn:tag:genre:place:coffee_shop,urn:tag:genre:place:cafe",
+    );
     return json({
       results: {
         entities: [
@@ -377,7 +398,8 @@ test("fixed plan: maps landmarks, ranks, finds restaurants and gatherings, never
   );
 
   // Qloo calls: 13 matched landmarks × 1 search + 3 unmatched × 2 aliases = 19, then rank, tags, places.
-  assert.deepEqual(qlooCallsByPath(), { "/search": 19, "/v2/insights": 2, "/v2/tags": 1 });
+  // tags: restaurant + the two café words excluded from restaurant answers
+  assert.deepEqual(qlooCallsByPath(), { "/search": 19, "/v2/insights": 2, "/v2/tags": 3 });
   const rankCall = plan.trace
     .find((t) => t.name === "rank_landmarks")
     ?.qloo?.find((c) => c.endpoint === "/v2/insights");
