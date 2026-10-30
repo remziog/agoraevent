@@ -609,7 +609,8 @@
     "fromDistrict": "From the centre of {{district}}",
     "fromCity": "From the city centre",
     "legend": "The first three, by direction and distance",
-    "section": "Where they are"
+    "section": "Where they are",
+    "whichDistrict": "One question: which district? Tap it on the map"
   },
   "cat": {
     "surprise": {

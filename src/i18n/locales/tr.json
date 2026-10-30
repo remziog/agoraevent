@@ -610,7 +610,8 @@
     "fromDistrict": "{{district}} merkezinden",
     "fromCity": "Şehir merkezinden",
     "legend": "İlk üç, yön ve mesafeyle",
-    "section": "Nerede oldukları"
+    "section": "Nerede oldukları",
+    "whichDistrict": "Tek soru: hangi semt? Haritada dokun"
   },
   "cat": {
     "surprise": {
