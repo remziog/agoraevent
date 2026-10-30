@@ -212,7 +212,7 @@ function ResultsView() {
               {state.constraints ? intentLabel(t, state.constraints) : "Agora"}
               {state.constraints?.district ? ` · ${state.constraints.district}` : ""}
             </p>
-            <h1 className="mt-1 line-clamp-3 text-[1.75rem] font-[800] leading-[1] tracking-[-0.01em] text-balance sm:text-[2.25rem]">
+            <h1 className="mt-1 line-clamp-3 text-[1.75rem] [overflow-wrap:anywhere] font-[800] leading-[1] tracking-[-0.01em] text-balance sm:text-[2.25rem]">
               {state.lastPrompt ? `“${state.lastPrompt}”` : t("discover.results", "Results")}
             </h1>
           </div>
