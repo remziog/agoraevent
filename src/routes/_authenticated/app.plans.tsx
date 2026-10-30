@@ -106,7 +106,7 @@ function PlansPage() {
         {plans.isLoading && (
           <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-3.5 sm:grid-cols-3" aria-busy="true">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="aspect-[4/5] animate-pulse rounded-[22px] bg-muted/60" />
+              <div key={i} className="aspect-[4/5] motion-safe:animate-pulse rounded-[22px] bg-muted/60" />
             ))}
             <p className="sr-only">{t("common.loading", "Loading…")}</p>
           </div>

@@ -233,7 +233,7 @@ function CalendarPage() {
           {loading && (
             <div className="mt-6 space-y-2">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="h-14 animate-pulse rounded-xl bg-muted/60" />
+                <div key={i} className="h-14 motion-safe:animate-pulse rounded-xl bg-muted/60" />
               ))}
               <p className="sr-only">{t("common.loading", "Loading…")}</p>
             </div>

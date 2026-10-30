@@ -126,10 +126,10 @@ function EventDetail() {
       <main className="mx-auto max-w-3xl pb-16 sm:px-6 sm:pt-6">
         {q.isLoading && (
           <div aria-busy="true" aria-live="polite">
-            <div className="h-[440px] animate-pulse bg-muted/60 sm:rounded-[32px]" />
+            <div className="h-[440px] motion-safe:animate-pulse bg-muted/60 sm:rounded-[32px]" />
             <div className="space-y-3 px-5 pt-6 sm:px-8">
-              <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-              <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-1/3 motion-safe:animate-pulse rounded bg-muted" />
+              <div className="h-4 w-2/3 motion-safe:animate-pulse rounded bg-muted" />
               <p className="sr-only">{t("common.loading", "Loading…")}</p>
             </div>
           </div>
