@@ -25,13 +25,14 @@ Agora is for visitors, newcomers and locals who want an evening that fits their 
 
 One compass, one conversation:
 
-1. **Say or type what you want**, in English or Turkish — *"I love Khruangbin and Amélie. Recommend a restaurant."* Voice input fills the same box, so you can correct it before sending.
+1. **Say or type what you want**, in English or Turkish — *"I love Khruangbin and Amélie. Recommend a restaurant."* — or tap one of ten categories on the compass (food, coffee, music, exhibitions…) and choose a district or "use my location" (turned into the nearest district on the device; coordinates never leave it). Voice input fills the same box, so you can correct it before sending.
 2. **Agora reads the request:** what you want (a restaurant, a place or a gathering), your favourites, and your conditions — district, time window in Istanbul time, budget, group size, meeting people. Every condition is a visible chip you can change; a missing district is asked once, never guessed.
 3. **Your favourites are checked with Qloo.** An exact match is used; when Qloo knows more than one (*which Amélie?*) Agora asks; a name Qloo doesn't know is reported and left out.
 4. **Qloo ranks real places in that district for your taste.** Each card shows Qloo's rank, which of your favourites Qloo's explainability credits for it ("Why it fits you"), the business's rating — labelled as a rating, not a taste match — and Qloo's tags. With no favourite named, Agora uses your saved taste profile, or says plainly that the list is Qloo's popularity ranking.
 5. **Then people.** Next to the places, Agora shows its own gatherings in the same district and time window — labelled as Agora data, not Qloo — each linking to its community and the organiser's next meet-ups.
-6. **Keep what you like.** Save a place or a gathering (saving is not an RSVP), RSVP to free gatherings with the date and price in view, see both in **My plans** and the calendar, and follow organisers in **My communities**.
+6. **Keep what you like.** Save a place or a gathering (saving is not an RSVP), RSVP to free gatherings with the date and price in view, add a gathering to your own calendar (.ics or Google Calendar), see both in **My plans** and the calendar, and follow organisers in **My communities**.
 7. **Keep talking.** A follow-up changes only what you say — *"Tomorrow evening in Beşiktaş"* moves the time and the district and keeps your favourites. A slow old answer never overwrites a newer one.
+8. **Count what you actually did.** "I went here" on a place (or "I attended" on a gathering, once it has started) records a self-reported experience on your device. It fills **Bingo** — a monthly 3×3 card of city experiences (a new café, a new cuisine, a new neighbourhood, an exhibition…) — and five badges in your profile, your personal city archive.
 
 The **Taste guide** (`/app/guide`) is the deeper mode: name a musician, a film and a book, and an agent ranks Agora's curated Istanbul landmarks against them, opens each place's story (History and Legend kept apart, with narration) and suggests taste-matched restaurants nearby.
 
@@ -53,11 +54,11 @@ Without Qloo there is no ranking, and two different tastes in the same district 
 
 ### Design
 
-Agora's identity and interface are by **Naz Paşalı, our Creative Director**. She drew the new geometric AGORA wordmark and a two-sided system: a warm paper-and-ink day side (condensed Archivo headlines, Instrument Sans, DM Mono labels) and a night field for discovery — a living colour field, her own WebGL shader, that gathers light around the compass and quickens while Agora searches (still under reduced motion). The compass is hers too: ten categories you select, then discover; a location chooser; a needle that turns toward the category and, once the answer arrives, points at the real places around the district on a small map of Istanbul's coastline — true bearings, distances in kilometres. Places and gatherings without a photo get generative posters seeded by their names instead of stock or AI images. She also designed the event page (poster, Add to calendar), the calendar and plans, the bottom navigation, the profile as a personal city archive, and **Bingo** — a monthly 3×3 card of city experiences you fill by marking what you actually did.
+Agora's identity and interface are by **Naz Paşalı, our Creative Director**. She drew the new geometric AGORA wordmark and a two-sided system: a warm paper-and-ink day side (condensed Archivo headlines, Instrument Sans, DM Mono labels) and a night field for discovery — a living colour field, her own WebGL shader, that gathers light around the compass and quickens while Agora searches (and holds still for anyone who prefers reduced motion). The compass is hers too: ten categories you select, then discover; a location chooser; a needle that turns toward the category and, once the answer arrives, points at the real places around the district on a small map of Istanbul's coastline — true bearings, distances in kilometres. Places and gatherings without a photo get generative posters seeded by their names instead of stock or AI images. She also designed the event page (poster, Add to calendar), the calendar and plans, the bottom navigation, the profile as a personal city archive, and **Bingo** — a monthly 3×3 card of city experiences you fill by marking what you actually did.
 
 ### How we built it
 
-TanStack Start (SSR) on Cloudflare Workers · React 19 · Tailwind v4 · Supabase (Auth, Postgres with row-level security) · Vercel AI SDK v6 with Gemini through the Lovable AI gateway · the Qloo Insights API through a server-only client (the key never reaches the browser) · the Web Speech API for voice · Capacitor shells for iOS and Android.
+TanStack Start (SSR) on Cloudflare Workers · React 19 · Tailwind v4 · WebGL (the living colour field) · Supabase (Auth, Postgres with row-level security) · Vercel AI SDK v6 with Gemini through the Lovable AI gateway · the Qloo Insights API through a server-only client (the key never reaches the browser) · the Web Speech API for voice · Capacitor shells for iOS and Android.
 
 ### Challenges
 
@@ -68,10 +69,9 @@ TanStack Start (SSR) on Cloudflare Workers · React 19 · Tailwind v4 · Supabas
 
 ### Known limits
 
-[[finalise against the live version]]
-
 - Budget, date and group size filter Agora's gatherings; for Qloo's places they are shown but not yet used to filter.
 - Qloo's district filter is a text match, so a few results can sit just outside the district.
+- With no favourite named, Qloo's popularity list for a district can include hotels among the restaurants.
 - Voice input depends on the browser's speech recognition (Chrome, Edge, Safari); typing always works.
 - The gatherings are seeded demo listings, labelled "Demo"; a demo gathering cannot be marked as attended.
 - Bingo records are self-reported and stored on the device only (another device starts empty); nothing is verified, and the reward tiers are shown as "not available" because there is no partner agreement yet. Each month starts a new card (Istanbul time).
@@ -90,11 +90,11 @@ Agora launched in May 2026 as a mobile-first app for small real-world gatherings
 
 ### What's next
 
-Map budgets to Qloo's price levels, tighten district filtering with coordinates, rank Agora's own gatherings by taste too, native sign-in and push notifications in the iOS and Android apps, and more cities.
+Map budgets to Qloo's price levels, tighten district filtering with coordinates, rank Agora's own gatherings by taste too, sync Bingo to the account and verify squares with partner venues (a code at the venue) before any reward exists, native sign-in and push notifications in the iOS and Android apps, and more cities.
 
 ## Built with
 
-qloo · typescript · react · tanstack-start · vite · tailwindcss · cloudflare-workers · supabase · postgresql · vercel-ai-sdk · gemini · web-speech-api · capacitor · lovable · zod
+qloo · typescript · react · tanstack-start · vite · tailwindcss · webgl · cloudflare-workers · supabase · postgresql · vercel-ai-sdk · gemini · web-speech-api · capacitor · lovable · zod
 
 ## "Try it out" links
 
