@@ -37,7 +37,7 @@ function TagInput({ label, value, onChange }: { label: string; value: string[]; 
               type="button"
               onClick={() => onChange(value.filter((_, j) => j !== i))}
               aria-label={t("profile3.edit.removeTag", { tag })}
-              className="grid h-8 w-8 place-items-center rounded-full opacity-60 hover:opacity-100 focus-visible:outline-2 focus-visible:outline-ring"
+              className="-my-2 grid h-11 w-11 place-items-center rounded-full opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring"
             >
               ×
             </button>
