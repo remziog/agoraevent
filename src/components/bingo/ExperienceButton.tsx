@@ -111,13 +111,13 @@ export function ExperienceButton({
             <p className="text-[15px] font-semibold">{isEvent ? t("experiences.youAttended") : t("experiences.youWent")}</p>
             <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted-foreground">
               <span>{dayLabel(current.date, i18n.language)}</span>
-              <span className="inline-flex min-h-[22px] items-center rounded-full px-2 font-mono text-[9.5px] uppercase tracking-[0.06em] text-[#8A5413] shadow-[inset_0_0_0_1px_#C9842A] dark:text-[#E9A23B]">
+              <span className="inline-flex min-h-[22px] items-center rounded-[11px] px-2 py-0.5 text-left font-mono text-[9.5px] uppercase leading-tight tracking-[0.06em] text-[#8A5413] shadow-[inset_0_0_0_1px_#C9842A] dark:text-[#E9A23B]">
                 {t("experiences.selfReported")}
               </span>
               {squaresOf(current.id) && (
                 <Link
                   to="/app/bingo"
-                  className="inline-flex min-h-[22px] items-center rounded-full px-2 font-mono text-[9.5px] uppercase tracking-[0.06em] shadow-[inset_0_0_0_1px_var(--border)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  className="inline-flex min-h-[22px] items-center rounded-[11px] px-2 py-0.5 text-left font-mono text-[9.5px] uppercase leading-tight tracking-[0.06em] shadow-[inset_0_0_0_1px_var(--border)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   {t("experiences.bingo", { squares: squaresOf(current.id) })}
                 </Link>

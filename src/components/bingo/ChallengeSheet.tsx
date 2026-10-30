@@ -79,13 +79,15 @@ export function ChallengeSheet({
           <span className="nb-mono shrink-0 text-[#E9A23B]">{t(`bingo.status.${cell.status}`)}</span>
         </div>
         <div className="relative -mx-5 mt-3 h-[190px] overflow-hidden">
-          <ArtBlock seed={`bingo-${id}`} className="absolute inset-0 [filter:grayscale(1)_contrast(1.2)]" shade={false} />
+          <div className="absolute inset-0 [filter:grayscale(1)_contrast(1.3)_brightness(0.7)]" aria-hidden>
+            <ArtBlock seed={`bingo-${id}`} className="h-full w-full" shade={false} />
+          </div>
           <span aria-hidden className="nb-tear" />
           <span aria-hidden className="nb-dot" />
           <span
             aria-hidden
             className="absolute inset-0"
-            style={{ background: "linear-gradient(180deg, rgba(13,11,26,0) 40%, rgba(31,16,36,.9))" }}
+            style={{ background: "linear-gradient(180deg, rgba(13,11,26,0) 25%, rgba(31,16,36,.6) 55%, rgba(31,16,36,.94))" }}
           />
           <h2 className="nb-poster absolute inset-x-5 bottom-3.5 z-[2] m-0 text-[clamp(36px,11vw,46px)] uppercase text-balance">
             {title}
