@@ -575,5 +575,322 @@
     "noNext": "No upcoming gathering listed yet.",
     "open": "Open community",
     "joinedCount": "You joined {{count}} of their gatherings"
+  },
+  "bingo": {
+    "title": "Bingo",
+    "period": "Bingo · {{period}}",
+    "lead": "Discover the city, complete lines, collect the trail.",
+    "tag": "Your city is the game.",
+    "sticker": "9 squares · 3 lines · 3 tiers",
+    "monthCard": "{{month}} card",
+    "lines_one": "{{count}} line",
+    "lines_other": "{{count}} lines",
+    "squares": "{{n}}/9 squares",
+    "gridAria": "Bingo card, 3 by 3",
+    "freeAria": "Centre square, Agora Free: a gift",
+    "free": "FREE",
+    "squareAria": "Square {{n}}, {{title}}: {{status}}",
+    "status": {
+      "locked": "Not started",
+      "progress": "In progress",
+      "done": "Self-reported",
+      "verified": "Verified",
+      "free": "Gift"
+    },
+    "legendNote": "Verified needs a partner check (venue QR or code, organiser check-in). Agora has no partner yet, so squares stay self-reported.",
+    "rewards": "Rewards",
+    "howBtn": "How it works",
+    "howTitle": "How does it work?",
+    "how": {
+      "1t": "A new card every month",
+      "1d": "Nine squares, nine small city challenges. The centre square is free. The month follows Istanbul time.",
+      "2t": "Tap a square, head out",
+      "2d": "Each challenge opens the compass with a ready question: cafés, exhibitions, stages, neighbourhoods.",
+      "3t": "Say you went",
+      "3d": "Tap “I attended” on an event or “I went here” on a place. It's saved as self-reported, on this device. Partner verification isn't available yet.",
+      "4t": "Complete a line",
+      "4d": "A full row, column or diagonal is a line. Your first three lines map to three reward tiers; no partner has joined yet, so none can be used."
+    },
+    "deviceNote": "Saved on this device only. Agora doesn't send your experiences anywhere, and they won't follow you to another phone or browser.",
+    "cardNote": "The card renews every month; your badges stay in your profile.",
+    "back": "Back",
+    "backToCard": "Back to the card",
+    "close": "Close",
+    "signedOut": "Sign in to keep a Bingo card on this device.",
+    "sq": {
+      "coffee": {
+        "t": "Discover a new café",
+        "l": "Find a coffee corner of the city you haven't discovered yet.",
+        "q": "A café I haven't tried"
+      },
+      "exhibit": {
+        "t": "Go to an exhibition",
+        "l": "Drop by a gallery or an opening; linger a little longer in front of a work.",
+        "q": "Exhibitions this week"
+      },
+      "music": {
+        "t": "Hear live music",
+        "l": "Not a recording: a sound played in the same room.",
+        "q": "Live music tonight"
+      },
+      "hood": {
+        "t": "Visit a new neighbourhood",
+        "l": "Walk for an hour in a neighbourhood you always pass through.",
+        "q": "Something to do in a neighbourhood I don't know"
+      },
+      "free": {
+        "t": "Agora Free",
+        "l": "The centre square is a gift. You're one square ahead on every line through it.",
+        "q": ""
+      },
+      "shop": {
+        "t": "Visit a local shop",
+        "l": "Step into an independent shop, not a chain, and discover something.",
+        "q": "An independent boutique"
+      },
+      "cuisine": {
+        "t": "Try a new cuisine",
+        "l": "A dish from a cuisine you've never tried.",
+        "q": "Dinner tonight, a cuisine I've never tried"
+      },
+      "park": {
+        "t": "Discover a park",
+        "l": "Find a green corner in the middle of the city where you can breathe.",
+        "q": "A walk in a park"
+      },
+      "surprise": {
+        "t": "Take a surprise trip",
+        "l": "Let Agora choose; you just go.",
+        "q": "Surprise me"
+      }
+    },
+    "rule": {
+      "coffee": "A place in the coffee category that you haven't recorded before.",
+      "exhibit": "An event or place whose type or tags say exhibition, gallery or museum.",
+      "music": "An event of the concert or live-music type. A venue on its own doesn't count.",
+      "hood": "An experience in a district where you've never recorded one; it can count together with another square.",
+      "shop": "A shop tagged independent, boutique or vintage.",
+      "cuisine": "A restaurant whose tags name a cuisine you have no earlier experience of.",
+      "park": "A place tagged as a park or grove.",
+      "surprise": "Mark it yourself after going somewhere Agora picked for you; it can count together with another square."
+    },
+    "line": {
+      "r0": "row 1",
+      "r1": "row 2",
+      "r2": "row 3",
+      "c0": "column 1",
+      "c1": "column 2",
+      "c2": "column 3",
+      "d0": "diagonal",
+      "d1": "anti-diagonal"
+    },
+    "ch": {
+      "square": "Square {{n}}",
+      "find": "Find it on the compass",
+      "howCounts": "How it counts",
+      "yourXp": "Your experiences",
+      "noXp": "No matching experience this month yet. Tap “I attended” on an event or “I went here” on a place and the square fills by itself.",
+      "verification": "Verification",
+      "verifyNA": "Partner QR, partner code and organiser check-in aren't available yet: no venue or organiser has joined. Squares stay self-reported.",
+      "noTracking": "Your location isn't tracked; being nearby never completes a square.",
+      "selfT": "Mark it yourself",
+      "selfP": "Done it already? Mark it: the square fills as self-reported, saved on this device.",
+      "selfBtn": "I did it, mark it",
+      "selfDone": "You marked this square this month.",
+      "undo": "Undo",
+      "progress": "Progress",
+      "rewardProgress": "Reward progress",
+      "lineDone": "line done",
+      "left_one": "{{count}} square to go",
+      "left_other": "{{count}} squares to go",
+      "nextTier": "Your next line reaches reward tier {{n}}: {{title}} (not available yet).",
+      "allTiers": "All three reward tiers reached."
+    },
+    "rw": {
+      "note": "Reward tiers, not vouchers. A tier becomes usable only with a partner agreement and verified squares. Agora has neither yet, so nothing here can be redeemed.",
+      "tier": "Line {{n}}",
+      "1t": "15% Off",
+      "1s": "At a participating independent design shop",
+      "2t": "Free Coffee",
+      "2s": "One cup at a participating café",
+      "3t": "Concert Ticket",
+      "3s": "Entry to a selected concert or cultural event",
+      "na": "Not available yet",
+      "partner": "Partner",
+      "noPartner": "None: no partner agreement yet",
+      "validity": "Validity",
+      "terms": "Terms",
+      "none": "Not set",
+      "status": "Status",
+      "reached": "Line reached, self-reported. It would still need verified squares and a partner.",
+      "more_one": "{{count}} more line to reach this tier",
+      "more_other": "{{count}} more lines to reach this tier"
+    },
+    "tk": {
+      "k1": "Line 1 · Coupon",
+      "big1": "15%",
+      "big1b": " OFF",
+      "k2": "Line 2 · Cup",
+      "big2": "Free coffee",
+      "cup": "One cup",
+      "k3": "Line 3 · Entry",
+      "big3": "Concert ticket",
+      "entry": "Entry",
+      "stamp": "NOT AVAILABLE"
+    },
+    "cz": {
+      "title": "Bingo!",
+      "kicker": "Bingo · {{period}} · self-reported",
+      "sub": "A self-reported line. Rewards need partner verification, which isn't available yet.",
+      "subMany": "{{count}} self-reported lines. Rewards need partner verification, which isn't available yet.",
+      "seeCard": "See the card",
+      "seeTiers": "See reward tiers"
+    },
+    "entry": {
+      "aria": "Agora Bingo, {{month}} card: {{n}} of 9 squares"
+    }
+  },
+  "experiences": {
+    "title": "My experiences",
+    "history": "History",
+    "wentHere": "I went here",
+    "attended": "I attended",
+    "youWent": "You went here",
+    "youAttended": "You attended",
+    "selfReported": "Self-reported",
+    "undo": "Undo",
+    "legend": "Saving or adding to your calendar doesn't mean you went; only “{{act}}” adds it to your experiences, as self-reported.",
+    "futureEvent": "You can mark it once the event has started.",
+    "alreadyEvent": "This event is already in your experiences.",
+    "alreadyToday": "Already recorded for today.",
+    "badDate": "The date couldn't be confirmed, so it wasn't recorded.",
+    "notSaved": "Not recorded",
+    "signIn": "Sign in to keep experiences on this device.",
+    "added": "Added to your experiences",
+    "addedBingo": "Bingo · {{squares}} · self-reported",
+    "addedNoMatch": "It didn't match a square on this month's Bingo card.",
+    "lineToast": "Bingo! A self-reported line",
+    "removed": "Removed from your experiences",
+    "recalc": "Bingo and badges were recalculated.",
+    "deviceNote": "Saved on this device only.",
+    "bingo": "Bingo · {{squares}}",
+    "tri": {
+      "want": "Want to do",
+      "wantS": "saved",
+      "did": "Done",
+      "didS": "self-reported",
+      "ver": "Verified",
+      "verS": "not available yet"
+    },
+    "g": {
+      "all": "All",
+      "art": "Art",
+      "music": "Music",
+      "food": "Food & Drink",
+      "other": "Other"
+    },
+    "filterAria": "Filter by category",
+    "none": "No experiences yet. Tap “{{a}}” on an event's page, or “{{b}}” on a place.",
+    "noneCat": "No experiences in this category.",
+    "square": "Bingo square",
+    "remove": "Remove",
+    "removeAria": "Remove {{name}} from your experiences",
+    "confirmRemove": "Tap again to remove",
+    "kind": {
+      "event": "Event",
+      "place": "Place",
+      "challenge": "Bingo square"
+    }
+  },
+  "badges": {
+    "title": "Badge collection",
+    "lead": "Your long-term discovery trail. It stays here even when the monthly Bingo card renews.",
+    "coffee": {
+      "req": "Discover five different cafés",
+      "how": "Each different café you record counts once; the same café never counts twice. Self-reported visits count."
+    },
+    "art": {
+      "req": "Go to five exhibitions",
+      "how": "Each different exhibition or gallery that fits the “Go to an exhibition” rule counts once."
+    },
+    "night": {
+      "req": "Five nights of live music",
+      "how": "Each different concert or live-music event you attend counts once."
+    },
+    "nomad": {
+      "req": "Discover ten different neighbourhoods",
+      "how": "Each different district where you record an experience counts once; the same one never counts twice."
+    },
+    "culture": {
+      "req": "Verify five different squares",
+      "how": "Each different type of square filled by a verified experience counts once. Self-reported visits don't count, and verification isn't available yet, so this badge can't progress for now."
+    },
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "needsVerification": "Needs verification · not available yet",
+    "req": "Requirement",
+    "howH": "How it progresses",
+    "archive": "Archive",
+    "empty": "No trail yet. Start with the matching square on your Bingo card.",
+    "openCard": "Open the Bingo card",
+    "aria": "{{name}}: {{n}} of {{goal}}",
+    "ariaDone": "{{name}}: unlocked"
+  },
+  "profile3": {
+    "kicker": "Your personal city archive",
+    "title": "Profile",
+    "member": "Agora member",
+    "statsAria": "This month at a glance",
+    "stats": {
+      "squares": "Squares this month",
+      "lines": "Lines · self-reported",
+      "badges": "Badges"
+    },
+    "pass": {
+      "k": "Your city, your game",
+      "no": "No. 001 · Istanbul",
+      "squares": "{{n}}/9 squares",
+      "lines": "{{n}}/3 lines",
+      "next": "Next reward tier:",
+      "na": "not available yet",
+      "all": "All three tiers reached",
+      "open": "Open my Bingo card",
+      "rewards": "Rewards"
+    },
+    "taste": {
+      "title": "Your tastes · Qloo signals",
+      "note": "When you name an artist, film or book, Qloo ranks picks to your taste.",
+      "empty": "No taste signals yet. Add a few below.",
+      "music": "music",
+      "sports": "movement",
+      "films": "film",
+      "interests": "interest"
+    },
+    "edit": {
+      "title": "Your taste",
+      "lead": "The more honest, the better the matches.",
+      "blankT": "Blank slate.",
+      "blankD": "Add a few tags below; even three is enough to start matching you to real rooms.",
+      "music": "Music",
+      "sports": "Sports & movement",
+      "films": "Films & shows",
+      "interests": "Interests",
+      "else": "Anything else?",
+      "elsePh": "Sunday morning person. Allergic to small talk.",
+      "addPh": "Add and press Enter",
+      "removeTag": "Remove {{tag}}",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Taste saved"
+    },
+    "activity": {
+      "title": "Activity",
+      "level": "Level",
+      "xp": "{{n}} XP total",
+      "streak": "Streak",
+      "badges": "Badges",
+      "best": "Best",
+      "agoraBadges": "Agora badges"
+    }
   }
 }
