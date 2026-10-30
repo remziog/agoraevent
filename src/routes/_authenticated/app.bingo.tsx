@@ -52,12 +52,14 @@ function BingoPage() {
     if (!xp.ready || !xp.userId || timer.current !== null) return;
     const fresh = xp.card.lines.filter((l) => !xp.celebrated.includes(l));
     if (!fresh.length) return;
-    xp.celebrate(fresh);
     setLit(fresh);
     const first = xp.card.lines.length - fresh.length + 1;
+    const celebrate = xp.celebrate;
+    // after the line has been drawn: remember it was celebrated, then show the moment
     timer.current = window.setTimeout(
       () => {
         timer.current = null;
+        celebrate(fresh);
         setCz({ count: fresh.length, tier: first <= 3 ? (first as RewardTier) : null });
       },
       reducedMotion() ? 50 : 1300,

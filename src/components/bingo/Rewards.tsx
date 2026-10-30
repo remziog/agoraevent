@@ -8,13 +8,18 @@ import { periodLabel } from "./text";
 export function Ticket({ tier, period }: { tier: RewardTier; period: string }) {
   const { t, i18n } = useTranslation();
   const per = periodLabel(period, i18n.language).toLocaleUpperCase(i18n.language);
-  const stamp = <span className="stamp">{t("bingo.tk.stamp")}</span>;
+  // the stamp sits in the ticket's head row, so it can wrap instead of covering the kicker
+  const head = (k: string) => (
+    <span className="hd">
+      <span className="k">{k}</span>
+      <span className="stamp">{t("bingo.tk.stamp")}</span>
+    </span>
+  );
   if (tier === 1)
     return (
       <div className="nb-ticket t1" aria-hidden>
-        {stamp}
         <div className="main nb-paper">
-          <span className="k">{t("bingo.tk.k1")}</span>
+          {head(t("bingo.tk.k1"))}
           <span className="big">
             {t("bingo.tk.big1")}
             <span>{t("bingo.tk.big1b")}</span>
@@ -34,9 +39,8 @@ export function Ticket({ tier, period }: { tier: RewardTier; period: string }) {
     return (
       <div className="nb-ticket t2" aria-hidden>
         <span className="cup" />
-        {stamp}
         <div className="main">
-          <span className="k">{t("bingo.tk.k2")}</span>
+          {head(t("bingo.tk.k2"))}
           <span className="big">{t("bingo.tk.big2")}</span>
           <span className="sub">{t("bingo.rw.2s")}</span>
         </div>
@@ -52,9 +56,8 @@ export function Ticket({ tier, period }: { tier: RewardTier; period: string }) {
     );
   return (
     <div className="nb-ticket t3" aria-hidden>
-      {stamp}
       <div className="main">
-        <span className="k">{t("bingo.tk.k3")}</span>
+        {head(t("bingo.tk.k3"))}
         <span className="big">{t("bingo.tk.big3")}</span>
         <span className="sub">{t("bingo.rw.3s")}</span>
       </div>

@@ -130,7 +130,8 @@ const CSS = String.raw`
 .nb-ticket .k{font-family:var(--font-mono,"DM Mono",monospace);font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
 .nb-ticket .big{font-family:var(--font-display,"Archivo",sans-serif);font-stretch:62%;font-weight:900;line-height:.82;letter-spacing:-.02em}
 .nb-ticket .sub{font-size:12.5px;opacity:.8;max-width:26ch}
-.nb-ticket .stamp{position:absolute;z-index:4;right:96px;top:12px;padding:3px 7px;border:1px solid currentColor;border-radius:4px;font-family:var(--font-mono,"DM Mono",monospace);font-size:9px;letter-spacing:.14em;transform:rotate(6deg);opacity:.85}
+.nb-ticket .hd{position:relative;z-index:4;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
+.nb-ticket .stamp{padding:3px 7px;border:1px solid currentColor;border-radius:4px;font-family:var(--font-mono,"DM Mono",monospace);font-size:9px;letter-spacing:.14em;transform:rotate(4deg);opacity:.85;white-space:nowrap}
 .nb-ticket.t1{color:var(--mg-ink)}
 .nb-ticket.t1 .big{font-size:clamp(52px,17vw,74px)}
 .nb-ticket.t1 .big span{font-size:.5em;vertical-align:top}
