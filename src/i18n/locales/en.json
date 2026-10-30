@@ -858,8 +858,8 @@
       "rewards": "Rewards"
     },
     "taste": {
-      "title": "Your tastes · Qloo signals",
-      "note": "When you name an artist, film or book, Qloo ranks picks to your taste.",
+      "title": "Your tastes",
+      "note": "Saved on your profile; Agora's suggestions read them. When you name an artist, film or book on the compass, Qloo ranks picks to your taste.",
       "empty": "No taste signals yet. Add a few below.",
       "music": "music",
       "sports": "movement",

@@ -859,8 +859,8 @@
       "rewards": "Ödüller"
     },
     "taste": {
-      "title": "Zevklerin · Qloo sinyalleri",
-      "note": "Bir sanatçı, film ya da kitap yazdığında Qloo önerileri zevkine göre sıralar.",
+      "title": "Zevklerin",
+      "note": "Profilinde kayıtlı; Agora'nın önerileri bunları okur. Pusulada bir sanatçı, film ya da kitap adı verdiğinde Qloo önerileri zevkine göre sıralar.",
       "empty": "Henüz zevk sinyali yok. Aşağıdan birkaç tane ekle.",
       "music": "müzik",
       "sports": "hareket",

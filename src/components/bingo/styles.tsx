@@ -93,6 +93,8 @@ const CSS = String.raw`
 @keyframes nb-flip{0%{opacity:0;transform:rotateX(-96deg)}5%{opacity:1;transform:rotateX(-96deg)}75%{transform:rotateX(8deg)}100%{opacity:1;transform:rotateX(0)}}
 
 /* challenge sheet */
+.nb-tear{position:absolute;left:-6%;bottom:30%;width:64%;height:13%;background:var(--paperc);opacity:.85;transform:rotate(-6deg);clip-path:polygon(0 18%,10% 0,22% 14%,36% 2%,50% 16%,64% 0,78% 14%,92% 2%,100% 12%,100% 86%,88% 100%,74% 86%,60% 100%,46% 84%,32% 100%,18% 86%,6% 100%,0 84%)}
+.nb-dot{position:absolute;right:16%;top:22%;width:12px;height:12px;border-radius:50%;background:var(--mg)}
 .nb-steps{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
 .nb-steps li{display:grid;gap:6px;font-size:11px;color:var(--nt-2);line-height:1.2}
 .nb-steps li::before{content:"";height:3px;border-radius:2px;background:var(--nt-line)}
