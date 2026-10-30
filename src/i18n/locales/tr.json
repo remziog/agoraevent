@@ -170,13 +170,14 @@
     "cardAlternative": "Alternatif",
     "cardMatch": "Koşullarına uyuyor",
     "checkedNote": "{{when}} için {{checked}} gerçek Agora kaydı denetlendi. Fiyat ve kontenjan organizatörün kaydından gelir; bilinmeyen değerler asla uygun sayılmaz.",
-    "compassLabel": "Pusula: bir yön seç ya da Agora'ya ne istediğini söyle",
+    "compassLabel": "Pusula: Agora'ya ne istediğini anlat ya da bir yön seç",
     "compassPlaceholder": "Agora'ya söyle… “Kadıköy'de iki kişilik sakin bir restoran, Khruangbin seviyorum”",
     "conditions": "Koşulların",
     "connectSocials": "Spotify, Strava ya da Letterboxd'ı bağla",
     "continueConversation": "Son konuşmana devam et →",
     "conversation": "Konuşma",
     "direction": {
+      "food": "Yemek",
       "quiet": "Sakin & samimi",
       "loud": "Hareketli & canlı",
       "move": "Bedenimi hareket ettir",
@@ -344,7 +345,14 @@
       "price": "fiyat doğrulanmadı",
       "capacity": "grup büyüklüğü belirtilmemiş"
     },
-    "placesNotePopular": "Sıra = bu semt için Qloo popülerliği (favori belirtilmedi). ★ = işletmenin Qloo verisindeki kendi puanı. Agora rezervasyon yapmaz."
+    "placesNotePopular": "Sıra = bu semt için Qloo popülerliği (favori belirtilmedi). ★ = işletmenin Qloo verisindeki kendi puanı. Agora rezervasyon yapmaz.",
+    "heroTitle": "Bugün ne yapmak istersin",
+    "city": "İstanbul",
+    "stateReady": "Ruh hâlin pusulan",
+    "compassPlaceholderNight": "Agora'ya anlat…",
+    "directionsLabel": "Yönler",
+    "cardForYou": "Zevkine göre",
+    "cardPopular": "Popüler"
   },
   "event": {
     "capacity": "en fazla {{n}} kişi",

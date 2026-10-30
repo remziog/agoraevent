@@ -148,7 +148,7 @@ function ResultsView() {
           <Link
             to="/app"
             viewTransition
-            className="agora-compass relative mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-card shadow-[0_10px_30px_-15px_color-mix(in_oklab,var(--primary)_60%,transparent)] transition hover:border-primary"
+            className="agora-compass relative mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[1.5px] border-foreground bg-card transition hover:bg-muted"
             aria-label={t("discover.backToCompass", "Back to the compass")}
             data-state={state.status}
           >
@@ -170,11 +170,11 @@ function ResultsView() {
             </svg>
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-primary">
+            <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
               {state.constraints ? intentLabel(t, state.constraints) : "Agora"}
               {state.constraints?.district ? ` · ${state.constraints.district}` : ""}
             </p>
-            <h1 className="mt-0.5 line-clamp-2 font-display text-2xl leading-tight sm:text-3xl">
+            <h1 className="mt-1 line-clamp-3 text-[1.75rem] font-[800] leading-[1] tracking-[-0.01em] text-balance sm:text-[2.25rem]">
               {state.lastPrompt ? `“${state.lastPrompt}”` : t("discover.results", "Results")}
             </h1>
           </div>

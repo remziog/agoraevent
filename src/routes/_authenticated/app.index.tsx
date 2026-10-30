@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -76,6 +76,21 @@ function Discover() {
     });
   }
 
+  // "Friday · 30 October · Istanbul" — the Istanbul date, in the reader's language.
+  const dateLine = useMemo(() => {
+    const parts = new Intl.DateTimeFormat(i18n.language, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: "Europe/Istanbul",
+    }).formatToParts(new Date());
+    const get = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((p) => p.type === type)?.value ?? "";
+    return [get("weekday"), `${get("day")} ${get("month")}`, t("discover.city", "Istanbul")].join(
+      " · ",
+    );
+  }, [i18n.language, t]);
+
   const events = upcoming.data?.events ?? [];
   const searching = state.status === "searching";
   const found =
@@ -86,60 +101,68 @@ function Discover() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader variant="member" />
+      {/* Stage 1 — the compass, on the night field (design: Naz) */}
+      <div className="night-field">
+        <span className="night-grain" aria-hidden />
+        <AppHeader variant="member" tone="night" />
+
+        <main className="mx-auto max-w-5xl px-5 sm:px-6">
+          <section className="mx-auto flex min-h-[calc(100dvh-4.5rem)] max-w-md flex-col justify-center pb-10 pt-5 sm:max-w-xl sm:py-10">
+            <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[color:var(--nt-2)]">
+              {dateLine}
+            </p>
+            <h1 className="mt-1.5 text-[3.375rem] font-[850] leading-[0.86] tracking-[-0.025em] text-balance [font-stretch:64%] sm:text-[4.5rem]">
+              {t("discover.heroTitle", "What do you feel like doing today")}
+              <span className="hero-q">?</span>
+            </h1>
+
+            <div className="mt-6">
+              <CompassFace
+                needleAngle={needle}
+                status={state.status}
+                found={found}
+                prompt={prompt}
+                setPrompt={setPrompt}
+                onSubmit={(p) => submit(p)}
+                onPickDirection={(d) => submit(d.prompt, d)}
+                disabled={searching}
+              />
+            </div>
+
+            <p className="mx-auto mt-6 max-w-sm text-center text-[13px] text-[color:var(--nt-2)]">
+              {t(
+                "discover.howItWorks",
+                "Ask for a restaurant, a place or a gathering. Qloo ranks places for your taste; Agora shows real gatherings and the communities behind them.",
+              )}
+            </p>
+
+            {state.status === "error" && state.error && (
+              <p className="mt-3 text-center text-sm text-destructive" role="alert">
+                {t("discover.error", "I couldn't search just now. Try again in a moment.")}
+              </p>
+            )}
+            {state.turns.length > 0 && !searching && (
+              <p className="mt-3 text-center text-sm">
+                <Link
+                  to="/app/map"
+                  viewTransition
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  {state.status === "question"
+                    ? t("discover.answerQuestion", "Agora has one question for you →")
+                    : t("discover.continueConversation", "Continue your last conversation →")}
+                </Link>
+              </p>
+            )}
+          </section>
+        </main>
+      </div>
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6">
-        {/* Stage 1 — the compass */}
-        <section className="flex min-h-[calc(100dvh-4.75rem)] flex-col items-center justify-center py-8 sm:py-10">
-          <p className="mb-2 text-center text-[11px] uppercase tracking-[0.35em] text-primary">
-            {t("discover.kicker", "Living city · Istanbul")}
-          </p>
-          <h1 className="mb-6 max-w-2xl text-center font-display text-3xl leading-tight sm:mb-8 sm:text-5xl">
-            {t("discover.invitation", "Where to tonight?")}
-          </h1>
-
-          <CompassFace
-            needleAngle={needle}
-            status={state.status}
-            found={found}
-            prompt={prompt}
-            setPrompt={setPrompt}
-            onSubmit={(p) => submit(p)}
-            onPickDirection={(d) => submit(d.prompt, d)}
-            disabled={searching}
-          />
-
-          <p className="mx-auto mt-6 max-w-lg text-center text-sm text-muted-foreground">
-            {t(
-              "discover.howItWorks",
-              "Ask for a restaurant, a place or a gathering. Qloo ranks places for your taste; Agora shows real gatherings and the communities behind them.",
-            )}
-          </p>
-
-          {state.status === "error" && state.error && (
-            <p className="mt-3 text-center text-sm text-destructive" role="alert">
-              {t("discover.error", "I couldn't search just now. Try again in a moment.")}
-            </p>
-          )}
-          {state.turns.length > 0 && !searching && (
-            <p className="mt-3 text-center text-sm">
-              <Link
-                to="/app/map"
-                viewTransition
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                {state.status === "question"
-                  ? t("discover.answerQuestion", "Agora has one question for you →")
-                  : t("discover.continueConversation", "Continue your last conversation →")}
-              </Link>
-            </p>
-          )}
-        </section>
-
         {/* Stage 0 — what's on this week, for those who'd rather browse */}
-        <section className="pb-16">
-          <div className="flex items-baseline justify-between">
-            <h2 className="font-display text-2xl">
+        <section className="pb-16 pt-10">
+          <div className="flex items-baseline justify-between border-t-2 border-foreground pt-3">
+            <h2 className="font-display text-3xl leading-none">
               {t("discover.thisWeek", "Tonight & this week")}
             </h2>
             <Link

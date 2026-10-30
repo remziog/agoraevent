@@ -10,7 +10,14 @@ import { XpChip } from "@/components/XpChip";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
-export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
+export function AppHeader({
+  variant,
+  tone = "paper",
+}: {
+  variant: "member" | "organizer";
+  /** "night": transparent over the discovery field (the field supplies the colours). */
+  tone?: "paper" | "night";
+}) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -39,10 +46,20 @@ export function AppHeader({ variant }: { variant: "member" | "organizer" }) {
         ];
 
   return (
-    <header className="border-b border-border/60 bg-background/80 backdrop-blur">
+    <header
+      className={
+        tone === "night"
+          ? "relative z-10 border-b border-border/60 bg-transparent"
+          : "border-b border-border/60 bg-background/80 backdrop-blur"
+      }
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-        <Link to={variant === "member" ? "/app" : "/biz"} className="shrink-0">
-          <Logo />
+        <Link
+          to={variant === "member" ? "/app" : "/biz"}
+          className="flex min-h-11 shrink-0 items-center"
+          aria-label="Agora"
+        >
+          <Logo tone={tone === "night" ? "night" : "ink"} />
         </Link>
 
         <nav className="hidden flex-1 items-center gap-5 sm:flex">

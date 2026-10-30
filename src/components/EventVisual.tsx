@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ArtBlock, artInk } from "@/components/ArtBlock";
 
 /**
  * The visual block of a gathering card. Agora shows a real photo only when the
@@ -18,12 +19,6 @@ export function eventPhoto(
   return { url, credit };
 }
 
-const PALETTES = [
-  "from-primary/25 via-primary/10 to-transparent",
-  "from-accent/30 via-accent/10 to-transparent",
-  "from-secondary via-secondary/40 to-transparent",
-];
-
 export function EventVisual({
   title,
   category,
@@ -41,7 +36,6 @@ export function EventVisual({
   const [failed, setFailed] = useState(false);
   const photo = eventPhoto(tags);
   const height = size === "lg" ? "h-56 sm:h-72" : size === "sm" ? "h-24" : "h-40";
-  const palette = PALETTES[Math.abs(hash(title)) % PALETTES.length];
 
   if (photo && !failed) {
     return (
@@ -62,28 +56,30 @@ export function EventVisual({
     );
   }
 
-  const words = title.split(/\s+/).slice(0, 3);
+  const words = title.split(/\s+/).slice(0, 4);
+  const titleSize =
+    size === "lg"
+      ? "text-[3rem] sm:text-[3.75rem]"
+      : size === "sm"
+        ? "text-[1.6rem]"
+        : "text-[2.25rem]";
   return (
-    <div
-      aria-hidden
-      className={`relative flex ${height} flex-col justify-end overflow-hidden bg-gradient-to-br ${palette} bg-card p-4 ${className}`}
-    >
-      <span className="absolute -right-4 -top-6 select-none font-display text-[7rem] leading-none text-primary/10 sm:text-[9rem]">
-        {title.trim().charAt(0).toUpperCase()}
-      </span>
-      {/* Category values are English data: keep English casing even when the UI is Turkish (no dotted İ). */}
-      <span lang="en" className="relative text-[10px] uppercase tracking-[0.3em] text-primary">
-        {category}
-      </span>
-      <span className="relative mt-1 font-display text-2xl leading-tight text-foreground/90 sm:text-3xl">
-        {words.join(" ")}
-      </span>
-    </div>
+    <ArtBlock seed={title} className={`${height} ${className}`}>
+      <div aria-hidden className="flex h-full flex-col justify-between p-4">
+        {/* Category values are English data: keep English casing even when the UI is Turkish (no dotted İ). */}
+        <span
+          lang="en"
+          className="self-start rounded-full bg-[#f7f2ea]/85 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-[#100f0e] backdrop-blur"
+        >
+          {category}
+        </span>
+        <span
+          className={`font-display ${titleSize} font-[900] leading-[0.86] tracking-[-0.02em] [font-stretch:62%] line-clamp-2`}
+          style={{ color: artInk(title) }}
+        >
+          {words.join(" ")}
+        </span>
+      </div>
+    </ArtBlock>
   );
-}
-
-function hash(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return h;
 }
