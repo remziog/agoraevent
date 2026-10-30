@@ -576,5 +576,26 @@
     "noNext": "Henüz listelenmiş yaklaşan buluşma yok.",
     "open": "Topluluğu aç",
     "joinedCount": "{{count}} buluşmasına katıldın"
+  },
+  "v3paper": {
+    "common": {
+      "newTab": "(yeni sekmede açılır)"
+    },
+    "detail": {
+      "noEnd": "bitiş saati belirtilmemiş",
+      "tags": "Etiketler",
+      "addToCalendar": "Takvime ekle",
+      "icsFile": ".ics dosyası",
+      "google": "Google Takvim",
+      "calendarNote": "Bu yalnızca kendi takvimine bir kopya ekler; katılım (RSVP) değildir ve organizatöre iletilmez.",
+      "noEndExport": "Bitiş saati belirtilmediği için takvim kaydı 2 saat olarak eklenir ve tahmini olduğu yazılır.",
+      "icsNoEnd": "Organizatör bitiş saati vermedi; bu kayıttaki 2 saatlik süre tahminidir.",
+      "icsDemo": "Agora demo buluşması: mekân gerçek, buluşma değil.",
+      "icsNotRsvp": "Agora'dan eklendi. Bu bir katılım (RSVP) ya da bilet değildir.",
+      "icsSaved": "Takvim dosyası indirildi",
+      "icsSavedSub": "Buluşmayı takvim uygulamana eklemek için dosyayı aç.",
+      "icsFailed": "Takvim dosyası oluşturulamadı. Google Takvim bağlantısını dene.",
+      "ended": "Bu buluşma sona erdi; artık takvime eklenemez."
+    }
   }
 }

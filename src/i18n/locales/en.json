@@ -575,5 +575,26 @@
     "noNext": "No upcoming gathering listed yet.",
     "open": "Open community",
     "joinedCount": "You joined {{count}} of their gatherings"
+  },
+  "v3paper": {
+    "common": {
+      "newTab": "(opens in a new tab)"
+    },
+    "detail": {
+      "noEnd": "no end time given",
+      "tags": "Tags",
+      "addToCalendar": "Add to calendar",
+      "icsFile": ".ics file",
+      "google": "Google Calendar",
+      "calendarNote": "This only copies it into your own calendar — it isn't an RSVP and the organiser isn't told.",
+      "noEndExport": "No end time was given, so the calendar entry uses 2 hours, marked as an estimate.",
+      "icsNoEnd": "The organiser gave no end time; the 2-hour duration of this entry is an estimate.",
+      "icsDemo": "Agora demo gathering: the venue is real, the meeting is not.",
+      "icsNotRsvp": "Added from Agora. This is not an RSVP or a ticket.",
+      "icsSaved": "Calendar file downloaded",
+      "icsSavedSub": "Open it to add the gathering to your calendar app.",
+      "icsFailed": "Couldn't create the calendar file. Try the Google Calendar link.",
+      "ended": "This gathering has ended — it can't be added any more."
+    }
   }
 }
