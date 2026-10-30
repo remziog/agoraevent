@@ -53,7 +53,7 @@ Without Qloo there is no ranking, and two different tastes in the same district 
 
 ### Design
 
-[[NAZ — written after the design is merged and live: what Naz, our Creative Director, designed — one paragraph]]
+Agora's identity and interface are by **Naz Paşalı, our Creative Director**. She drew the new geometric AGORA wordmark and a two-sided system: a warm paper-and-ink day side (condensed Archivo headlines, Instrument Sans, DM Mono labels) and a night field for discovery — a living colour field, her own WebGL shader, that gathers light around the compass and quickens while Agora searches (still under reduced motion). The compass is hers too: ten categories you select, then discover; a location chooser; a needle that turns toward the category and, once the answer arrives, points at the real places around the district on a small map of Istanbul's coastline — true bearings, distances in kilometres. Places and gatherings without a photo get generative posters seeded by their names instead of stock or AI images. She also designed the event page (poster, Add to calendar), the calendar and plans, the bottom navigation, the profile as a personal city archive, and **Bingo** — a monthly 3×3 card of city experiences you fill by marking what you actually did.
 
 ### How we built it
 
@@ -73,7 +73,8 @@ TanStack Start (SSR) on Cloudflare Workers · React 19 · Tailwind v4 · Supabas
 - Budget, date and group size filter Agora's gatherings; for Qloo's places they are shown but not yet used to filter.
 - Qloo's district filter is a text match, so a few results can sit just outside the district.
 - Voice input depends on the browser's speech recognition (Chrome, Edge, Safari); typing always works.
-- The gatherings are seeded demo listings, labelled "Demo".
+- The gatherings are seeded demo listings, labelled "Demo"; a demo gathering cannot be marked as attended.
+- Bingo records are self-reported and stored on the device only (another device starts empty); nothing is verified, and the reward tiers are shown as "not available" because there is no partner agreement yet. Each month starts a new card (Istanbul time).
 
 ### What's new since October 1, 2026
 
@@ -83,7 +84,9 @@ Agora launched in May 2026 as a mobile-first app for small real-world gatherings
 - the one-compass flow: intent, explicit conditions, favourites verified with Qloo, one clarifying question, Qloo-ranked restaurants and places with explainability;
 - the Taste guide agent with its decision trace, landmark stories and narration;
 - voice input, Save vs. RSVP, My plans, My communities and following;
-- [[Naz's redesign — after merge]]; Turkish localisation; mobile layouts from 320 px; an MIT licence and a public repository.
+- Naz Paşalı's redesign: the new identity, the night compass with categories, a location chooser and a map of the answer, generative posters, the event page with Add to calendar, the calendar and plans, and bottom navigation on phones;
+- Bingo and the city archive: "I went here" / "I attended" records (self-reported, kept on the device) fill a monthly 3×3 card and five badges;
+- Turkish localisation; mobile layouts from 320 px; an MIT licence and a public repository.
 
 ### What's next
 
@@ -114,5 +117,6 @@ qloo · typescript · react · tanstack-start · vite · tailwindcss · cloudfla
 5. Ask again with a different taste in the same district to see the ranking change.
 6. Save a place or a gathering → **My plans**; open a gathering → its community → **Follow** → **My communities**; RSVP (free, confirmed) → **Calendar**.
 7. **Taste guide** in the top navigation: a musician, a film and a book → confirm the matches → three landmarks with Qloo's evidence, their stories and narration.
+8. **Bingo:** open a place from step 3 → **I went here** → the toast names the squares it filled, the **BINGO n/9** ticket on the compass screen counts them, and the card (`/app/bingo`) and **Profile** show the record — marked self-reported, with undo.
 
 Works in phone browsers; voice input needs a browser with speech recognition.
