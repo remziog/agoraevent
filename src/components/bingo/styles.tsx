@@ -25,6 +25,18 @@ const CSS = String.raw`
 .nb-tk:hover .a{background:var(--mg);color:var(--mg-ink)}
 .nb-tk:focus-visible{outline:2px solid var(--mg);outline-offset:3px;border-radius:10px}
 
+/* intro collage */
+.nb-collage{position:relative;height:262px;margin:4px -4px 0}
+.nb-collage .tile{position:absolute;overflow:hidden;border-radius:4px;box-shadow:0 18px 40px -22px rgba(0,0,0,.8)}
+.nb-collage .tile > *{filter:grayscale(1) contrast(1.3) brightness(.85)}
+.nb-collage .t1{left:0;top:10px;width:58%;height:186px;transform:rotate(-3deg)}
+.nb-collage .t2{right:2%;top:0;width:40%;height:134px;transform:rotate(4deg)}
+.nb-collage .t3{right:8%;top:146px;width:34%;height:106px;transform:rotate(-2deg)}
+.nb-collage .strip{position:absolute;left:6%;top:170px;padding:8px 14px 8px 12px;transform:rotate(-4deg);font-family:var(--font-mono,"DM Mono",monospace);font-size:11px;letter-spacing:.16em;text-transform:uppercase;clip-path:polygon(0 6%,4% 0,12% 5%,22% 0,35% 4%,48% 0,60% 5%,74% 0,86% 4%,100% 0,98% 100%,88% 94%,76% 100%,62% 95%,50% 100%,36% 94%,24% 100%,12% 95%,0 100%)}
+.nb-collage .sticker{position:absolute;right:2%;top:100px;width:92px;height:92px;border-radius:50%;background:var(--mg);color:var(--mg-ink);display:grid;place-items:center;text-align:center;font-family:var(--font-mono,"DM Mono",monospace);font-size:9.5px;line-height:1.35;letter-spacing:.1em;text-transform:uppercase;transform:rotate(10deg);box-shadow:0 10px 24px -12px rgba(0,0,0,.6)}
+.nb-collage .stub{position:absolute;left:40%;top:222px;padding:6px 12px;border:1px dashed var(--mg);border-radius:4px;font-family:var(--font-mono,"DM Mono",monospace);font-size:10px;letter-spacing:.12em;color:var(--mg);background:rgba(14,11,26,.55);transform:rotate(2deg);white-space:nowrap}
+@media (max-width:359px){.nb-collage .stub{left:30%}.nb-collage .sticker{width:84px;height:84px;font-size:9px}}
+
 /* card */
 .nb-pips{display:flex;gap:4px}
 .nb-pips i{width:22px;height:12px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--mg)}

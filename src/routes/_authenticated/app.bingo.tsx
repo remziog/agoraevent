@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Ticket as TicketIcon } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { BingoCard } from "@/components/bingo/BingoCard";
+import { BingoCollage } from "@/components/bingo/BingoCollage";
 import { ChallengeSheet } from "@/components/bingo/ChallengeSheet";
 import { Cinko } from "@/components/bingo/Cinko";
 import { RewardsList } from "@/components/bingo/Rewards";
@@ -151,6 +152,7 @@ function BingoPage() {
             </section>
           ) : (
             <>
+              <BingoCollage period={xp.period} />
               <div className="mt-3">
                 <h1 className="m-0 flex flex-wrap items-end gap-3">
                   <img
@@ -164,7 +166,6 @@ function BingoPage() {
                   <b className="nb-poster text-[52px] leading-[0.78] text-[#E9A23B]">BINGO</b>
                 </h1>
                 <p className="mt-3 max-w-[28ch] text-[18px] font-medium leading-[1.3] text-balance">{t("bingo.lead")}</p>
-                <p className="nb-mono mt-2 text-[color:var(--nt-2)]">{t("bingo.tag")}</p>
               </div>
 
               <div className="mt-7">
