@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { CompassLoader } from "@/components/CompassLoader";
+import { BottomNav, useBottomNavVisible } from "@/components/BottomNav";
 
 // Per-user cache of the onboarding flag so in-app navigations don't re-query
 // `profiles` on every route change (beforeLoad runs for each navigation under
@@ -39,5 +40,17 @@ export const Route = createFileRoute("/_authenticated")({
     if (!profile?.onboarded) throw redirect({ to: "/onboarding", search: { next: location.href } });
     onboardedByUser.set(user.id, true);
   },
-  component: () => <Outlet />,
+  component: AuthenticatedLayout,
 });
+
+function AuthenticatedLayout() {
+  const navVisible = useBottomNavVisible();
+  return (
+    <>
+      <Outlet />
+      {/* room for the phone navigation, so it never covers the end of a page */}
+      {navVisible && <div className="h-24 sm:hidden" aria-hidden />}
+      <BottomNav />
+    </>
+  );
+}

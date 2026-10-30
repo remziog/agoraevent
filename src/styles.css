@@ -223,8 +223,7 @@
   background:
     radial-gradient(80% 50% at 55% 55%, #8a2a1a 0%, transparent 70%),
     radial-gradient(70% 45% at 15% 85%, #3a1438 0%, transparent 70%),
-    radial-gradient(60% 40% at 90% 15%, #2a2560 0%, transparent 70%),
-    #0d0b1a;
+    radial-gradient(60% 40% at 90% 15%, #2a2560 0%, transparent 70%), #0d0b1a;
 }
 .night-field::before,
 .night-field::after {
@@ -308,4 +307,198 @@
     animation: none;
     stroke-dashoffset: 0;
   }
+}
+
+/* a card picked on the discovery compass glows once */
+.card-flash {
+  animation: agora-card-flash 1.4s ease-out;
+}
+@keyframes agora-card-flash {
+  0% {
+    box-shadow: 0 0 0 0 #f2a43a;
+  }
+  35% {
+    box-shadow: 0 0 0 8px #f2a43a;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-flash {
+    animation: none;
+    box-shadow: 0 0 0 3px #f2a43a;
+  }
+}
+
+@keyframes agora-twinkle {
+  0%,
+  72%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  82% {
+    transform: scale(1.3) rotate(45deg);
+  }
+}
+
+/* --- Cinematic intro (design: Naz) ----------------------------------------- */
+.agora-intro {
+  animation: agora-intro-out 380ms ease 2850ms both;
+}
+.agora-liquid {
+  animation: agora-fade-in 1200ms ease both;
+}
+.agora-liquid i {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+}
+.agora-liquid .l1 {
+  width: 70%;
+  height: 52%;
+  left: -6%;
+  top: 4%;
+  background: #5e0f24;
+  animation: agora-lq1 6.5s ease-in-out infinite alternate;
+}
+.agora-liquid .l2 {
+  width: 64%;
+  height: 58%;
+  right: -12%;
+  top: 24%;
+  background: #2a2560;
+  animation: agora-lq2 7.8s ease-in-out infinite alternate;
+}
+.agora-liquid .l3 {
+  width: 62%;
+  height: 46%;
+  left: 6%;
+  bottom: -4%;
+  background: #9a3418;
+  animation: agora-lq3 6s ease-in-out infinite alternate;
+}
+.agora-liquid .l4 {
+  width: 46%;
+  height: 38%;
+  right: 8%;
+  bottom: 8%;
+  background: #c77a2a;
+  animation: agora-lq4 8.6s ease-in-out infinite alternate;
+}
+.agora-liquid .l5 {
+  width: 42%;
+  height: 34%;
+  left: 28%;
+  top: 36%;
+  background: #3a1438;
+  animation: agora-lq5 5.4s ease-in-out infinite alternate;
+}
+@keyframes agora-lq1 {
+  50% {
+    transform: translate(28%, 22%) scale(1.2);
+  }
+  100% {
+    transform: translate(8%, 48%) scale(0.86);
+  }
+}
+@keyframes agora-lq2 {
+  50% {
+    transform: translate(-34%, 18%) scale(0.9);
+  }
+  100% {
+    transform: translate(-12%, -26%) scale(1.15);
+  }
+}
+@keyframes agora-lq3 {
+  50% {
+    transform: translate(30%, -30%) scale(1.15);
+  }
+  100% {
+    transform: translate(-10%, -10%) scale(0.9);
+  }
+}
+@keyframes agora-lq4 {
+  50% {
+    transform: translate(-40%, -20%) scale(1.25);
+  }
+  100% {
+    transform: translate(-20%, -50%) scale(1);
+  }
+}
+@keyframes agora-lq5 {
+  50% {
+    transform: translate(-30%, 30%) scale(1.3);
+  }
+  100% {
+    transform: translate(35%, 10%) scale(0.8);
+  }
+}
+.agora-intro-q {
+  color: #f3ebdd;
+  animation:
+    agora-intro-q 1150ms cubic-bezier(0.16, 1, 0.3, 1) 250ms both,
+    agora-intro-warm 1100ms ease-in-out 700ms both;
+}
+@keyframes agora-intro-q {
+  from {
+    opacity: 0;
+    filter: blur(22px);
+    transform: translateY(26px);
+    letter-spacing: 0.03em;
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+    letter-spacing: -0.03em;
+  }
+}
+@keyframes agora-intro-warm {
+  0%,
+  25% {
+    color: #f2a43a;
+  }
+  100% {
+    color: #f3ebdd;
+  }
+}
+.agora-intro-tag {
+  animation: agora-intro-tag 1500ms linear 450ms both;
+}
+@keyframes agora-intro-tag {
+  0% {
+    opacity: 0;
+  }
+  30%,
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes agora-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes agora-intro-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agora-intro {
+    display: none;
+  }
+}
+/* with the living canvas on, the CSS light leaks step back */
+.night-field:has(> .living-canvas[data-on])::before,
+.night-field:has(> .living-canvas[data-on])::after {
+  display: none;
 }

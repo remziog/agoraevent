@@ -576,5 +576,128 @@
     "noNext": "Henüz listelenmiş yaklaşan buluşma yok.",
     "open": "Topluluğu aç",
     "joinedCount": "{{count}} buluşmasına katıldın"
+  },
+  "dial": {
+    "meters": "{{n}} m",
+    "km": "{{v}} km",
+    "dir": {
+      "n": "K",
+      "ne": "KD",
+      "e": "D",
+      "se": "GD",
+      "s": "G",
+      "sw": "GB",
+      "w": "B",
+      "nw": "KB"
+    },
+    "dirFull": {
+      "n": "kuzey",
+      "ne": "kuzeydoğu",
+      "e": "doğu",
+      "se": "güneydoğu",
+      "s": "güney",
+      "sw": "güneybatı",
+      "w": "batı",
+      "nw": "kuzeybatı"
+    },
+    "water": {
+      "bosphorus": "Boğaziçi",
+      "goldenHorn": "Haliç",
+      "marmara": "Marmara"
+    },
+    "aria": "{{origin}} merkezli pusula: 1 numara {{name}}, {{dir}} yönünde {{dist}}",
+    "pick": "{{n}}. öneriyi göster: {{name}}",
+    "fromDistrict": "{{district}} merkezinden",
+    "fromCity": "Şehir merkezinden",
+    "legend": "İlk üç, yön ve mesafeyle",
+    "section": "Nerede oldukları"
+  },
+  "cat": {
+    "surprise": {
+      "label": "Sürpriz yap",
+      "prompt": "Zevkime uygun bir mekânla beni şaşırt",
+      "word": "beni şaşırt"
+    },
+    "food": {
+      "label": "Yemek",
+      "prompt": "Zevkime uygun bir restoran öner",
+      "word": "restoran"
+    },
+    "coffee": {
+      "label": "Kahve",
+      "prompt": "Zevkime uygun bir kafe öner",
+      "word": "kafe"
+    },
+    "music": {
+      "label": "Müzik",
+      "prompt": "Bu hafta canlı müzikli bir buluşma",
+      "word": "canlı müzikli buluşma"
+    },
+    "night": {
+      "label": "Gece hayatı",
+      "prompt": "Bu akşam için zevkime uygun bir bar",
+      "word": "bar"
+    },
+    "exhibit": {
+      "label": "Sergi",
+      "prompt": "Zevkime uygun bir sanat galerisi ya da sergi",
+      "word": "sergi"
+    },
+    "concert": {
+      "label": "Konser",
+      "prompt": "Bu hafta bir konser",
+      "word": "konser"
+    },
+    "workshop": {
+      "label": "Atölye",
+      "prompt": "Bu hafta bir atölye",
+      "word": "atölye"
+    },
+    "event": {
+      "label": "Etkinlik",
+      "prompt": "Bu hafta bir buluşma",
+      "word": "buluşma"
+    },
+    "shop": {
+      "label": "Alışveriş",
+      "prompt": "Zevkime uygun bağımsız bir kitapçı",
+      "word": "kitapçı"
+    },
+    "selected": "Seçildi: {{name}} — keşfetmek için tekrar dokun",
+    "clear": "{{name}} seçimini kaldır",
+    "group": "Kategoriler",
+    "heard": "Agora'nın şimdiye kadar anladığı",
+    "heardIntent": {
+      "restaurant": "Restoran",
+      "place": "Mekân",
+      "event": "Buluşma"
+    }
+  },
+  "loc": {
+    "city": "Tüm İstanbul",
+    "near": "Yakınımda · {{name}}",
+    "button": "Keşif konumu: {{place}}. Değiştir",
+    "title": "Nerede keşfedelim?",
+    "lead": "İsteğin bir semt söylemediğinde Agora bu semti ekler. Bu cihazda saklanır.",
+    "search": "Semt ara",
+    "useMine": "Konumumu kullan",
+    "locating": "En yakın semt bulunuyor…",
+    "useMineHint": "Yalnız en yakın semti seçmek için; Qloo'ya gönderilmez",
+    "cityHint": "Bir mekân semt gerektirdiğinde Agora sorar",
+    "unsupported": "Bu tarayıcı konum paylaşamıyor. Bir semt seç.",
+    "outside": "İstanbul dışında görünüyorsun. Agora yalnız İstanbul'u biliyor — bir semt seç.",
+    "denied": "Konum paylaşılmadı. Listeden bir semt seç."
+  },
+  "bnav": {
+    "label": "Ana menü",
+    "discover": "Keşfet",
+    "calendar": "Takvim",
+    "saved": "Kaydedilenler",
+    "profile": "Profil",
+    "savedCount": "kayıtlı"
+  },
+  "intro": {
+    "tag": "Ruh hâlin pusulan.",
+    "skip": "Geç"
   }
 }
