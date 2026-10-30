@@ -8,8 +8,18 @@ import { listUpcomingEvents } from "@/lib/events.functions";
 import { useDiscovery } from "@/lib/discovery-store";
 import { AppHeader } from "@/components/AppHeader";
 import { EventVisual } from "@/components/EventVisual";
-import { CompassFace, DIRECTIONS, type Direction } from "@/components/compass/CompassFace";
+import { CompassFace } from "@/components/compass/CompassFace";
+import { LivingCanvas } from "@/components/LivingCanvas";
+import { CinematicIntro } from "@/components/CinematicIntro";
 import { formatWhenLocalized } from "@/components/guide/guide-format";
+import { whenLabel } from "@/components/discover/DiscoveryPanel";
+import { CATEGORIES, categoryOf, composeRequest, type CategoryKey } from "@/lib/categories";
+import { extractConstraints } from "@/lib/discovery";
+import {
+  LocationChooser,
+  useDiscoveryLocation,
+  withLocation,
+} from "@/components/discover/LocationChooser";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
@@ -29,6 +39,9 @@ export const Route = createFileRoute("/_authenticated/app/")({
       },
     ],
   }),
+  // `?q=` pre-fills the field (Bingo challenges link here); nothing is sent until the person sends it.
+  validateSearch: (search: Record<string, unknown>): { q?: string } =>
+    typeof search.q === "string" && search.q.trim() ? { q: search.q.slice(0, 280) } : {},
   component: Discover,
 });
 
@@ -41,13 +54,17 @@ function Discover() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const list = useServerFn(listUpcomingEvents);
-  const { state, ask } = useDiscovery();
+  const { state, ask, reset } = useDiscovery();
+  const { q } = Route.useSearch();
 
-  const [prompt, setPrompt] = useState("");
-  const [needle, setNeedle] = useState<number>(() => {
-    const d = DIRECTIONS.find((x) => x.key === state.direction);
-    return d ? d.angle : -90;
-  });
+  const [prompt, setPrompt] = useState(q ?? "");
+  const [selected, setSelected] = useState<CategoryKey | null>(null);
+  const [loc, setLoc] = useDiscoveryLocation();
+  const [needle, setNeedle] = useState<number>(() => categoryOf(state.direction)?.angle ?? -90);
+
+  useEffect(() => {
+    if (q) setPrompt(q);
+  }, [q]);
   const pendingNav = useRef(false);
 
   const upcoming = useQuery({ queryKey: ["events", "upcoming"], queryFn: () => list() });
@@ -65,19 +82,67 @@ function Discover() {
     }
   }, [state.status, navigate]);
 
-  function submit(text: string, direction?: Direction) {
-    const clean = text.trim();
-    if (!clean || state.status === "searching") return;
+  /** A search from the home is a new discovery (the last one stays one tap away). */
+  function submit(text: string) {
+    if (state.status === "searching") return;
+    const base = composeRequest(text, selected, t);
+    if (!base) return;
+    const request = withLocation(base, loc, Boolean(extractConstraints(base, new Date()).district));
     pendingNav.current = true;
-    if (direction) setNeedle(direction.angle);
-    void ask(clean, {
-      direction: direction?.key ?? null,
-      display: direction ? t(`discover.direction.${direction.key}`) : clean,
+    const cat = categoryOf(selected);
+    if (cat) setNeedle(cat.angle);
+    reset();
+    void ask(request, {
+      direction: selected,
+      display: text.trim() || (selected ? t(`cat.${selected}.label`) : request),
     });
+    setPrompt("");
   }
 
+  function tapCategory(key: CategoryKey) {
+    if (state.status === "searching") return;
+    if (selected !== key) {
+      setSelected(key);
+      setNeedle(categoryOf(key)?.angle ?? -90);
+      return;
+    }
+    submit(prompt);
+  }
+
+  // What the rule layer understands from the text so far — the same extraction the server runs first.
+  const heard = useMemo(() => {
+    const text = prompt.trim();
+    if (!text) return null;
+    const base = composeRequest(text, selected, t);
+    const c = extractConstraints(
+      withLocation(base, loc, Boolean(extractConstraints(base, new Date()).district)),
+      new Date(),
+    );
+    const chips: string[] = [];
+    if (c.intent)
+      chips.push(
+        c.intent === "event"
+          ? t("cat.heardIntent.event", "Gathering")
+          : c.intent === "restaurant"
+            ? t("cat.heardIntent.restaurant", "Restaurant")
+            : t("cat.heardIntent.place", "Place") +
+              (c.placeKind && c.placeKind !== "place" ? ` · ${c.placeKind}` : ""),
+      );
+    if (c.district) chips.push(c.district);
+    if (c.when) chips.push(whenLabel(t, c.when));
+    if (typeof c.budgetMax === "number") chips.push(`≤ ${c.budgetMax} TL`);
+    if (c.groupSize)
+      chips.push(
+        c.groupSize === "small"
+          ? t("discover.smallGroup", "Small group")
+          : t("discover.largeGroup", "Big crowd"),
+      );
+    if (c.social) chips.push(t("discover.social", "Meet new people"));
+    return chips;
+  }, [prompt, selected, loc, t]);
+
   // "Friday · 30 October · Istanbul" — the Istanbul date, in the reader's language.
-  const dateLine = useMemo(() => {
+  const date = useMemo(() => {
     const parts = new Intl.DateTimeFormat(i18n.language, {
       weekday: "long",
       day: "numeric",
@@ -86,10 +151,8 @@ function Discover() {
     }).formatToParts(new Date());
     const get = (type: Intl.DateTimeFormatPartTypes) =>
       parts.find((p) => p.type === type)?.value ?? "";
-    return [get("weekday"), `${get("day")} ${get("month")}`, t("discover.city", "Istanbul")].join(
-      " · ",
-    );
-  }, [i18n.language, t]);
+    return { weekday: get("weekday"), day: `${get("day")} ${get("month")}` };
+  }, [i18n.language]);
 
   const events = upcoming.data?.events ?? [];
   const searching = state.status === "searching";
@@ -102,15 +165,21 @@ function Discover() {
   return (
     <div className="min-h-screen bg-background">
       {/* Stage 1 — the compass, on the night field (design: Naz) */}
+      <CinematicIntro />
       <div className="night-field">
+        <LivingCanvas mode={searching ? "seek" : "home"} />
         <span className="night-grain" aria-hidden />
         <AppHeader variant="member" tone="night" />
 
         <main className="mx-auto max-w-5xl px-5 sm:px-6">
           <section className="mx-auto flex min-h-[calc(100dvh-4.5rem)] max-w-md flex-col justify-center pb-10 pt-5 sm:max-w-xl sm:py-10">
-            <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[color:var(--nt-2)]">
-              {dateLine}
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="min-w-0 truncate font-mono text-[11px] uppercase tracking-[0.08em] text-[color:var(--nt-2)]">
+                <span className="hidden min-[420px]:inline">{date.weekday} · </span>
+                {date.day} · {t("discover.city", "Istanbul")}
+              </p>
+              <LocationChooser value={loc} onChange={setLoc} />
+            </div>
             <h1 className="mt-1.5 text-[3.375rem] font-[850] leading-[0.86] tracking-[-0.025em] text-balance [font-stretch:64%] [word-spacing:0.12em] sm:text-[4.5rem]">
               {t("discover.heroTitle", "What do you feel like doing today")}
               <span className="hero-q">?</span>
@@ -124,7 +193,27 @@ function Discover() {
                 prompt={prompt}
                 setPrompt={setPrompt}
                 onSubmit={(p) => submit(p)}
-                onPickDirection={(d) => submit(d.prompt, d)}
+                selected={selected}
+                onCategoryTap={tapCategory}
+                onCategoryClear={() => setSelected(null)}
+                heard={
+                  heard && heard.length > 0 ? (
+                    <div
+                      className="mx-auto mt-2 flex max-w-md flex-wrap gap-1"
+                      aria-label={t("cat.heard", "What Agora understood so far")}
+                      aria-live="polite"
+                    >
+                      {heard.map((h) => (
+                        <span
+                          key={h}
+                          className="inline-flex h-6 items-center rounded-full bg-[var(--nt-glass)] px-2.5 text-[12px] text-[color:var(--nt)] shadow-[inset_0_0_0_1px_var(--nt-line)]"
+                        >
+                          {h}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null
+                }
                 disabled={searching}
               />
             </div>

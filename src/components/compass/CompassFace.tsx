@@ -1,39 +1,12 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, UtensilsCrossed } from "lucide-react";
+import { Sparkles, UtensilsCrossed, X } from "lucide-react";
 import type { DiscoveryStatus } from "@/lib/discovery-store";
 import { AskBox } from "@/components/discover/AskBox";
+import { CATEGORIES, type CategoryKey } from "@/lib/categories";
 
-/**
- * Compass directions. Each is a ready-made request sent through the same
- * discovery context as typed text — not a separate search engine. "food" asks
- * for a restaurant (Qloo ranks it; Agora asks for the district once); the
- * other four name a gathering explicitly and carry no date or district.
- * The angle only turns the needle.
- */
-export const DIRECTIONS = [
-  { key: "food", angle: -20, prompt: "Recommend a restaurant that fits my taste" },
-  {
-    key: "quiet",
-    angle: -135,
-    prompt: "A quiet gathering with a small group, vinyl and slow conversation",
-  },
-  { key: "loud", angle: -45, prompt: "A loud gathering with a big crowd, live music or dancing" },
-  {
-    key: "move",
-    angle: 45,
-    prompt: "A run, a swim or a workout gathering with strangers, outdoors",
-  },
-  { key: "cinema", angle: 135, prompt: "An indie film club night with wine" },
-] as const;
-
-export type Direction = (typeof DIRECTIONS)[number];
-
-const DOT: Record<string, string> = {
-  quiet: "#9ccbff",
-  loud: "#e57ca8",
-  move: "#f2a43a",
-  cinema: "#a08bdd",
-};
+/** Needle angles for the results stage: a category's direction (see `src/lib/categories.ts`). */
+export const DIRECTIONS = CATEGORIES.map((c) => ({ key: c.key, angle: c.angle }));
 
 /** Point on the dial: 0° = north, clockwise; r in viewBox units (centre 160,160). */
 function pt(deg: number, r: number) {
@@ -67,7 +40,10 @@ export function CompassFace({
   prompt,
   setPrompt,
   onSubmit,
-  onPickDirection,
+  selected,
+  onCategoryTap,
+  onCategoryClear,
+  heard,
   disabled,
   className = "",
 }: {
@@ -78,7 +54,12 @@ export function CompassFace({
   prompt: string;
   setPrompt: (v: string) => void;
   onSubmit: (p: string) => void;
-  onPickDirection: (d: Direction) => void;
+  /** Naz's categories: the first tap selects, the second tap discovers. */
+  selected: CategoryKey | null;
+  onCategoryTap: (key: CategoryKey) => void;
+  onCategoryClear: () => void;
+  /** What Agora understood from the text so far (rendered under the field). */
+  heard?: ReactNode;
   disabled: boolean;
   className?: string;
 }) {
@@ -245,40 +226,74 @@ export function CompassFace({
         />
       </div>
 
+      {heard}
+
       <div
-        className="chip-scroll -mx-5 mt-3 flex gap-2 overflow-x-auto px-5 py-0.5 sm:mx-auto sm:max-w-md sm:flex-wrap sm:justify-center sm:px-0"
+        className="chip-scroll -mx-5 mt-3 flex gap-2 overflow-x-auto px-5 py-0.5 sm:mx-auto sm:max-w-xl sm:flex-wrap sm:justify-center sm:px-0"
         role="group"
-        aria-label={t("discover.directionsLabel", "Directions")}
+        aria-label={t("cat.group", "Categories")}
       >
-        {DIRECTIONS.map((d) =>
-          d.key === "food" ? (
+        {CATEGORIES.map((c) => {
+          const on = selected === c.key;
+          const label = t(`cat.${c.key}.label`);
+          const base =
+            "relative inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-[14.5px] font-semibold transition disabled:opacity-50";
+          const look =
+            c.key === "food"
+              ? `bg-[color:var(--nt)] text-[color:var(--nt-ink)] ${on ? "shadow-[0_0_0_2px_#e9a23b]" : "hover:shadow-[0_0_0_3px_rgb(232_87_63/0.35)]"}`
+              : c.key === "surprise"
+                ? `border border-transparent text-[color:var(--nt)] [background:linear-gradient(#17121f,#17121f)_padding-box,linear-gradient(120deg,#f2a43a,#e57ca8_55%,#9ccbff)_border-box] ${on ? "shadow-[0_0_0_2px_#e9a23b]" : ""}`
+                : `text-[color:var(--nt)] ${on ? "bg-[rgb(233_162_59/0.16)] shadow-[inset_0_0_0_1.5px_#e9a23b]" : "shadow-[inset_0_0_0_1px_var(--nt-line)] hover:shadow-[inset_0_0_0_1px_var(--nt)]"}`;
+          return (
             <button
-              key={d.key}
+              key={c.key}
               type="button"
               disabled={disabled}
-              onClick={() => onPickDirection(d)}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-[color:var(--nt)] px-4 text-[14.5px] font-semibold text-[color:var(--nt-ink)] transition hover:shadow-[0_0_0_3px_rgb(232_87_63/0.35)] disabled:opacity-50"
+              aria-pressed={on}
+              aria-label={on ? t("cat.selected", { name: label }) : label}
+              onClick={(e) => {
+                if (on && (e.target as HTMLElement).closest("[data-clear]")) onCategoryClear();
+                else onCategoryTap(c.key);
+              }}
+              className={`${base} ${look}`}
             >
-              <UtensilsCrossed className="h-4 w-4 text-[color:var(--ember)]" aria-hidden />
-              {t(`discover.direction.${d.key}`)}
+              {c.key === "food" ? (
+                <UtensilsCrossed className="h-4 w-4 text-[color:var(--ember)]" aria-hidden />
+              ) : c.key === "surprise" ? (
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                  className="h-3.5 w-3.5 text-[color:var(--amber)] motion-safe:animate-[agora-twinkle_3.2s_ease-in-out_infinite]"
+                >
+                  <path
+                    d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"
+                    fill="currentColor"
+                  />
+                </svg>
+              ) : (
+                <i
+                  aria-hidden
+                  className="h-[7px] w-[7px] rounded-full"
+                  style={{ background: c.color, boxShadow: `0 0 9px ${c.color}` }}
+                />
+              )}
+              {label}
+              {on && (
+                <span
+                  data-clear
+                  aria-hidden
+                  className={`-mr-1.5 ml-0.5 inline-grid h-6 w-6 place-items-center rounded-full ${
+                    c.key === "food"
+                      ? "bg-[rgb(233_162_59/0.28)] text-[#9a5f12]"
+                      : "bg-[rgb(233_162_59/0.22)] text-[#e9a23b]"
+                  }`}
+                >
+                  <X className="h-3 w-3" strokeWidth={2.6} />
+                </span>
+              )}
             </button>
-          ) : (
-            <button
-              key={d.key}
-              type="button"
-              disabled={disabled}
-              onClick={() => onPickDirection(d)}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-[14.5px] font-semibold text-[color:var(--nt)] shadow-[inset_0_0_0_1px_var(--nt-line)] transition hover:shadow-[inset_0_0_0_1px_var(--nt)] disabled:opacity-50"
-            >
-              <i
-                aria-hidden
-                className="h-[7px] w-[7px] rounded-full"
-                style={{ background: DOT[d.key], boxShadow: `0 0 9px ${DOT[d.key]}` }}
-              />
-              {t(`discover.direction.${d.key}`)}
-            </button>
-          ),
-        )}
+          );
+        })}
       </div>
     </div>
   );

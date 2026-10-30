@@ -32,6 +32,8 @@ import {
   SignalChips,
 } from "@/components/discover/PlaceResults";
 import { DIRECTIONS } from "@/components/compass/CompassFace";
+import { DiscoveryDial, type DialPoint } from "@/components/compass/DiscoveryDial";
+import { LivingCanvas } from "@/components/LivingCanvas";
 import { formatWhenLocalized } from "@/components/guide/guide-format";
 import { kindWord, useDiscovery } from "@/lib/discovery-store";
 import type { DiscoverPlace } from "@/lib/events.functions";
@@ -139,6 +141,39 @@ function ResultsView() {
   const needle = DIRECTIONS.find((d) => d.key === state.direction)?.angle ?? -90;
   const nearby = result && result.intent !== "event" ? result.matches : [];
 
+  // The discovery moment: the top answers with coordinates, in rank order.
+  const dialPoints = useMemo<DialPoint[]>(() => {
+    if (!result) return [];
+    const raw =
+      result.intent !== "event" && result.places
+        ? result.places.items.map((p) => ({
+            id: p.qlooEntityId,
+            name: p.name,
+            lat: p.geocode?.latitude ?? null,
+            lng: p.geocode?.longitude ?? null,
+          }))
+        : result.matches.map((e) => ({
+            id: e.id,
+            name: e.title,
+            lat: e.latitude ?? null,
+            lng: e.longitude ?? null,
+          }));
+    return raw.filter(
+      (x): x is DialPoint => typeof x.lat === "number" && typeof x.lng === "number",
+    );
+  }, [result]);
+
+  function focusCard(id: string) {
+    const el = document.getElementById(`card-${id}`);
+    if (!el) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    el.classList.remove("card-flash");
+    void el.offsetWidth;
+    el.classList.add("card-flash");
+    window.setTimeout(() => el.classList.remove("card-flash"), 1600);
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader variant="member" />
@@ -211,6 +246,22 @@ function ResultsView() {
             </Button>
           </div>
         </header>
+
+        {(dialPoints.length > 0 || (busy && state.turns.length <= 1)) && (
+          <section
+            className="night-field -mx-4 mt-4 px-5 pb-5 pt-6 sm:mx-0 sm:rounded-[28px]"
+            aria-label={t("dial.section", "Where they are")}
+          >
+            <LivingCanvas mode={busy ? "seek" : "lock"} />
+            <span className="night-grain" aria-hidden />
+            <DiscoveryDial
+              district={state.constraints?.district ?? null}
+              points={dialPoints}
+              searching={busy}
+              onPick={(id) => focusCard(id)}
+            />
+          </section>
+        )}
 
         {state.constraints && (
           <div className="mt-4 space-y-2">
@@ -619,7 +670,8 @@ function ResultCard({
   const isSaved = Boolean(saved.data?.events.includes(e.id));
   return (
     <article
-      className={`flex flex-col overflow-hidden rounded-3xl border bg-card transition ${
+      id={`card-${e.id}`}
+      className={`flex scroll-mt-24 flex-col overflow-hidden rounded-[26px] border bg-card transition ${
         selected
           ? "border-primary/60 shadow-[0_20px_60px_-40px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
           : "hover:border-primary/40"

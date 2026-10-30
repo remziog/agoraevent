@@ -575,5 +575,128 @@
     "noNext": "No upcoming gathering listed yet.",
     "open": "Open community",
     "joinedCount": "You joined {{count}} of their gatherings"
+  },
+  "dial": {
+    "meters": "{{n}} m",
+    "km": "{{v}} km",
+    "dir": {
+      "n": "N",
+      "ne": "NE",
+      "e": "E",
+      "se": "SE",
+      "s": "S",
+      "sw": "SW",
+      "w": "W",
+      "nw": "NW"
+    },
+    "dirFull": {
+      "n": "north",
+      "ne": "north-east",
+      "e": "east",
+      "se": "south-east",
+      "s": "south",
+      "sw": "south-west",
+      "w": "west",
+      "nw": "north-west"
+    },
+    "water": {
+      "bosphorus": "Bosphorus",
+      "goldenHorn": "Golden Horn",
+      "marmara": "Marmara"
+    },
+    "aria": "Compass centred on {{origin}}: #1 {{name}} is {{dist}} to the {{dir}}",
+    "pick": "Show #{{n}} {{name}}",
+    "fromDistrict": "From the centre of {{district}}",
+    "fromCity": "From the city centre",
+    "legend": "The first three, by direction and distance",
+    "section": "Where they are"
+  },
+  "cat": {
+    "surprise": {
+      "label": "Surprise me",
+      "prompt": "Surprise me with a place that fits my taste",
+      "word": "surprise me"
+    },
+    "food": {
+      "label": "Restaurants",
+      "prompt": "Recommend a restaurant that fits my taste",
+      "word": "restaurant"
+    },
+    "coffee": {
+      "label": "Coffee",
+      "prompt": "A café that fits my taste",
+      "word": "café"
+    },
+    "music": {
+      "label": "Music",
+      "prompt": "A gathering with live music this week",
+      "word": "a live music gathering"
+    },
+    "night": {
+      "label": "Nightlife",
+      "prompt": "A bar for tonight that fits my taste",
+      "word": "bar"
+    },
+    "exhibit": {
+      "label": "Exhibitions",
+      "prompt": "An art gallery or exhibition that fits my taste",
+      "word": "art gallery"
+    },
+    "concert": {
+      "label": "Concerts",
+      "prompt": "A concert this week",
+      "word": "concert"
+    },
+    "workshop": {
+      "label": "Workshops",
+      "prompt": "A workshop this week",
+      "word": "workshop"
+    },
+    "event": {
+      "label": "Gatherings",
+      "prompt": "A gathering this week",
+      "word": "gathering"
+    },
+    "shop": {
+      "label": "Shops",
+      "prompt": "An independent bookshop that fits my taste",
+      "word": "bookshop"
+    },
+    "selected": "Selected: {{name}} — tap again to discover",
+    "clear": "Clear {{name}}",
+    "group": "Categories",
+    "heard": "What Agora understood so far",
+    "heardIntent": {
+      "restaurant": "Restaurant",
+      "place": "Place",
+      "event": "Gathering"
+    }
+  },
+  "loc": {
+    "city": "All Istanbul",
+    "near": "Near me · {{name}}",
+    "button": "Discovery location: {{place}}. Change",
+    "title": "Where shall we explore?",
+    "lead": "Agora fills in this district when your request doesn't name one. It is kept on this device.",
+    "search": "Search a district",
+    "useMine": "Use my location",
+    "locating": "Finding the nearest district…",
+    "useMineHint": "Only to pick the nearest district; never sent to Qloo",
+    "cityHint": "Agora asks for a district when a place needs one",
+    "unsupported": "This browser can't share a location. Pick a district instead.",
+    "outside": "You seem to be outside Istanbul. Agora knows Istanbul only — pick a district.",
+    "denied": "Location wasn't shared. Pick a district from the list."
+  },
+  "bnav": {
+    "label": "Main",
+    "discover": "Discover",
+    "calendar": "Calendar",
+    "saved": "Saved",
+    "profile": "Profile",
+    "savedCount": "saved"
+  },
+  "intro": {
+    "tag": "Your mood is the compass.",
+    "skip": "Skip"
   }
 }

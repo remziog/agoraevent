@@ -304,7 +304,8 @@ export function PlaceResults({
           return (
             <article
               key={p.qlooEntityId}
-              className={`flex min-w-0 flex-col overflow-hidden rounded-[26px] border bg-card transition hover:border-foreground/40 ${
+              id={`card-${p.qlooEntityId}`}
+              className={`flex min-w-0 scroll-mt-24 flex-col overflow-hidden rounded-[26px] border bg-card transition hover:border-foreground/40 ${
                 hero ? "md:col-span-2" : ""
               }`}
               style={{ "--i": i } as React.CSSProperties}
