@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,13 @@ import { useTranslation } from "react-i18next";
 export function AppHeader({
   variant,
   tone = "paper",
+  extra,
 }: {
   variant: "member" | "organizer";
   /** "night": transparent over the discovery field (the field supplies the colours). */
   tone?: "paper" | "night";
+  /** A small control shown on the right at every width (the home's Bingo ticket). */
+  extra?: ReactNode;
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -36,6 +39,7 @@ export function AppHeader({
           { to: "/app/plans", label: t("nav.plans", "My plans") },
           { to: "/app/communities", label: t("nav.communities", "My communities") },
           { to: "/app/calendar", label: t("nav.calendar", "Calendar") },
+          { to: "/app/bingo", label: t("nav.bingo", "Bingo") },
           { to: "/app/memories", label: t("nav.memories", "Memories") },
           { to: "/app/profile", label: t("nav.taste", "Taste") },
           { to: "/biz", label: t("nav.host", "Host") },
@@ -74,6 +78,8 @@ export function AppHeader({
             </Link>
           ))}
         </nav>
+
+        {extra && <div className="ml-auto flex shrink-0 items-center sm:ml-0">{extra}</div>}
 
         <div className="hidden items-center gap-3 sm:flex">
           {variant === "member" && <XpChip />}

@@ -10,6 +10,7 @@ import { eventDistrict } from "@/lib/discovery";
 import { AppHeader } from "@/components/AppHeader";
 import { EventHero } from "@/components/event/EventHero";
 import { AddToCalendar } from "@/components/event/AddToCalendar";
+import { ExperienceButton } from "@/components/bingo/ExperienceButton";
 import { MemorySection } from "@/components/MemorySection";
 import { GettingThere } from "@/components/GettingThere";
 import { Button } from "@/components/ui/button";
@@ -283,7 +284,20 @@ function EventDetail() {
                     "Saving is a private bookmark: it doesn't tell the organiser, doesn't count as going and earns no XP.",
                   )}
                 </p>
-                {/* EXPERIENCE_ACTION_SLOT */}
+                {/* "I attended" — self-reported, on this device; never for a demo gathering (it did not happen). */}
+                {!demo && (
+                  <ExperienceButton
+                    item={{
+                      kind: "event",
+                      refId: id,
+                      name: event.title,
+                      categories: event.category ? [event.category] : [],
+                      tags: (event.tags ?? []).filter((tag: string) => !tag.includes(":")),
+                      district,
+                    }}
+                    startsAt={event.starts_at}
+                  />
+                )}
                 <AddToCalendar event={event} demo={demo} />
               </div>
 

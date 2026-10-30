@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArtBlock, artInk } from "@/components/ArtBlock";
+import { ExperienceButton } from "@/components/bingo/ExperienceButton";
 import {
   Sheet,
   SheetContent,
@@ -660,6 +661,17 @@ export function PlaceSheet({
                   }
                 />
               </div>
+              {/* "I went here" — self-reported, on this device (Bingo, design: Naz). */}
+              <ExperienceButton
+                item={{
+                  kind: "place",
+                  refId: place.qlooEntityId,
+                  name: place.name,
+                  categories: kind && kind !== "place" ? [kind] : [],
+                  tags: place.cuisineTags,
+                  district: place.district,
+                }}
+              />
             </div>
           </>
         )}

@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon, MapPin } from "lucide-react";
 import { listUpcomingEvents } from "@/lib/events.functions";
 import { useDiscovery } from "@/lib/discovery-store";
 import { AppHeader } from "@/components/AppHeader";
+import { BingoEntry } from "@/components/bingo/BingoEntry";
 import { EventVisual } from "@/components/EventVisual";
 import { CompassFace } from "@/components/compass/CompassFace";
 import { LivingCanvas } from "@/components/LivingCanvas";
@@ -169,7 +170,7 @@ function Discover() {
       <div className="night-field">
         <LivingCanvas mode={searching ? "seek" : "home"} />
         <span className="night-grain" aria-hidden />
-        <AppHeader variant="member" tone="night" />
+        <AppHeader variant="member" tone="night" extra={<BingoEntry />} />
 
         <main className="mx-auto max-w-5xl px-5 sm:px-6">
           <section className="mx-auto flex min-h-[calc(100dvh-4.5rem)] max-w-md flex-col justify-center pb-10 pt-5 sm:max-w-xl sm:py-10">
