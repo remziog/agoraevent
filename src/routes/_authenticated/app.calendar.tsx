@@ -100,9 +100,12 @@ function CalendarPage() {
   const maxWeek = Math.max(0, Math.floor((lastDay - today) / 7));
   const w = Math.min(week, maxWeek);
   const days = Array.from({ length: 7 }, (_, i) => today + w * 7 + i);
+  // Events: the shown week (or the picked day). My plans: every upcoming plan,
+  // unless a day is picked (as in Naz's prototype and the old upcoming list).
   const inView = (e: CalEvent) => {
     const d = dayOf(e);
-    return selected !== null ? d === selected : d >= days[0] && d <= days[6];
+    if (selected !== null) return d === selected;
+    return tab === "plans" || (d >= days[0] && d <= days[6]);
   };
 
   const source = tab === "events" ? listed : myUpcoming;
