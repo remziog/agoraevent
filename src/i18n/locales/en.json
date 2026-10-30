@@ -699,5 +699,62 @@
   "intro": {
     "tag": "Your mood is the compass.",
     "skip": "Skip"
+  },
+  "v3paper": {
+    "common": {
+      "newTab": "(opens in a new tab)"
+    },
+    "detail": {
+      "noEnd": "no end time given",
+      "tags": "Tags",
+      "addToCalendar": "Add to calendar",
+      "icsFile": ".ics file",
+      "google": "Google Calendar",
+      "calendarNote": "This only copies it into your own calendar — it isn't an RSVP and the organiser isn't told.",
+      "noEndExport": "No end time was given, so the calendar entry uses 2 hours, marked as an estimate.",
+      "icsNoEnd": "The organiser gave no end time; the 2-hour duration of this entry is an estimate.",
+      "icsDemo": "Agora demo gathering: the venue is real, the meeting is not.",
+      "icsNotRsvp": "Added from Agora. This is not an RSVP or a ticket.",
+      "icsSaved": "Calendar file downloaded",
+      "icsSavedSub": "Open it to add the gathering to your calendar app.",
+      "icsFailed": "Couldn't create the calendar file. Try the Google Calendar link.",
+      "ended": "This gathering has ended — it can't be added any more."
+    },
+    "cal": {
+      "next7": "The next 7 days",
+      "view": "Calendar view",
+      "tabEvents": "Events",
+      "tabPlans": "My plans",
+      "prevWeek": "Previous week",
+      "nextWeek": "Next week",
+      "pickDay": "Pick a day",
+      "todayShort": "Today",
+      "tomorrow": "Tomorrow",
+      "dayEvents_one": "{{count}} gathering",
+      "dayEvents_other": "{{count}} gatherings",
+      "dayPlans": "you're going",
+      "next": "Your next plan",
+      "eventsCount_one": "{{count}} gathering · Istanbul time",
+      "eventsCount_other": "{{count}} gatherings · Istanbul time",
+      "plansCount_one": "{{count}} plan · Istanbul time",
+      "plansCount_other": "{{count}} plans · Istanbul time",
+      "first50": "first 50 listed",
+      "eventsError": "Couldn't load the gatherings.",
+      "emptyDay": "No gatherings on this day",
+      "emptyWeek": "No gatherings this week",
+      "noPlansDay": "No plans on this day",
+      "noPlansWeek": "No plans this week",
+      "emptyHint": "Pick another day or week. Only gatherings listed on Agora by their organisers appear here.",
+      "footer": "Times are Istanbul time (Europe/Istanbul). Only gatherings listed on Agora by their organisers appear here; demo listings are marked. Qloo taste data is never used as a date."
+    },
+    "plans": {
+      "view": "Plans view",
+      "tabSaved": "Saved",
+      "tabGoing": "Going",
+      "noSaved": "Nothing saved yet",
+      "noGoing": "You're not going to anything yet",
+      "noSavedHint": "Tap the bookmark on a gathering or a place to keep it here. Saving isn't an RSVP.",
+      "noGoingHint": "Open a gathering and tap “I'm going” — it's a free RSVP, and it shows up here and in your calendar."
+    }
   }
 }
