@@ -41,7 +41,7 @@ export function AppHeader({
           { to: "/app/calendar", label: t("nav.calendar", "Calendar") },
           { to: "/app/bingo", label: t("nav.bingo", "Bingo") },
           { to: "/app/memories", label: t("nav.memories", "Memories") },
-          { to: "/app/profile", label: t("nav.taste", "Taste") },
+          { to: "/app/profile", label: t("nav.profile", "Profile") },
           { to: "/biz", label: t("nav.host", "Host") },
         ]
       : [
@@ -66,12 +66,12 @@ export function AppHeader({
           <Logo tone={tone === "night" ? "night" : "ink"} />
         </Link>
 
-        <nav className="hidden flex-1 items-center gap-5 sm:flex">
+        <nav className="hidden min-w-0 flex-1 items-center gap-x-4 gap-y-1 sm:flex sm:flex-wrap xl:gap-x-5">
           {navLinks.map((l) => (
             <Link
               key={l.to}
               to={l.to}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="whitespace-nowrap text-sm text-muted-foreground hover:text-foreground"
               activeProps={{ className: "text-foreground font-medium" }}
             >
               {l.label}
@@ -82,7 +82,8 @@ export function AppHeader({
         {extra && <div className="ml-auto flex shrink-0 items-center sm:ml-0">{extra}</div>}
 
         <div className="hidden items-center gap-3 sm:flex">
-          {variant === "member" && <XpChip />}
+          {/* One game marker per header: the home shows the Bingo ticket instead of the XP chip. */}
+          {variant === "member" && !extra && <XpChip />}
           <LanguageSwitcher />
           <Button size="sm" variant="ghost" onClick={signOut}>
             {t("common.signOut", "Sign out")}
