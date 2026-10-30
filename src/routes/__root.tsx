@@ -153,7 +153,7 @@ function RootComponent() {
       <AuthSync />
       <HtmlLangSync />
       <Outlet />
-      <Toaster richColors position="top-center" />
+      <Toaster position="top-center" />
     </QueryClientProvider>
   );
 }
