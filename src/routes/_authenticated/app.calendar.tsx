@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/app/calendar")({
 });
 
 type Tab = "events" | "plans";
+type RsvpRow = { event_id: string; events: CalEvent | null };
 const MONO = "font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground";
 
 /**
@@ -57,7 +58,9 @@ function CalendarPage() {
   const now = Date.now();
   const today = istanbulDay(new Date(now));
 
-  const rsvps = ((q.data?.rsvps ?? []) as any[]).filter((r) => r.events?.starts_at);
+  const rsvps = ((q.data?.rsvps ?? []) as unknown as RsvpRow[]).filter(
+    (r): r is RsvpRow & { events: CalEvent } => Boolean(r.events?.starts_at),
+  );
   const goingIds = useMemo(() => new Set(rsvps.map((r) => r.event_id as string)), [rsvps]);
   const myUpcoming = useMemo(
     () =>

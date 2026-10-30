@@ -51,12 +51,15 @@ export function icsUtc(date: Date): string {
  * allowed in TEXT and are dropped; the colon needs no escaping.
  */
 export function escapeIcsText(value: string | null | undefined): string {
-  return String(value ?? "")
-    .replace(/\\/g, "\\\\")
-    .replace(/;/g, "\\;")
-    .replace(/,/g, "\\,")
-    .replace(/\r\n|\r|\n/g, "\\n")
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+  return (
+    String(value ?? "")
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\r\n|\r|\n/g, "\\n")
+      // eslint-disable-next-line no-control-regex -- stripping control characters is the point
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+  );
 }
 
 function utf8Length(ch: string): number {
