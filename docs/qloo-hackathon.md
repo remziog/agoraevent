@@ -4,18 +4,18 @@ Branch: `hackathon/qloo-agent` (rebased on `main` after PRs #1–#3, 25 Oct 2026
 
 Submission deadline: 30 Oct 2026 23:45 EDT (31 Oct 06:45 Istanbul). Working plan and task notes live in Remzi's Obsidian vault / claude.ai project; this file is the repo-side summary.
 
-## What Agora is becoming for the hackathon
+## What Agora became for the hackathon
 
-A taste-aware Istanbul companion: tell it what you love (artists, films, books) and an agent uses Qloo's taste graph to pick the historic places, nearby restaurants and gatherings you'll connect with — then tells each place's story (short pre-made AI film or narrated photo story), keeping history and legend clearly apart.
+A taste-aware Istanbul compass. One conversation on the compass (`/app` → `/app/map`): say or type what you want — or pick a category and a district — and the `discover()` server function reads the intent (restaurant, place or gathering) and the conditions, verifies favourites with Qloo's typed `/search`, asks one question when it must, ranks real places in the district with `/v2/insights` (favourites as `signal.interests.entities`, explainability on) and adds Agora's own gatherings in the same window, labelled as Agora data. The **Taste guide** below is the deeper landmark mode. Save vs. RSVP, My plans, My communities, Add to calendar and Bingo (self-reported "I went here" records on the device) complete the loop. Design: Naz Paşalı.
 
-Four surfaces, each in its thinnest viable slice:
+| Surface               | What shipped                                                                                                   | Qloo / AI                                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Compass               | Free text, voice or category + district → one clarifying question at most → Qloo-ranked places or Agora gatherings, with the discovery dial and "How Agora decided" | `/search` (typed) to verify favourites, `/v2/tags` for place-scoped tags, `/v2/insights` to rank            |
+| Taste guide           | Three favourites → confirm → agent → 3 landmarks with Qloo's evidence, stories (History / Legend, narration)    | `/v2/insights` with `filter.results.entities` (landmark shortlist); Vercel AI SDK `ToolLoopAgent`                    |
+| Restaurants and places | Ranked for the user's taste in the district, with "Why it fits you"                                           | `/v2/insights` with `filter.type=urn:entity:place`, `filter.tags`, `filter.exclude.tags`, `filter.location.query`, `feature.explainability` |
+| Gatherings            | Agora's own community events in the same district and window                                                   | Agora data only — no Qloo badge                                                                                      |
 
-| Surface                           | Slice                                                                                                          | Qloo / AI                                                                                                            |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Compass search                    | Taste form (3 fields) → agent → 3 landmarks; free-text input if time allows                                    | `/search` to resolve terms, `/v2/insights` to rank                                                                   |
-| Place history as a short AI video | 3 hero landmarks with pre-generated 30–45 s clips + History/Legend captions; narrated photo story for the rest | Veo 3.1 via the Lovable AI gateway (or an external tool), TTS                                                        |
-| Restaurant experience             | 3 restaurants in the landmark's neighbourhood, ranked for the user's taste, with "why"                         | `/v2/insights` with `filter.type=urn:entity:place`, `filter.tags`, `filter.location.query`, `feature.explainability` |
-| Events                            | Agora's own community events near the landmark in the next 7 days                                              | Agora data only — no Qloo badge                                                                                      |
+Not built: AI-generated story videos (the landmark story has no video; it is text with narration).
 
 ## The guide (`/app/guide`, "Taste guide" in the member nav)
 
@@ -99,7 +99,7 @@ Always `git fetch` and rebase before pushing; open a PR rather than pushing to `
 - Only taste terms, Qloo entity ids, tag ids and a neighbourhood name are sent to Qloo — no names, emails, user ids or GPS positions.
 - Ambiguous entity matches are shown to the user for confirmation before they are used as signals.
 - Qloo results are aggregate affinities, not evidence about an individual; the UI says "ranked by Qloo for your taste", not "you will like this".
-- Pre-made videos are labelled as AI-generated visualisations; legend sections are labelled as legend.
+- Legend sections are labelled as legend; AI notes are labelled "AI".
 
 ## About `.env`
 
