@@ -757,5 +757,322 @@
       "noSavedHint": "Bir buluşmada ya da mekânda yer imine dokun; burada durur. Kaydetmek katılım (RSVP) değildir.",
       "noGoingHint": "Bir buluşmayı aç ve “Gidiyorum”a dokun — ücretsiz bir katılım (RSVP); burada ve takviminde görünür."
     }
+  },
+  "bingo": {
+    "title": "Bingo",
+    "period": "Bingo · {{period}}",
+    "lead": "Şehri keşfet, çinko yap, izini topla.",
+    "tag": "Your city is the game.",
+    "sticker": "9 kare · 3 çinko · 3 kademe",
+    "monthCard": "{{month}} kartı",
+    "lines_one": "{{count}} çinko",
+    "lines_other": "{{count}} çinko",
+    "squares": "{{n}}/9 kare",
+    "gridAria": "Bingo kartı, 3'e 3",
+    "freeAria": "Orta kare, Agora Free: hediye",
+    "free": "FREE",
+    "squareAria": "Kare {{n}}, {{title}}: {{status}}",
+    "status": {
+      "locked": "Başlamadı",
+      "progress": "Devam ediyor",
+      "done": "Kendi beyanın",
+      "verified": "Doğrulandı",
+      "free": "Hediye"
+    },
+    "legendNote": "Doğrulama bir partner kontrolü ister (mekân QR'ı ya da kodu, organizatör check-in'i). Agora'nın henüz partneri yok; kareler kendi beyanın olarak kalır.",
+    "rewards": "Ödüller",
+    "howBtn": "Nasıl çalışır",
+    "howTitle": "Nasıl çalışır?",
+    "how": {
+      "1t": "Her ay yeni bir kart",
+      "1d": "Dokuz kare, dokuz küçük şehir görevi. Ortadaki kare hediye. Ay, İstanbul saatine göre değişir.",
+      "2t": "Kareye dokun, keşfe çık",
+      "2d": "Her görev pusulayı hazır bir soruyla açar: kahveciler, sergiler, sahneler, semtler.",
+      "3t": "Gittiğini söyle",
+      "3d": "Bir etkinlikte “Katıldım”, bir mekânda “Buraya gittim” de. Kendi beyanın olarak, bu cihazda kaydedilir. Partner doğrulaması henüz yok.",
+      "4t": "Çinko yap",
+      "4d": "Yatay, dikey ya da çapraz tam bir sıra bir çinko. İlk üç çinko üç ödül kademesine denk gelir; henüz katılan bir partner yok, bu yüzden hiçbiri kullanılamaz."
+    },
+    "deviceNote": "Yalnızca bu cihazda kayıtlı. Agora deneyimlerini hiçbir yere göndermez; başka bir telefona ya da tarayıcıya taşınmaz.",
+    "cardNote": "Kart her ay yenilenir; rozetlerin profilinde kalır.",
+    "back": "Geri",
+    "backToCard": "Karta dön",
+    "close": "Kapat",
+    "signedOut": "Bu cihazda bir Bingo kartı tutmak için giriş yap.",
+    "sq": {
+      "coffee": {
+        "t": "Yeni bir kahveci keşfet",
+        "l": "Şehrin daha önce keşfetmediğin bir kahve köşesini bul.",
+        "q": "Denemediğim bir kahveci"
+      },
+      "exhibit": {
+        "t": "Bir sergiye git",
+        "l": "Bir galeriye ya da sergi açılışına uğra; bir eserin önünde biraz fazla dur.",
+        "q": "Bu hafta sergi"
+      },
+      "music": {
+        "t": "Canlı müzik dinle",
+        "l": "Kayıttan değil, aynı odada çalınan bir ses.",
+        "q": "Bu akşam canlı müzik"
+      },
+      "hood": {
+        "t": "Yeni bir semte git",
+        "l": "Hep geçip gittiğin bir semtte bir saat yürü.",
+        "q": "Hiç gitmediğim bir semtte yapılacak bir şey"
+      },
+      "free": {
+        "t": "Agora Free",
+        "l": "Ortadaki kare hediye. Her çizgide bir kare öndesin.",
+        "q": ""
+      },
+      "shop": {
+        "t": "Yerel bir mağazaya uğra",
+        "l": "Bağımsız bir dükkâna gir, zincir olmasın; bir şey keşfet.",
+        "q": "Bağımsız bir butik"
+      },
+      "cuisine": {
+        "t": "Yeni bir mutfak dene",
+        "l": "Daha önce hiç denemediğin bir mutfaktan bir tabak.",
+        "q": "Bu akşam yemek, hiç denemediğim bir mutfak"
+      },
+      "park": {
+        "t": "Bir park keşfet",
+        "l": "Şehrin ortasında nefes alınan yeşil bir köşe bul.",
+        "q": "Parkta bir yürüyüş"
+      },
+      "surprise": {
+        "t": "Sürpriz keşif yap",
+        "l": "Agora seçsin, sen sadece git.",
+        "q": "Beni şaşırt"
+      }
+    },
+    "rule": {
+      "coffee": "Kahve kategorisinde, daha önce kaydın olmayan bir mekân.",
+      "exhibit": "Türü ya da etiketleri sergi, galeri ya da müze olan bir etkinlik ya da mekân.",
+      "music": "Konser ya da canlı müzik türünde bir etkinlik. Tek başına bir mekân sayılmaz.",
+      "hood": "Daha önce hiç deneyim kaydetmediğin bir semtte bir deneyim; başka bir kareyle birlikte sayılabilir.",
+      "shop": "Bağımsız, butik ya da vintage olarak etiketlenmiş bir mağaza.",
+      "cuisine": "Etiketlerinde bir mutfak türü yazan ve o mutfaktan önceki deneyimin olmayan bir restoran.",
+      "park": "Park ya da koru olarak etiketlenmiş bir yer.",
+      "surprise": "Agora'nın senin için seçtiği bir yere gittikten sonra kendin işaretle; başka bir kareyle birlikte sayılabilir."
+    },
+    "line": {
+      "r0": "1. satır",
+      "r1": "2. satır",
+      "r2": "3. satır",
+      "c0": "1. sütun",
+      "c1": "2. sütun",
+      "c2": "3. sütun",
+      "d0": "çapraz",
+      "d1": "ters çapraz"
+    },
+    "ch": {
+      "square": "Kare {{n}}",
+      "find": "Pusulada bul",
+      "howCounts": "Nasıl sayılır",
+      "yourXp": "Deneyimlerin",
+      "noXp": "Bu ay henüz eşleşen bir deneyim yok. Bir etkinlikte “Katıldım”, bir mekânda “Buraya gittim” dediğinde kare kendiliğinden dolar.",
+      "verification": "Doğrulama",
+      "verifyNA": "Partner QR'ı, partner kodu ve organizatör check-in'i henüz yok: katılan bir mekân ya da organizatör yok. Kareler kendi beyanın olarak kalır.",
+      "noTracking": "Konumun izlenmez; yakınlık hiçbir zaman bir kareyi tamamlamaz.",
+      "selfT": "Kendin işaretle",
+      "selfP": "Zaten yaptın mı? İşaretle: kare kendi beyanın olarak dolar, bu cihazda kaydedilir.",
+      "selfBtn": "Yaptım, işaretle",
+      "selfDone": "Bu kareyi bu ay sen işaretledin.",
+      "undo": "Geri al",
+      "progress": "İlerleme",
+      "rewardProgress": "Ödül ilerlemesi",
+      "lineDone": "çinko",
+      "left_one": "{{count}} kare kaldı",
+      "left_other": "{{count}} kare kaldı",
+      "nextTier": "Sıradaki çinko {{n}}. ödül kademesine ulaşır: {{title}} (henüz yok).",
+      "allTiers": "Üç ödül kademesine de ulaştın."
+    },
+    "rw": {
+      "note": "Bunlar ödül kademeleri, kupon değil. Bir kademe ancak bir partner anlaşması ve doğrulanmış karelerle kullanılabilir. Agora'da ikisi de henüz yok; burada hiçbir şey kullanılamaz.",
+      "tier": "{{n}}. çinko",
+      "1t": "%15 İndirim",
+      "1s": "Katılımcı bir bağımsız tasarım mağazasında",
+      "2t": "Ücretsiz Kahve",
+      "2s": "Katılımcı bir kahvecide bir fincan",
+      "3t": "Konser Bileti",
+      "3s": "Seçili bir konser ya da kültür etkinliğine giriş",
+      "na": "Henüz yok",
+      "partner": "Partner",
+      "noPartner": "Yok: henüz partner anlaşması yok",
+      "validity": "Geçerlilik",
+      "terms": "Koşullar",
+      "none": "Belirlenmedi",
+      "status": "Durum",
+      "reached": "Çinko tamam, kendi beyanın. Yine de doğrulanmış kareler ve bir partner gerekir.",
+      "more_one": "Bu kademe için {{count}} çinko daha",
+      "more_other": "Bu kademe için {{count}} çinko daha"
+    },
+    "tk": {
+      "k1": "1. Çinko · Kupon",
+      "big1": "%15",
+      "big1b": " İNDİRİM",
+      "k2": "2. Çinko · Fincan",
+      "big2": "Ücretsiz kahve",
+      "cup": "Bir fincan",
+      "k3": "3. Çinko · Giriş",
+      "big3": "Konser bileti",
+      "entry": "Giriş",
+      "stamp": "HENÜZ YOK"
+    },
+    "cz": {
+      "title": "Çinko!",
+      "kicker": "Bingo · {{period}} · kendi beyanın",
+      "sub": "Kendi beyanınla bir çinko. Ödüller partner doğrulaması ister; bu henüz yok.",
+      "subMany": "Kendi beyanınla {{count}} çinko. Ödüller partner doğrulaması ister; bu henüz yok.",
+      "seeCard": "Kartı gör",
+      "seeTiers": "Ödül kademelerini gör"
+    },
+    "entry": {
+      "aria": "Agora Bingo, {{month}} kartı: 9 karenin {{n}} tanesi"
+    }
+  },
+  "experiences": {
+    "title": "Deneyimlerim",
+    "history": "Geçmiş",
+    "wentHere": "Buraya gittim",
+    "attended": "Katıldım",
+    "youWent": "Buraya gittin",
+    "youAttended": "Katıldın",
+    "selfReported": "Kendi beyanın",
+    "undo": "Geri al",
+    "legend": "Kaydetmek ya da takvime eklemek gittiğin anlamına gelmez; yalnızca “{{act}}” deneyimlerine ekler, kendi beyanın olarak.",
+    "futureEvent": "Etkinlik başladığında işaretleyebilirsin.",
+    "alreadyEvent": "Bu etkinlik zaten deneyimlerinde.",
+    "alreadyToday": "Bugün için zaten kayıtlı.",
+    "badDate": "Tarih doğrulanamadı; kaydedilmedi.",
+    "notSaved": "Kaydedilmedi",
+    "signIn": "Deneyimlerini bu cihazda tutmak için giriş yap.",
+    "added": "Deneyimlerine eklendi",
+    "addedBingo": "Bingo · {{squares}} · kendi beyanın",
+    "addedNoMatch": "Bu ayın Bingo kartında bir kareyle eşleşmedi.",
+    "lineToast": "Çinko! Kendi beyanınla bir çinko",
+    "removed": "Deneyimlerinden kaldırıldı",
+    "recalc": "Bingo ve rozetler yeniden hesaplandı.",
+    "deviceNote": "Yalnızca bu cihazda kayıtlı.",
+    "bingo": "Bingo · {{squares}}",
+    "tri": {
+      "want": "İstediklerin",
+      "wantS": "kaydettiklerin",
+      "did": "Yaptıkların",
+      "didS": "kendi beyanın",
+      "ver": "Doğruladıkların",
+      "verS": "henüz yok"
+    },
+    "g": {
+      "all": "Tümü",
+      "art": "Sanat",
+      "music": "Müzik",
+      "food": "Yeme & İçme",
+      "other": "Diğer"
+    },
+    "filterAria": "Kategoriye göre süz",
+    "none": "Henüz bir deneyim yok. Bir etkinliğin sayfasında “{{a}}”, bir mekânda “{{b}}” de.",
+    "noneCat": "Bu kategoride deneyim yok.",
+    "square": "Bingo karesi",
+    "remove": "Kaldır",
+    "removeAria": "{{name}} kaydını deneyimlerinden kaldır",
+    "confirmRemove": "Kaldırmak için tekrar dokun",
+    "kind": {
+      "event": "Etkinlik",
+      "place": "Mekân",
+      "challenge": "Bingo karesi"
+    }
+  },
+  "badges": {
+    "title": "Rozet koleksiyonu",
+    "lead": "Uzun soluklu keşif izlerin. Aylık Bingo kartı yenilense de burada kalır.",
+    "coffee": {
+      "req": "Beş farklı kahveci keşfet",
+      "how": "Kaydettiğin her farklı kahveci bir sayılır; aynı kahveci iki kez sayılmaz. Kendi beyanın da sayılır."
+    },
+    "art": {
+      "req": "Beş sergiye git",
+      "how": "“Bir sergiye git” kuralına uyan her farklı sergi ya da galeri bir sayılır."
+    },
+    "night": {
+      "req": "Beş canlı müzik gecesi",
+      "how": "Katıldığın her farklı konser ya da canlı müzik etkinliği bir sayılır."
+    },
+    "nomad": {
+      "req": "On farklı semt keşfet",
+      "how": "Deneyim kaydettiğin her farklı semt bir sayılır; aynı semt iki kez sayılmaz."
+    },
+    "culture": {
+      "req": "Beş farklı kareyi doğrula",
+      "how": "Doğrulanmış bir deneyimle dolan her farklı kare türü bir kez sayılır. Kendi beyanın sayılmaz; doğrulama da henüz yok, bu yüzden bu rozet şimdilik ilerleyemez."
+    },
+    "unlocked": "Açıldı",
+    "locked": "Kilitli",
+    "needsVerification": "Doğrulama gerekir · henüz yok",
+    "req": "Koşul",
+    "howH": "Nasıl ilerler",
+    "archive": "Arşiv",
+    "empty": "Henüz bir iz yok. Bingo kartındaki ilgili kareyle başla.",
+    "openCard": "Bingo kartını aç",
+    "aria": "{{name}}: {{goal}} hedefin {{n}} tanesi",
+    "ariaDone": "{{name}}: açıldı"
+  },
+  "profile3": {
+    "kicker": "Kişisel şehir arşivin",
+    "title": "Profil",
+    "member": "Agora üyesi",
+    "statsAria": "Bu ayın özeti",
+    "stats": {
+      "squares": "Bu ay kare",
+      "lines": "Çinko · kendi beyanın",
+      "badges": "Rozet"
+    },
+    "pass": {
+      "k": "Your city, your game",
+      "no": "No. 001 · İstanbul",
+      "squares": "{{n}}/9 kare",
+      "lines": "{{n}}/3 çinko",
+      "next": "Sıradaki ödül kademesi:",
+      "na": "henüz yok",
+      "all": "Üç kademeye de ulaştın",
+      "open": "Bingo kartımı aç",
+      "rewards": "Ödüller"
+    },
+    "taste": {
+      "title": "Zevklerin",
+      "note": "Profilinde kayıtlı; Agora'nın önerileri bunları okur. Pusulada bir sanatçı, film ya da kitap adı verdiğinde Qloo önerileri zevkine göre sıralar.",
+      "empty": "Henüz zevk sinyali yok. Aşağıdan birkaç tane ekle.",
+      "music": "müzik",
+      "sports": "hareket",
+      "films": "film",
+      "interests": "ilgi"
+    },
+    "edit": {
+      "title": "Zevkin",
+      "lead": "Ne kadar dürüst olursan eşleşmeler o kadar iyi olur.",
+      "blankT": "Boş sayfa.",
+      "blankD": "Aşağıya birkaç etiket ekle; seni gerçek odalarla eşleştirmeye başlamak için üç tane bile yeter.",
+      "music": "Müzik",
+      "sports": "Spor ve hareket",
+      "films": "Filmler ve diziler",
+      "interests": "İlgi alanları",
+      "else": "Başka bir şey?",
+      "elsePh": "Pazar sabahı insanıyım. Laf olsun diye sohbete alerjim var.",
+      "addPh": "Yaz ve Enter'a bas",
+      "removeTag": "{{tag}} etiketini kaldır",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor…",
+      "saved": "Zevkin kaydedildi"
+    },
+    "activity": {
+      "title": "Etkinlik geçmişi",
+      "level": "Seviye",
+      "xp": "Toplam {{n}} XP",
+      "streak": "Seri",
+      "badges": "Rozet",
+      "best": "En iyi",
+      "agoraBadges": "Agora rozetleri"
+    }
   }
 }

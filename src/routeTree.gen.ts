@@ -37,6 +37,7 @@ import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppGuideRouteImport } from './routes/_authenticated/app.guide'
 import { Route as AuthenticatedAppCommunitiesRouteImport } from './routes/_authenticated/app.communities'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
+import { Route as AuthenticatedAppBingoRouteImport } from './routes/_authenticated/app.bingo'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AuthenticatedAppEventIdRouteImport } from './routes/_authenticated/app.event.$id'
 import { Route as AuthenticatedAppCommunityIdRouteImport } from './routes/_authenticated/app.community.$id'
@@ -187,6 +188,11 @@ const AuthenticatedAppCalendarRoute =
     path: '/app/calendar',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAppBingoRoute = AuthenticatedAppBingoRouteImport.update({
+  id: '/app/bingo',
+  path: '/app/bingo',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
+  '/app/bingo': typeof AuthenticatedAppBingoRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/communities': typeof AuthenticatedAppCommunitiesRoute
   '/app/guide': typeof AuthenticatedAppGuideRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
+  '/app/bingo': typeof AuthenticatedAppBingoRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/communities': typeof AuthenticatedAppCommunitiesRoute
   '/app/guide': typeof AuthenticatedAppGuideRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/api/guide-health': typeof ApiGuideHealthRoute
   '/concert/$slug': typeof ConcertSlugRoute
+  '/_authenticated/app/bingo': typeof AuthenticatedAppBingoRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/communities': typeof AuthenticatedAppCommunitiesRoute
   '/_authenticated/app/guide': typeof AuthenticatedAppGuideRoute
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/api/guide-health'
     | '/concert/$slug'
+    | '/app/bingo'
     | '/app/calendar'
     | '/app/communities'
     | '/app/guide'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/api/guide-health'
     | '/concert/$slug'
+    | '/app/bingo'
     | '/app/calendar'
     | '/app/communities'
     | '/app/guide'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/api/guide-health'
     | '/concert/$slug'
+    | '/_authenticated/app/bingo'
     | '/_authenticated/app/calendar'
     | '/_authenticated/app/communities'
     | '/_authenticated/app/guide'
@@ -617,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCalendarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app/bingo': {
+      id: '/_authenticated/app/bingo'
+      path: '/app/bingo'
+      fullPath: '/app/bingo'
+      preLoaderRoute: typeof AuthenticatedAppBingoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -643,6 +662,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedAppBingoRoute: typeof AuthenticatedAppBingoRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
   AuthenticatedAppCommunitiesRoute: typeof AuthenticatedAppCommunitiesRoute
   AuthenticatedAppGuideRoute: typeof AuthenticatedAppGuideRoute
@@ -664,6 +684,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedAppBingoRoute: AuthenticatedAppBingoRoute,
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
   AuthenticatedAppCommunitiesRoute: AuthenticatedAppCommunitiesRoute,
   AuthenticatedAppGuideRoute: AuthenticatedAppGuideRoute,
