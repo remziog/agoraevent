@@ -143,7 +143,10 @@ function ResultsView() {
 
   // The discovery moment: the top answers with coordinates, in rank order.
   const dialPoints = useMemo<DialPoint[]>(() => {
-    if (!result) return [];
+    // A question is answered on the map; Agora's own gatherings are only an
+    // extra for place requests, never the answer the compass points at.
+    if (!result || state.status === "question") return [];
+    if (result.intent !== "event" && !result.places) return [];
     const raw =
       result.intent !== "event" && result.places
         ? result.places.items.map((p) => ({
@@ -161,7 +164,7 @@ function ResultsView() {
     return raw.filter(
       (x): x is DialPoint => typeof x.lat === "number" && typeof x.lng === "number",
     );
-  }, [result]);
+  }, [result, state.status]);
 
   function focusCard(id: string) {
     const el = document.getElementById(`card-${id}`);

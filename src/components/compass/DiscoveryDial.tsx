@@ -234,7 +234,7 @@ export function DiscoveryDial({
 
   const geo = useMemo(() => {
     const far = Math.max(
-      1.2,
+      0.6,
       ...top.map((p) => distanceKm(origin, p)),
       ...choices.map((d) => distanceKm(origin, d)),
     );
@@ -256,12 +256,16 @@ export function DiscoveryDial({
       const s = proj.scr(proj.kmOf(p.lat, p.lng));
       return { ...p, i, x: s.x, y: s.y, b: bearingDeg(origin, p), d: distanceKm(origin, p) };
     });
-    // keep the three name chips from sitting on each other
+    // keep the three name chips from sitting on each other: walk them top to
+    // bottom and open a 26 px gap where two would overlap
     const labels = marks.map((m) => ({ id: m.id, x: m.x, y: m.y }));
-    for (let a = 0; a < labels.length; a++)
-      for (let b = 0; b < a; b++)
-        if (Math.abs(labels[a].y - labels[b].y) < 18 && Math.abs(labels[a].x - labels[b].x) < 90)
-          labels[a].y = labels[b].y + (labels[a].y >= labels[b].y ? 18 : -18);
+    const order = [...labels].sort((a, b) => a.y - b.y);
+    for (let k = 1; k < order.length; k++)
+      for (let j = 0; j < k; j++) {
+        const a = order[k],
+          b = order[j];
+        if (Math.abs(a.x - b.x) < 120 && a.y - b.y < 26) a.y = b.y + 26;
+      }
     const asks = choices.map((d) => {
       const p = proj.scr(proj.kmOf(d.lat, d.lng));
       return { name: d.name, x: p.x, y: p.y };
