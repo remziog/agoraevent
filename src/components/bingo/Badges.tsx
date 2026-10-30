@@ -26,8 +26,8 @@ export function BadgeBand({ badges }: { badges: BadgeProgress[] }) {
   const current = badges.find((b) => b.id === open) ?? null;
   return (
     <section className="nb-band -mx-4 px-4 pb-6 pt-5 sm:mx-0 sm:rounded-3xl sm:px-6" aria-labelledby="bdg-t">
-      <div className="flex items-baseline justify-between gap-2.5">
-        <h2 id="bdg-t" className="nb-poster m-0 text-[34px] leading-[0.9] [font-stretch:66%]">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2.5 gap-y-1">
+        <h2 id="bdg-t" className="nb-poster m-0 min-w-0 text-[34px] leading-[0.9] [font-stretch:66%]">
           {t("badges.title")}
         </h2>
         <span className="nb-mono text-[color:var(--nt-2)]">

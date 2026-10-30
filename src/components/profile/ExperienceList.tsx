@@ -33,8 +33,8 @@ export function ExperienceList({
 
   return (
     <section className="mt-8 border-t-2 border-foreground pt-3" aria-labelledby="xp-t">
-      <div className="flex items-baseline justify-between gap-2.5">
-        <h2 id="xp-t" className="m-0 text-[34px] font-[900] uppercase leading-[0.9] tracking-[-0.015em] [font-stretch:66%]">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2.5 gap-y-1">
+        <h2 id="xp-t" className="m-0 min-w-0 text-[34px] font-[900] uppercase leading-[0.9] tracking-[-0.015em] [font-stretch:66%]">
           {t("experiences.title")}
         </h2>
         <span className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">

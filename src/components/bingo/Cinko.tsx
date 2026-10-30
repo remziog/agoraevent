@@ -24,11 +24,21 @@ export function Cinko({
 }) {
   const { t, i18n } = useTranslation();
   const primary = useRef<HTMLButtonElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
     primary.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      // keep focus inside the moment (it is modal)
+      if (e.key === "Tab" && box.current) {
+        const items = [...box.current.querySelectorAll<HTMLElement>("button")];
+        if (!items.length) return;
+        const i = items.indexOf(document.activeElement as HTMLElement);
+        const next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : i === items.length - 1 ? 0 : i + 1;
+        e.preventDefault();
+        items[next].focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -37,7 +47,7 @@ export function Cinko({
     };
   }, [onClose]);
   return (
-    <div className="nb-cz nb-scope" role="dialog" aria-modal="true" aria-labelledby="cz-h" aria-describedby="cz-sub">
+    <div ref={box} className="nb-cz nb-scope" role="dialog" aria-modal="true" aria-labelledby="cz-h" aria-describedby="cz-sub">
       <div className="bg" aria-hidden />
       <p className="nb-mono m-0 text-[#E9A23B]">{t("bingo.cz.kicker", { period: periodLabel(period, i18n.language) })}</p>
       <h2 id="cz-h" className="h nb-poster">
