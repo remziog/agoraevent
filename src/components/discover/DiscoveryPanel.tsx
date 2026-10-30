@@ -238,14 +238,20 @@ export function TurnList({
   const { t } = useTranslation();
   const endRef = useRef<HTMLDivElement>(null);
   // Follow the conversation as it grows, but not on arrival: the stage opens at
-  // the top, with the compass and the answer in view (QA-29-02).
+  // the top, with the compass and the answer in view (QA-29-02). And only while
+  // the conversation is on screen — an answer given on the dial (a district
+  // tapped at the top) keeps the person at the dial, where the result appears.
   const arrived = useRef(false);
   useEffect(() => {
     if (!arrived.current) {
       arrived.current = true;
       return;
     }
-    endRef.current?.scrollIntoView({ block: "nearest" });
+    const end = endRef.current;
+    const list = end?.parentElement;
+    if (!end || !list) return;
+    const r = list.getBoundingClientRect();
+    if (r.bottom > 0 && r.top < window.innerHeight) end.scrollIntoView({ block: "nearest" });
   }, [turns.length, status]);
   if (turns.length === 0 && status !== "searching") return null;
   return (
