@@ -6,18 +6,22 @@ Stack: TanStack Start (SSR) · React 19 · Vite 7 · Tailwind v4 · Supabase (Au
 
 ## Agora × Qloo Agentic Hackathon (October 2026)
 
-Agora first shipped in May 2026 as an events app. For the [Qloo Agentic Hackathon](https://qloo.devpost.com/) it is becoming a **taste-aware Istanbul companion**: tell it what you love — artists, films, books — and an agent uses Qloo's taste graph to pick the historic places, nearby restaurants and gatherings you'll connect with, explains each pick with Qloo's evidence, then tells the place's story (a short AI-made film for the hero landmarks, a narrated photo story for the rest), keeping history and legend clearly apart.
+Agora first shipped in May 2026 as an events app. For the [Qloo Agentic Hackathon](https://qloo.devpost.com/) it became a **taste-aware Istanbul compass**: say or type what you feel like — or pick one of ten categories and a district — and Agora reads your intent, favourites and conditions, checks your favourites with Qloo, asks one question when it must (usually the district), and has Qloo rank real restaurants and places for your taste, showing which favourite Qloo credits for each pick. Agora's own gatherings in the same district and time window sit next to them, labelled as Agora data. "I went here" fills **Bingo**, a monthly card of city experiences (self-reported, stored on the device).
 
 ```
-taste form ──▶ server function (agent, Vercel AI SDK tools) ──▶ Qloo /search · /v2/insights (+ explainability)
-                     │                                              │
-                     ├──▶ 3 landmarks + "why"  ◀────────────────────┘
-                     ├──▶ restaurants in the landmark's neighbourhood (Qloo, taste-ranked)
-                     ├──▶ Agora community events nearby (Agora data, no Qloo badge)
-                     └──▶ landmark drawer: story video / narration, History vs Legend
+compass (text · voice · category · district)
+  └─▶ discover() server function — intent + conditions (rules first, model second)
+        ├─▶ Qloo /search (typed) ──── verify favourites; ask when ambiguous
+        ├─▶ Qloo /v2/tags ─────────── place-scoped tag ids at runtime
+        ├─▶ Qloo /v2/insights ─────── places in the district ranked for the favourites (+ explainability)
+        └─▶ Agora gatherings in the same district and window (Agora data, no Qloo badge)
+  └─▶ results stage — discovery dial, cards, "How Agora decided" (each Qloo call: status, timing, counts)
+
+Taste guide (/app/guide) — Vercel AI SDK ToolLoopAgent: Qloo-ranked landmarks, their stories
+(History vs Legend, narration), Qloo restaurants nearby, Agora gatherings
 ```
 
-The guide lives at `/app/guide` (sign in → **Taste guide**); `/app/qloo-status` shows the live Qloo state. Everything Qloo-related is documented in [`docs/qloo-hackathon.md`](./docs/qloo-hackathon.md): client modules, configuration (`QLOO_API_KEY` is a server-only secret), probe scripts, the Workers-vs-harness decision and the data rules we follow (no personal data to Qloo, no fake "Qloo-powered" labels). The Devpost write-up is [`docs/devpost.md`](./docs/devpost.md). Hackathon work happens on the `hackathon/qloo-agent` branch and reaches `main` through pull requests. Licensed under [MIT](./LICENSE).
+Design: **Naz Paşalı** (Creative Director). `/app/qloo-status` shows the live Qloo state. Everything Qloo-related is documented in [`docs/qloo-hackathon.md`](./docs/qloo-hackathon.md): client modules, configuration (`QLOO_API_KEY` is a server-only secret), probe scripts, the Workers-vs-harness decision and the data rules we follow (no personal data to Qloo, no fake "Qloo-powered" labels). The Devpost write-up is [`docs/devpost.md`](./docs/devpost.md). Hackathon work happens on the `hackathon/qloo-agent` branch and reaches `main` through pull requests. Licensed under [MIT](./LICENSE).
 
 ## Local development
 
