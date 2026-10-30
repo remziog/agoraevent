@@ -116,7 +116,7 @@ qloo · typescript · react · tanstack-start · vite · tailwindcss · webgl ·
 4. Follow up with *"Tomorrow evening in Beşiktaş."* — only the time and the district change.
 5. Ask again with a different taste in the same district to see the ranking change.
 6. Save a place or a gathering → **My plans**; open a gathering → its community → **Follow** → **My communities**; RSVP (free, confirmed) → **Calendar**.
-7. **Taste guide** in the top navigation: a musician, a film and a book → confirm the matches → three landmarks with Qloo's evidence, their stories and narration.
+7. **Taste guide** (`/app/guide` — the link at the bottom of the compass screen, "Prefer a landmark tour by taste?"): a musician, a film and a book → confirm the matches → three landmarks with Qloo's evidence, their stories and narration.
 8. **Bingo:** open a place from step 3 → **I went here** → the toast names the squares it filled, the **BINGO n/9** ticket on the compass screen counts them, and the card (`/app/bingo`) and **Profile** show the record — marked self-reported, with undo.
 
 Works in phone browsers; voice input needs a browser with speech recognition.
