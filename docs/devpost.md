@@ -1,90 +1,118 @@
-# Devpost submission — Agora: Your Istanbul, by taste
+# Devpost submission — Agora
 
-Draft for the Qloo Agentic Hackathon submission form (English). Fill the bracketed
-parts before submitting; keep the "What's new since October 1" section — Agora is a
-pre-existing project and the rules ask how it was updated during the submission period.
+Paste-ready blocks for the Qloo Agentic Hackathon form, in form order. The text is
+finalised against the version live at https://ago-ra.life at submission time, and
+the screenshots come from the same version. Agora is a pre-existing project, so the
+"What's new since October 1, 2026" block is required.
 
-## Tagline (≤ 60 chars)
+## Project overview
 
-Tell Agora what you love. It finds your Istanbul — and your crowd.
+**Name:** Agora
 
-## Elevator pitch (≤ 200 chars)
+**Elevator pitch (≤ 200 characters):**
 
-An agent takes a musician, a film and a book you love to Qloo's taste graph, ranks Istanbul's places against them with evidence, tells their stories, then points you to real gatherings nearby.
+Tell Agora's compass what you love, by text or voice. An agent uses Qloo's taste graph to pick Istanbul restaurants and places that fit your taste, and links you to real local gatherings.
 
 ## About the project
 
+### The problem
+
+Istanbul has thousands of restaurants and venues, and the usual ways to choose one — star ratings, top-ten lists, popularity — say nothing about *you*. Two people with very different taste get the same list. And when the evening ends, nothing connects you to the people who share that taste.
+
+Agora is for visitors, newcomers and locals who want an evening that fits their taste and a way to meet the same kind of people again: name what you love, get places ranked for it, and find the real gatherings nearby.
+
 ### What it does
 
-Agora is a travel companion that chooses places the way a well-read local friend would — from who you are, not from a top-ten list.
+One compass, one conversation:
 
-1. **You name three favourites** — a musician or band, a film or series, a book or author — and, if you like, a mood for the day. Nothing else about you leaves the app.
-2. **You confirm what Qloo found** for each one ("Is this who you mean?" — the right _Blade Runner_, the right _Nick Cave_), so the agent ranks against the right thing. Uncertain matches are never assumed.
-3. **An agent plans your visit.** It asks Qloo's taste graph to rank Agora's curated Istanbul landmarks against your confirmed favourites, picks three, chooses which part of each place's story to open with, finds restaurants in the first pick's neighbourhood that Qloo ranks for the same taste, and checks which Agora community gatherings are within walking distance this week.
-4. **Every pick comes with evidence you can check.** Each card shows Qloo's rank and which of _your_ favourites Qloo's explainability credits for it; the agent's one-sentence note is labelled "Agora's note · AI" so you always know what is Qloo data and what is the model's voice. A "How Agora decided" panel lists every tool call and every Qloo request with its parameters, status and timing.
-5. **Then the place tells its story.** Each landmark opens into labelled **History** and **Legend** sections — the records versus what the city tells — with narration you can listen to, opened at the section the agent chose for you.
-6. **And it ends with people, not pins.** Every gathering card links to its community and the organiser's next real meet-ups; joining is a free RSVP you confirm with the date and price in view, and it shows in your calendar at once.
+1. **Say or type what you want**, in English or Turkish — *"I love Khruangbin and Amélie. Recommend a restaurant."* Voice input fills the same box, so you can correct it before sending.
+2. **Agora reads the request:** what you want (a restaurant, a place or a gathering), your favourites, and your conditions — district, time window in Istanbul time, budget, group size, meeting people. Every condition is a visible chip you can change; a missing district is asked once, never guessed.
+3. **Your favourites are checked with Qloo.** An exact match is used; when Qloo knows more than one (*which Amélie?*) Agora asks; a name Qloo doesn't know is reported and left out.
+4. **Qloo ranks real places in that district for your taste.** Each card shows Qloo's rank, which of your favourites Qloo's explainability credits for it ("Why it fits you"), the business's rating — labelled as a rating, not a taste match — and Qloo's tags. With no favourite named, Agora uses your saved taste profile, or says plainly that the list is Qloo's popularity ranking.
+5. **Then people.** Next to the places, Agora shows its own gatherings in the same district and time window — labelled as Agora data, not Qloo — each linking to its community and the organiser's next meet-ups.
+6. **Keep what you like.** Save a place or a gathering (saving is not an RSVP), RSVP to free gatherings with the date and price in view, see both in **My plans** and the calendar, and follow organisers in **My communities**.
+7. **Keep talking.** A follow-up changes only what you say — *"Tomorrow evening in Beşiktaş"* moves the time and the district and keeps your favourites. A slow old answer never overwrites a newer one.
 
-### The talking compass
-
-The home screen is a compass you can talk to. Pick a direction without typing ("Quiet & intimate", "Loud & alive"…) or say what you want in Turkish or English — *"Bu akşam Kadıköy'de, en fazla 700 TL, küçük bir grupta elektronik müzik dinleyip yeni insanlarla tanışmak istiyorum"*. Agora turns it into explicit, editable conditions (tonight in Istanbul time · Kadıköy · ≤ 700 TL · small group · meeting people · interests) and checks real listings against every one of them. A gathering that misses a condition is never a "top match": it is shown as an alternative that says exactly what it misses, and an unknown price or capacity never counts as satisfied. Follow-ups change only what you say — *"yarın da olur ama bütçe aynı"* moves the date and keeps everything else — and a slow old answer can never overwrite a newer one.
+The **Taste guide** (`/app/guide`) is the deeper mode: name a musician, a film and a book, and an agent ranks Agora's curated Istanbul landmarks against them, opens each place's story (History and Legend kept apart, with narration) and suggests taste-matched restaurants nearby.
 
 ### What makes it Qloo-powered
 
-Without Qloo there is no ranking: Agora's own data is sixteen curated landmarks, authored stories and community events. Qloo supplies the connection between a person's cultural taste and a physical place:
+Agora's own data is community gatherings and authored landmark stories; it has no notion of taste. Qloo supplies the link between what a person loves and a real place:
 
-- `/search` resolves free-text favourites to Qloo entities (confirmed by the person) and maps our landmarks to Qloo place entities at runtime.
-- `/v2/insights` with `filter.results.entities` ranks our landmark shortlist against `signal.interests.entities` — the same call the official `qloo-harness` makes for `qloo_rank` — with `feature.explainability=true`, which is where the "credited favourites" on each card come from.
-- `/v2/insights` with `filter.type=urn:entity:place`, `filter.tags` (a place-scoped restaurant tag) and `filter.location.query="<district>, Istanbul"` ranks restaurants around the chosen landmark for the same favourites.
-- `/v2/tags` finds the restaurant tag at runtime, scoped to place entities the way the official harness does.
+- **`/search`** with a typed `types` filter verifies each favourite as the right kind of entity (an artist, a film, a book).
+- **`/v2/tags`** finds the place-scoped restaurant tag and the café tags at runtime.
+- **`/v2/insights`** with `filter.type=urn:entity:place`, `filter.location.query` (the district, Istanbul), `filter.tags` (restaurant), `filter.exclude.tags` (cafés, for a restaurant request), `signal.interests.entities` (the verified favourites) and `feature.explainability=true` ranks the places and says which favourite drives each pick.
+- **`/v2/insights`** with `filter.results.entities` ranks Agora's landmark shortlist in the Taste guide — the same call the official `qloo-harness` makes for `qloo_rank`.
 
-Landmarks Qloo has no confident entity for are shown without a Qloo badge and are never ranked; a landmark is matched only when the name agrees *and* Qloo's coordinates sit at the place (a same-named mosque 55 km away is rejected). Agora's own events are labelled as Agora data (seeded demo events as "Demo"). If Qloo returns no ranking, the guide says so and shows Agora's editorial landmarks labelled "not ranked by Qloo" — never as a Qloo result. Every Qloo call in the trace shows how many items came back, how many were readable and how many belonged to our shortlist.
+Without Qloo there is no ranking, and two different tastes in the same district get different lists. Qloo receives only taste terms, tags and a district name — never a name, an email or a location. Qloo results carry a Qloo badge; everything else is labelled as Agora data or as popularity.
 
 ### How it is agentic
 
-The guide is a Vercel AI SDK `ToolLoopAgent` running on Cloudflare Workers. The model holds five tools — `rank_landmarks`, `story_outline`, `restaurants_near`, `gatherings_near` and `submit_plan` — decides which to call, picks among Qloo's top results, chooses the story section to open with and writes the short notes; every fact on screen comes from tool executions recorded on the server, never from the model's text. Invalid picks are dropped and Qloo's order fills the gaps. The decision trace is part of the product, not a debug view: judges and users can see what the agent asked Qloo and what came back.
+- **The compass** is a multi-turn assistant. A model reads the intent, favourites and interests in free text (explicit words in the request take precedence); the server then runs the steps — verify with Qloo, ask one question when needed, rank with Qloo, add Agora's gatherings — and carries the conversation's state across turns. Every step is listed under **How Agora decided**, with each Qloo request, its status, its timing and how many results were readable.
+- **The Taste guide** is a Vercel AI SDK `ToolLoopAgent` on Cloudflare Workers with five tools (`rank_landmarks`, `story_outline`, `restaurants_near`, `gatherings_near`, `submit_plan`). The model chooses the calls and writes short notes labelled "AI"; every fact on screen comes from recorded tool results, never from the model's text.
 
-### What's new since October 1, 2026
+### Design
 
-Agora shipped in May 2026 as a mobile-first app for discovering small real-world gatherings in Istanbul (compass search over community events, organiser CRM, memories, gamification). For the hackathon we added, during the submission period:
+[[NAZ — written after the design is merged and live: what Naz, our Creative Director, designed — one paragraph]]
 
-- the Qloo integration (server-only client, runtime landmark mapping cached outside the repo, honest error states) and the favourites → confirm → plan flow at `/app/guide`;
-- the tool-calling agent with its decision trace and explainability-credited picks;
-- taste-ranked restaurants near a landmark and nearby community gatherings;
-- authored History / Legend stories for the hero landmarks with spoken narration;
-- the talking compass: explicit conditions in Turkish and English, exact matches vs. labelled alternatives, a conversation that keeps its context, community pages and confirmed RSVPs that stay consistent with the calendar;
-- a live diagnostics page (`/app/qloo-status`), Turkish localisation, an MIT licence and a public repository.
+### How we built it
 
-### Built with
-
-TanStack Start (SSR) · React 19 · Vite · Tailwind v4 · Vercel AI SDK v6 (`ToolLoopAgent`, tool calling) · Gemini via the Lovable AI gateway · Qloo Insights API (`/search`, `/v2/insights`, `/v2/tags`) · Supabase (Auth, Postgres + RLS) · Cloudflare Workers · Capacitor (iOS/Android shells).
+TanStack Start (SSR) on Cloudflare Workers · React 19 · Tailwind v4 · Supabase (Auth, Postgres with row-level security) · Vercel AI SDK v6 with Gemini through the Lovable AI gateway · the Qloo Insights API through a server-only client (the key never reaches the browser) · the Web Speech API for voice · Capacitor shells for iOS and Android.
 
 ### Challenges
 
-- **Workers vs. the harness.** The hackathon kit supports `qloo-harness` surfaces and says serverless is not a supported route; Agora runs on Cloudflare Workers, so it calls the same HTTP endpoints the harness wraps, with a bounded retry and a one-hour cache, and keeps the request → result trace visible.
-- **No Qloo data in the repo.** Entity ids for our landmarks are resolved at runtime with a conservative rule (the name matches one of the landmark's aliases and Qloo places it in Istanbul) and cached in a server-only database table — never committed.
-- **Honesty under failure.** Every path degrades to a labelled state: no key → "not configured", quota → "busy", no affinity → "Qloo could not rank any of Agora's landmarks for these favourites"; if the agent is unavailable Agora runs a fixed plan with the same tools and the trace says so.
+- **A silent zero.** Qloo answered, but one item with an unexpected field made a strict schema drop the whole list, so it looked like "no results". Each item is now read on its own, and every call shows how many results came back, how many were readable and how many were used.
+- **Same name, wrong place.** A mosque with the same name 55 km away is not the landmark: a place is matched only when the name agrees and Qloo's coordinates sit at the place.
+- **A restaurant request is not an event search.** The intent decides who answers — Qloo for places, Agora for gatherings — and a follow-up may change only the fields it names.
+- **Workers vs. the harness.** The hackathon kit's supported route is `qloo-harness`; Agora runs on Cloudflare Workers, so it calls the same HTTP endpoints the harness wraps, with a bounded retry and a one-hour cache.
+
+### Known limits
+
+[[finalise against the live version]]
+
+- Budget, date and group size filter Agora's gatherings; for Qloo's places they are shown but not yet used to filter.
+- Qloo's district filter is a text match, so a few results can sit just outside the district.
+- Voice input depends on the browser's speech recognition (Chrome, Edge, Safari); typing always works.
+- The gatherings are seeded demo listings, labelled "Demo".
+
+### What's new since October 1, 2026
+
+Agora launched in May 2026 as a mobile-first app for small real-world gatherings in Istanbul (event discovery, organiser tools, calendar, memories). During the submission period we added:
+
+- the Qloo integration: a server-only client, runtime landmark mapping kept out of the repository, honest error states and a live status page;
+- the one-compass flow: intent, explicit conditions, favourites verified with Qloo, one clarifying question, Qloo-ranked restaurants and places with explainability;
+- the Taste guide agent with its decision trace, landmark stories and narration;
+- voice input, Save vs. RSVP, My plans, My communities and following;
+- [[Naz's redesign — after merge]]; Turkish localisation; mobile layouts from 320 px; an MIT licence and a public repository.
 
 ### What's next
 
-Voice input and a photo guide once real speech and image providers are wired (nothing is faked in the meantime), short AI-made films for the hero stories, following a community, and the same taste ranking applied to Agora's community gatherings themselves.
+Map budgets to Qloo's price levels, tighten district filtering with coordinates, rank Agora's own gatherings by taste too, native sign-in and push notifications in the iOS and Android apps, and more cities.
+
+## Built with
+
+qloo · typescript · react · tanstack-start · vite · tailwindcss · cloudflare-workers · supabase · postgresql · vercel-ai-sdk · gemini · web-speech-api · capacitor · lovable · zod
+
+## "Try it out" links
+
+- https://ago-ra.life
+- https://github.com/remziog/agoraevent
+
+## Additional info (judges only)
+
+- **When did you start this project?** May 2026 (Agora); the Qloo work started on October 18, 2026.
+- **Public URL:** https://ago-ra.life
+- **Public repository:** https://github.com/remziog/agoraevent
+- **How was it significantly updated for Qloo?** Paste "What's new since October 1, 2026".
 
 ## Testing instructions (for judges)
 
-1. Open **[https://ago-ra.life](https://ago-ra.life)** and sign in with the test account: `[email]` / `[password]` (or create an account — email sign-up works).
-2. Go to **Taste guide** in the top navigation (or `/app/guide`).
-3. Enter a musician, a film and a book — e.g. _Nick Cave_, _Amélie_, _Agatha Christie_ — optionally a mood, and press **Find my Istanbul**.
-4. On "Is this who you mean?" confirm the Qloo matches (or skip one) and press **Plan my visit**.
-5. Read the three picks: Qloo's rank, the favourites Qloo credits, and the agent's note (labelled AI). Open **How Agora decided** to see the tool calls and the Qloo requests.
-6. Tap **Hear the story** on a pick (Basilica Cistern, Hagia Sophia and Galata Tower have full stories) → **Listen**.
-7. Scroll to **Eat nearby, matched to you** and **Gatherings this week**; the directions button opens the route.
-8. Back on **Discover**, pick a compass direction or type a request such as _tonight in Kadıköy, under 700 TL, small group_ — then refine it in the conversation ("tomorrow works too, same budget"). Open a gathering → its community → **I'm going** (free RSVP, confirmed) → **Calendar**.
-9. `/app/qloo-status` shows the live Qloo state (credential, landmark map, raw explainability).
+1. Open https://ago-ra.life and sign in: create an account with email or Google, or use the test account in the judges' notes.
+2. On the compass, type or say *"I love Khruangbin and Amélie. Recommend a restaurant."* and pick a district (for example Kadıköy).
+3. Read the cards — Qloo's rank, "Why it fits you", the rating note — and open **How Agora decided** to see each Qloo request.
+4. Follow up with *"Tomorrow evening in Beşiktaş."* — only the time and the district change.
+5. Ask again with a different taste in the same district to see the ranking change.
+6. Save a place or a gathering → **My plans**; open a gathering → its community → **Follow** → **My communities**; RSVP (free, confirmed) → **Calendar**.
+7. **Taste guide** in the top navigation: a musician, a film and a book → confirm the matches → three landmarks with Qloo's evidence, their stories and narration.
 
-Works on phone browsers; narration uses the browser's speech synthesis.
-
-## Links
-
-- Live demo: https://ago-ra.life
-- Repository: https://github.com/remziog/agoraevent (MIT) — hackathon notes in `docs/qloo-hackathon.md`
-- Video: [optional]
+Works in phone browsers; voice input needs a browser with speech recognition.

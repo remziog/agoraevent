@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowUp, Mic, Square, X } from "lucide-react";
+import { ArrowRight, ArrowUp, Mic, Square, X } from "lucide-react";
 import { useSpeechInput, type SpeechStatus } from "@/lib/use-speech-input";
 
 /**
@@ -25,8 +25,9 @@ export function AskBox({
   disabled?: boolean;
   autoFocus?: boolean;
   placeholder?: string;
-  /** "docked": full-width bar (results stage, mobile bottom). "compass": compact, inside the dial. */
-  variant?: "docked" | "compass";
+  /** "docked": full-width bar (results stage, mobile bottom). "compass": compact, inside the dial.
+   *  "night": the glass bar under the night compass (amber send). */
+  variant?: "docked" | "compass" | "night";
   inputId?: string;
   /** False when another microphone owns this field (the dial's centre on phones). */
   showMic?: boolean;
@@ -78,19 +79,40 @@ export function AskBox({
 
   const listening = speech.status === "listening";
   const compact = variant === "compass";
+  const night = variant === "night";
 
   return (
-    <div className={compact ? "w-full" : "w-full"}>
+    <div className="w-full">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
-        className={`flex items-end gap-1.5 rounded-2xl border bg-background/95 shadow-sm backdrop-blur transition-colors focus-within:border-primary/60 ${
-          listening ? "border-primary/70 ring-2 ring-primary/20" : "border-border"
-        } ${compact ? "p-1" : "p-1.5"}`}
+        className={
+          night
+            ? `flex items-end gap-1 rounded-2xl bg-[var(--nt-glass)] p-[5px] pl-3.5 text-[color:var(--nt)] backdrop-blur-md transition-shadow ${
+                listening
+                  ? "shadow-[inset_0_0_0_1px_var(--rose),0_0_0_4px_rgb(229_124_168/0.18)]"
+                  : "shadow-[inset_0_0_0_1px_var(--nt-line)] focus-within:shadow-[inset_0_0_0_1px_var(--nt),0_0_0_4px_rgb(242_164_58/0.16)]"
+              }`
+            : `flex items-end gap-1.5 rounded-2xl border bg-background/95 shadow-sm backdrop-blur transition-colors focus-within:border-primary/60 ${
+                listening ? "border-primary/70 ring-2 ring-primary/20" : "border-border"
+              } ${compact ? "p-1" : "p-1.5"}`
+        }
         data-listening={listening || undefined}
       >
+        {night && (
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden
+            className="mb-[14px] mr-1 h-[13px] w-[13px] shrink-0 text-[color:var(--amber)]"
+          >
+            <path
+              d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"
+              fill="currentColor"
+            />
+          </svg>
+        )}
         <label className="sr-only" htmlFor={inputId}>
           {t("discover.askLabel", "Tell Agora what you're looking for")}
         </label>
@@ -114,9 +136,13 @@ export function AskBox({
           rows={compact ? 2 : 1}
           disabled={disabled}
           enterKeyHint="send"
-          className={`min-h-[2.75rem] w-full resize-none bg-transparent px-2 py-2 leading-snug placeholder:text-muted-foreground focus:outline-none ${
-            compact ? "max-h-24 text-sm" : "max-h-32 text-sm sm:text-base"
-          }`}
+          className={
+            night
+              ? "max-h-28 min-h-[2.625rem] w-full resize-none bg-transparent px-0.5 py-2.5 text-base font-medium leading-snug text-[color:var(--nt)] placeholder:font-normal placeholder:text-[color:var(--nt-2)] focus:outline-none"
+              : `min-h-[2.75rem] w-full resize-none bg-transparent px-2 py-2 leading-snug placeholder:text-muted-foreground focus:outline-none ${
+                  compact ? "max-h-24 text-sm" : "max-h-32 text-sm sm:text-base"
+                }`
+          }
         />
         {showMic && (
           <MicButton
@@ -124,23 +150,40 @@ export function AskBox({
             onClick={onMic}
             onCancel={speech.cancel}
             disabled={disabled}
+            tone={night ? "night" : "paper"}
           />
         )}
-        <button
-          type="submit"
-          disabled={disabled || !value.trim()}
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
-          aria-label={t("discover.send", "Send")}
-        >
-          <ArrowUp className="h-4 w-4" aria-hidden />
-        </button>
+        {night ? (
+          <button
+            type="submit"
+            disabled={disabled || !value.trim()}
+            className="group inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--go)] text-[#241c22] transition hover:-translate-y-px hover:brightness-105 active:scale-95 disabled:translate-y-0 disabled:cursor-default disabled:brightness-100 motion-reduce:transition-none"
+            aria-label={t("discover.send", "Send")}
+          >
+            <ArrowRight
+              className="h-[19px] w-[19px] transition-transform group-enabled:group-hover:translate-x-0.5 group-disabled:opacity-45"
+              aria-hidden
+            />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={disabled || !value.trim()}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+            aria-label={t("discover.send", "Send")}
+          >
+            <ArrowUp className="h-4 w-4" aria-hidden />
+          </button>
+        )}
       </form>
       {note && (
         <p
-          className={`mt-1.5 px-2 text-xs ${compact ? "text-center" : ""} ${
+          className={`mt-1.5 px-2 text-xs ${compact || night ? "text-center" : ""} ${
             speech.status === "denied" || speech.status === "error"
               ? "text-destructive"
-              : "text-muted-foreground"
+              : night
+                ? "text-[color:var(--nt-2)]"
+                : "text-muted-foreground"
           }`}
           role="status"
         >
@@ -157,16 +200,19 @@ export function MicButton({
   onCancel,
   disabled,
   size = "md",
+  tone = "paper",
 }: {
   status: SpeechStatus;
   onClick: () => void;
   onCancel: () => void;
   disabled?: boolean;
   size?: "md" | "lg";
+  tone?: "paper" | "night";
 }) {
   const { t } = useTranslation();
   const listening = status === "listening";
   const dim = size === "lg" ? "h-14 w-14" : "h-11 w-11";
+  const night = tone === "night";
   return (
     <span className="relative inline-flex shrink-0 items-center">
       <button
@@ -186,13 +232,23 @@ export function MicButton({
             ? t("voice.unsupportedShort", "Voice input not available in this browser")
             : undefined
         }
-        className={`inline-flex ${dim} items-center justify-center rounded-full border transition disabled:opacity-40 ${
-          listening
-            ? "border-primary bg-primary text-primary-foreground motion-safe:animate-pulse"
-            : status === "unsupported"
-              ? "border-dashed border-border text-muted-foreground"
-              : "border-primary/40 bg-background text-primary hover:bg-primary/10"
-        }`}
+        className={
+          night
+            ? `inline-flex ${dim} items-center justify-center rounded-xl transition disabled:opacity-40 ${
+                listening
+                  ? "bg-[var(--rose)] text-[color:var(--nt-ink)] motion-safe:animate-pulse"
+                  : status === "unsupported"
+                    ? "text-[color:var(--nt-2)] opacity-60"
+                    : "text-[color:var(--nt-2)] hover:text-[color:var(--nt)]"
+              }`
+            : `inline-flex ${dim} items-center justify-center rounded-full border transition disabled:opacity-40 ${
+                listening
+                  ? "border-primary bg-primary text-primary-foreground motion-safe:animate-pulse"
+                  : status === "unsupported"
+                    ? "border-dashed border-border text-muted-foreground"
+                    : "border-primary/40 bg-background text-primary hover:bg-primary/10"
+              }`
+        }
       >
         {listening ? (
           <Square className="h-4 w-4 fill-current" aria-hidden />

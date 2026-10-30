@@ -1,15 +1,25 @@
-type Props = { className?: string; showWordmark?: boolean };
+type Props = {
+  className?: string;
+  /** Kept for existing call sites; the AGORA wordmark is the whole logo. */
+  showWordmark?: boolean;
+  /** "night": white wordmark on the dark discovery field. */
+  tone?: "ink" | "night";
+};
 
-export function Logo({ className, showWordmark = true }: Props) {
+/**
+ * Agora's wordmark (design: Naz Paşalı, Creative Director, Oct 2026): AGORA set
+ * in geometric shapes. Black on transparent; inverted on the night field.
+ */
+export function Logo({ className, tone = "ink" }: Props) {
   return (
-    <div className={`flex items-center gap-2 ${className ?? ""}`}>
-      <LogoMark className="h-8 w-8 text-primary" />
-      {showWordmark && (
-        <span className="font-display text-2xl font-semibold tracking-tight text-foreground">
-          Agora
-        </span>
-      )}
-    </div>
+    <img
+      src="/agora-logo.png"
+      alt="Agora"
+      width={720}
+      height={157}
+      draggable={false}
+      className={`block h-6 w-auto select-none sm:h-7 ${tone === "night" ? "invert" : ""} ${className ?? ""}`}
+    />
   );
 }
 

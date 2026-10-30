@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ArtBlock, artInk } from "@/components/ArtBlock";
 import {
   Sheet,
   SheetContent,
@@ -61,7 +62,7 @@ export function SignalChips({
       className="flex flex-wrap items-center gap-2"
       aria-label={t("discover.signals", "Your taste")}
     >
-      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-primary">
+      <span className="inline-flex items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.08em] text-brand">
         <QlooMark /> {t("discover.rankedFor", "Qloo ranks for")}
       </span>
       {signals.map((s) => (
@@ -299,30 +300,51 @@ export function PlaceResults({
           const rating = formatRating(p.rating, i18n.language);
           const price = priceMarks(p.priceLevel);
           const isSaved = savedPlaces.has(p.qlooEntityId);
+          const hero = i === 0;
           return (
             <article
               key={p.qlooEntityId}
-              className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-3xl border bg-card p-4 transition hover:border-primary/40"
+              className={`flex min-w-0 flex-col overflow-hidden rounded-[26px] border bg-card transition hover:border-foreground/40 ${
+                hero ? "md:col-span-2" : ""
+              }`}
               style={{ "--i": i } as React.CSSProperties}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-primary">
-                    {personal
-                      ? t("discover.qlooRank", { n: i + 1, defaultValue: "Qloo #{{n}} for you" })
-                      : t("discover.qlooPopularRank", {
-                          n: i + 1,
-                          defaultValue: "Qloo #{{n}} · popular",
-                        })}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onOpen(p, i + 1)}
-                    className="mt-1 text-left font-display text-2xl leading-tight hover:underline"
-                  >
-                    {p.name}
-                  </button>
-                </div>
+              <div className="relative">
+                <ArtBlock seed={p.qlooEntityId} className={hero ? "h-72 sm:h-80" : "h-36"}>
+                  <div className="flex h-full flex-col justify-between p-4">
+                    <div className="flex flex-wrap gap-1.5 pr-12">
+                      <span className="rounded-full bg-[#100f0e] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-[#f7f2ea]">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#f7f2ea]/85 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-[#100f0e] backdrop-blur">
+                        <QlooMark />
+                        {personal
+                          ? t("discover.cardForYou", "For your taste")
+                          : t("discover.cardPopular", "Popular")}
+                      </span>
+                    </div>
+                    {hero ? (
+                      <h3 className="min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => onOpen(p, i + 1)}
+                          className="text-left font-display text-[3.25rem] font-[900] leading-[0.84] tracking-[-0.02em] [font-stretch:62%] [overflow-wrap:anywhere] hover:underline sm:text-[4rem]"
+                          style={{ color: artInk(p.qlooEntityId) }}
+                        >
+                          {p.name}
+                        </button>
+                      </h3>
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="font-display text-[4rem] font-[900] leading-[0.8] [font-stretch:62%]"
+                        style={{ color: artInk(p.qlooEntityId) }}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                    )}
+                  </div>
+                </ArtBlock>
                 <button
                   type="button"
                   disabled={toggle.isPending}
@@ -337,10 +359,10 @@ export function PlaceResults({
                       saved: isSaved,
                     })
                   }
-                  className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition ${
+                  className={`absolute right-3 top-3 z-[4] inline-flex h-11 w-11 items-center justify-center rounded-full backdrop-blur transition ${
                     isSaved
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                      ? "bg-[#100f0e] text-[#f7f2ea]"
+                      : "bg-[#f7f2ea]/80 text-[#100f0e] hover:bg-[#f7f2ea]"
                   }`}
                   aria-label={
                     isSaved
@@ -362,75 +384,103 @@ export function PlaceResults({
                 </button>
               </div>
 
-              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                {rating && (
-                  <span
-                    className="inline-flex items-center gap-1"
-                    title={t(
-                      "discover.ratingNote",
-                      "Business rating (Qloo data) — not your taste match",
-                    )}
-                  >
-                    <Star className="h-3.5 w-3.5 fill-current text-primary" aria-hidden /> {rating}
-                  </span>
-                )}
-                {price && <span aria-label={t("discover.priceLevel", "Price level")}>{price}</span>}
-                <span className="inline-flex min-w-0 max-w-full items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  <span className="min-w-0 truncate">{p.address ?? p.district}</span>
-                </span>
-              </p>
-              {p.cuisineTags.length > 0 && (
-                <p className="flex flex-wrap gap-1.5 text-xs">
-                  {p.cuisineTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </p>
-              )}
-              {personal && (
-                <p className="text-xs text-muted-foreground">
-                  {p.drivers.length > 0 ? (
-                    <>
-                      <Sparkles className="mr-1 inline h-3 w-3 text-primary" aria-hidden />
-                      {t("discover.whyYou", "Why it fits you")}:{" "}
-                      <span className="text-foreground">{p.drivers.join(" · ")}</span>
-                    </>
-                  ) : (
-                    t(
-                      "discover.whyYouGeneral",
-                      "Ranked by Qloo for your favourites together — no single one stands out.",
-                    )
+              <div className="flex flex-1 flex-col gap-3 p-4 pt-3.5">
+                <div className="min-w-0">
+                  <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
+                    {personal
+                      ? t("discover.qlooRank", { n: i + 1, defaultValue: "Qloo #{{n}} for you" })
+                      : t("discover.qlooPopularRank", {
+                          n: i + 1,
+                          defaultValue: "Qloo #{{n}} · popular",
+                        })}
+                  </p>
+                  {!hero && (
+                    <h3 className="mt-1">
+                      <button
+                        type="button"
+                        onClick={() => onOpen(p, i + 1)}
+                        className="text-left font-display text-[1.75rem] font-[850] leading-[0.95] tracking-[-0.01em] [overflow-wrap:anywhere] hover:underline"
+                      >
+                        {p.name}
+                      </button>
+                    </h3>
                   )}
-                </p>
-              )}
-              <div className="mt-auto flex gap-2 pt-1">
-                <Button size="sm" className="min-h-11 flex-1" onClick={() => onOpen(p, i + 1)}>
-                  {t("discover.placeDetails", "Why this place")}
-                </Button>
-                <LocationPreviewDialog
-                  place={{
-                    title: p.name,
-                    venue: p.address ?? null,
-                    city: "Istanbul",
-                    latitude: p.geocode?.latitude ?? null,
-                    longitude: p.geocode?.longitude ?? null,
-                  }}
-                  trigger={
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="min-h-11 min-w-11"
-                      aria-label={t("event.takeMeThere", "Take me there")}
+                </div>
+
+                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground [font-variant-numeric:tabular-nums]">
+                  {rating && (
+                    <span
+                      className="inline-flex items-center gap-1"
+                      title={t(
+                        "discover.ratingNote",
+                        "Business rating (Qloo data) — not your taste match",
+                      )}
                     >
-                      <Navigation className="h-3.5 w-3.5" aria-hidden />
-                    </Button>
-                  }
-                />
+                      <Star className="h-3.5 w-3.5 fill-current text-brand" aria-hidden /> {rating}
+                    </span>
+                  )}
+                  {price && (
+                    <span aria-label={t("discover.priceLevel", "Price level")}>{price}</span>
+                  )}
+                  <span className="inline-flex min-w-0 max-w-full items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    <span className="min-w-0 truncate">{p.address ?? p.district}</span>
+                  </span>
+                </p>
+                {personal && (
+                  <p className="text-sm leading-snug">
+                    {p.drivers.length > 0 ? (
+                      <>
+                        <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.08em] text-brand">
+                          {t("discover.whyYou", "Why it fits you")}
+                        </span>
+                        <span className="text-foreground">{p.drivers.join(" · ")}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t(
+                          "discover.whyYouGeneral",
+                          "Ranked by Qloo for your favourites together — no single one stands out.",
+                        )}
+                      </span>
+                    )}
+                  </p>
+                )}
+                {p.cuisineTags.length > 0 && (
+                  <p className="flex flex-wrap gap-1.5 text-xs">
+                    {p.cuisineTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-muted px-2.5 py-1 text-foreground/80"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </p>
+                )}
+                <div className="mt-auto flex gap-2 pt-1">
+                  <Button className="min-h-11 flex-1" onClick={() => onOpen(p, i + 1)}>
+                    {t("discover.placeDetails", "Why this place")}
+                  </Button>
+                  <LocationPreviewDialog
+                    place={{
+                      title: p.name,
+                      venue: p.address ?? null,
+                      city: "Istanbul",
+                      latitude: p.geocode?.latitude ?? null,
+                      longitude: p.geocode?.longitude ?? null,
+                    }}
+                    trigger={
+                      <Button
+                        variant="outline"
+                        className="min-h-11 min-w-11 border-2 border-foreground"
+                        aria-label={t("event.takeMeThere", "Take me there")}
+                      >
+                        <Navigation className="h-4 w-4" aria-hidden />
+                      </Button>
+                    }
+                  />
+                </div>
               </div>
             </article>
           );
@@ -478,8 +528,11 @@ export function PlaceSheet({
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
         {place && (
           <>
+            {!place.imageUrl && (
+              <ArtBlock seed={place.qlooEntityId} className="-mx-6 -mt-6 mb-5 h-44" />
+            )}
             <SheetHeader className="text-left">
-              <p className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-primary">
+              <p className="inline-flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
                 <QlooMark />
                 {signals.length > 0
                   ? t("discover.qlooRank", { n: rank, defaultValue: "Qloo #{{n}} for you" })
@@ -488,7 +541,9 @@ export function PlaceSheet({
                       defaultValue: "Qloo #{{n}} · popular",
                     })}
               </p>
-              <SheetTitle className="font-display text-3xl leading-tight">{place.name}</SheetTitle>
+              <SheetTitle className="text-[2.75rem] font-[900] leading-[0.86] tracking-[-0.02em] [font-stretch:62%] [overflow-wrap:anywhere]">
+                {place.name}
+              </SheetTitle>
               <SheetDescription>
                 {[place.address ?? place.district, rating ? `★ ${rating}` : null, price]
                   .filter(Boolean)
@@ -505,7 +560,7 @@ export function PlaceSheet({
                 />
               )}
               <div>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-primary">
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-brand">
                   {t("discover.whyYou", "Why it fits you")}
                 </p>
                 {signals.length === 0 ? (
@@ -541,7 +596,7 @@ export function PlaceSheet({
               </div>
               {place.cuisineTags.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-primary">
+                  <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-brand">
                     {t("discover.placeTags", "Qloo tags")}
                   </p>
                   <p className="mt-1 flex flex-wrap gap-1.5">

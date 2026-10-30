@@ -191,7 +191,7 @@
     "thisWeek": "Tonight & this week",
     "viewCalendar": "View calendar →",
     "noEvents": "No gatherings yet. Be the first — or check back tonight.",
-    "compassLabel": "Compass: pick a direction or tell Agora what you want",
+    "compassLabel": "Compass: tell Agora what you want, or pick a direction",
     "stateSearching": "Searching",
     "stateFound": "Found",
     "stateEmpty": "No exact match",
@@ -205,6 +205,7 @@
     "summaryNoExact": "I couldn't verify a gathering that meets all of your conditions. Below are {{count}} nearby alternatives, each marked with what it misses — I won't change your conditions unless you tell me to.",
     "summaryNothing": "Nothing in the {{checked}} upcoming listings fits — not even loosely. Try another time or district, or browse the calendar.",
     "direction": {
+      "food": "Restaurants",
       "quiet": "Quiet & intimate",
       "loud": "Loud & alive",
       "move": "Move my body",
@@ -315,7 +316,14 @@
       "price": "price not verified",
       "capacity": "group size not listed"
     },
-    "placesNotePopular": "Order = Qloo's popularity for this district (no favourite named). ★ = the business's own rating in Qloo's data. Agora makes no reservations."
+    "placesNotePopular": "Order = Qloo's popularity for this district (no favourite named). ★ = the business's own rating in Qloo's data. Agora makes no reservations.",
+    "heroTitle": "What do you feel like doing today",
+    "city": "Istanbul",
+    "stateReady": "Your mood is the compass",
+    "compassPlaceholderNight": "Tell Agora…",
+    "directionsLabel": "Directions",
+    "cardForYou": "For your taste",
+    "cardPopular": "Popular"
   },
   "guide": {
     "exec": {

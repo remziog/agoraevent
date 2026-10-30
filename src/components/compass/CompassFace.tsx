@@ -1,18 +1,17 @@
 import { useTranslation } from "react-i18next";
-import { Compass, Sparkles } from "lucide-react";
+import { Sparkles, UtensilsCrossed } from "lucide-react";
 import type { DiscoveryStatus } from "@/lib/discovery-store";
-import { AskBox, MicButton } from "@/components/discover/AskBox";
-import { useSpeechInput } from "@/lib/use-speech-input";
-import { useRef, useState } from "react";
+import { AskBox } from "@/components/discover/AskBox";
 
 /**
- * The four directions sit on the intercardinal points (NE, SE, SW, NW), in
- * the ring band, so the centre — where the person types or speaks — is never
- * covered (UI-29-02). Each is a preference added to the same discovery
- * context as typed text, not a separate search engine; the prompts name a
- * gathering explicitly and carry no date or district.
+ * Compass directions. Each is a ready-made request sent through the same
+ * discovery context as typed text — not a separate search engine. "food" asks
+ * for a restaurant (Qloo ranks it; Agora asks for the district once); the
+ * other four name a gathering explicitly and carry no date or district.
+ * The angle only turns the needle.
  */
 export const DIRECTIONS = [
+  { key: "food", angle: -20, prompt: "Recommend a restaurant that fits my taste" },
   {
     key: "quiet",
     angle: -135,
@@ -29,13 +28,38 @@ export const DIRECTIONS = [
 
 export type Direction = (typeof DIRECTIONS)[number];
 
-const CARDINALS = [
-  { l: "N", a: -90 },
-  { l: "E", a: 0 },
-  { l: "S", a: 90 },
-  { l: "W", a: 180 },
-];
+const DOT: Record<string, string> = {
+  quiet: "#9ccbff",
+  loud: "#e57ca8",
+  move: "#f2a43a",
+  cinema: "#a08bdd",
+};
 
+/** Point on the dial: 0° = north, clockwise; r in viewBox units (centre 160,160). */
+function pt(deg: number, r: number) {
+  const a = (deg * Math.PI) / 180;
+  return [160 + Math.sin(a) * r, 160 - Math.cos(a) * r] as const;
+}
+
+const TICKS = Array.from({ length: 72 }, (_, i) => {
+  const major = i % 18 === 0;
+  const mid = i % 9 === 0;
+  const [x1, y1] = pt(i * 5, 150);
+  const [x2, y2] = pt(i * 5, major ? 136 : mid ? 141.5 : 145.5);
+  return { i, x1, y1, x2, y2, o: major ? 1 : mid ? 0.7 : 0.42 };
+});
+
+const AXIS = [0, 90, 180, 270].map((deg) => {
+  const [x1, y1] = pt(deg, 15);
+  const [x2, y2] = pt(deg, 116);
+  return { deg, x1, y1, x2, y2 };
+});
+
+/**
+ * The night compass (design: Naz Paşalı): white hairlines, an open centre and
+ * a needle that spins while Agora searches and settles on the answer. Below
+ * it, one field for typing or speaking, then the directions as chips.
+ */
 export function CompassFace({
   needleAngle,
   status,
@@ -58,36 +82,8 @@ export function CompassFace({
   disabled: boolean;
   className?: string;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const searching = status === "searching";
-  const [voiceNote, setVoiceNote] = useState<string | null>(null);
-  // Mobile: the microphone is the dial's centre; the text field sits below the dial.
-  // What was typed before stays; the transcript is appended to it.
-  const typedBefore = useRef("");
-  const speech = useSpeechInput(i18n.language, (text, final) => {
-    const prefix = typedBefore.current.trim();
-    setPrompt(prefix ? `${prefix} ${text}` : text);
-    if (final) setVoiceNote(t("voice.heard", "Here's what I heard — edit it, then send."));
-  });
-
-  function onMic() {
-    if (!speech.supported) {
-      setVoiceNote(
-        t(
-          "voice.unsupported",
-          "This browser has no speech recognition (try Chrome, Edge or Safari). Typing works everywhere.",
-        ),
-      );
-      return;
-    }
-    if (speech.status === "listening") {
-      speech.stop();
-      return;
-    }
-    typedBefore.current = prompt;
-    setVoiceNote(t("voice.listening", "Listening… speak, then tap stop or just pause."));
-    speech.start();
-  }
 
   const stateLabel = searching
     ? t("discover.stateSearching", "Searching")
@@ -99,211 +95,190 @@ export function CompassFace({
           ? t("discover.stateEmpty", "No exact match")
           : status === "error"
             ? t("discover.stateError", "Error")
-            : "Agora";
+            : t("discover.stateReady", "Your mood is the compass");
+
+  const line = "var(--nt, currentColor)";
 
   return (
     <div className={`w-full ${className}`}>
       <div
-        className="agora-compass relative mx-auto aspect-square w-full max-w-[18rem] sm:max-w-[34rem]"
+        className="agora-compass night-dial relative mx-auto aspect-square w-full max-w-[17.5rem] sm:max-w-[20rem]"
         data-state={status}
-        role="group"
+        role="img"
         aria-label={t(
           "discover.compassLabel",
-          "Compass: pick a direction or tell Agora what you want",
+          "Compass: tell Agora what you want, or pick a direction",
         )}
       >
-        {/* Bezel: slow turn at rest, quick while searching (still under reduced motion).
-            The rotating ring sits inside a clipped circle so its corners never widen the page. */}
+        {/* sheen while searching */}
         <div
-          className={`absolute inset-0 overflow-hidden rounded-full border transition-colors shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_45%,transparent),inset_0_0_60px_color-mix(in_oklab,var(--primary)_8%,transparent)] ${
-            status === "error"
-              ? "border-destructive/60"
-              : searching
-                ? "border-primary/70"
-                : "border-primary/30"
+          aria-hidden
+          className={`pointer-events-none absolute inset-[3%] rounded-full bg-[conic-gradient(from_0deg,transparent_0deg_290deg,rgb(243_235_221/0.14)_359deg,transparent_360deg)] ${
+            searching ? "motion-safe:animate-[spin_1.9s_linear_infinite]" : "hidden"
           }`}
-        >
-          <div
-            className={`absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_20%,_color-mix(in_oklab,_var(--primary)_18%,_transparent),_transparent_55%),radial-gradient(circle_at_70%_80%,_color-mix(in_oklab,_var(--primary)_10%,_transparent),_transparent_55%)] ${
-              searching
-                ? "motion-safe:animate-[spin_6s_linear_infinite]"
-                : "motion-safe:animate-[spin_90s_linear_infinite]"
-            }`}
-          >
-            <svg viewBox="0 0 200 200" className="absolute inset-0 h-full w-full" aria-hidden>
-              <g stroke="currentColor" className="text-primary/40">
-                {Array.from({ length: 72 }).map((_, i) => {
-                  const long = i % 9 === 0;
-                  const a = (i / 72) * Math.PI * 2;
-                  const r1 = 96;
-                  const r2 = long ? 88 : 92;
-                  return (
-                    <line
-                      key={i}
-                      x1={100 + Math.cos(a) * r1}
-                      y1={100 + Math.sin(a) * r1}
-                      x2={100 + Math.cos(a) * r2}
-                      y2={100 + Math.sin(a) * r2}
-                      strokeWidth={long ? 0.8 : 0.4}
-                      opacity={long ? 1 : 0.55}
-                    />
-                  );
-                })}
-              </g>
-            </svg>
-          </div>
-        </div>
-
-        {/* Inner face */}
-        <div className="absolute inset-[9%] rounded-full border border-border/60 bg-card/80 shadow-[inset_0_0_80px_color-mix(in_oklab,var(--primary)_6%,transparent)] backdrop-blur-sm" />
-
-        {/* Needle: spins while searching, settles on the chosen direction (clipped to the dial) */}
-        <div
-          className="pointer-events-none absolute inset-0 overflow-hidden rounded-full"
+        />
+        <svg
+          viewBox="0 0 320 320"
+          className="absolute inset-0 h-full w-full overflow-visible"
           aria-hidden
         >
-          <div
-            className={`absolute inset-0 flex items-center justify-center ${
+          <circle cx="160" cy="160" r="150" fill="rgb(13 11 26 / 0.16)" />
+          <circle
+            className="dial-trace"
+            cx="160"
+            cy="160"
+            r="150"
+            fill="none"
+            stroke={status === "error" ? "var(--ember, #e8573f)" : line}
+            strokeWidth="1.2"
+            pathLength={1}
+            transform="rotate(-90 160 160)"
+          />
+          <circle
+            className="dial-trace"
+            style={{ animationDelay: "380ms" }}
+            cx="160"
+            cy="160"
+            r="124"
+            fill="none"
+            stroke={line}
+            strokeWidth="1.2"
+            opacity="0.38"
+            pathLength={1}
+            transform="rotate(90 160 160)"
+          />
+          <g stroke={line} strokeWidth="1.2">
+            {TICKS.map((k) => (
+              <line
+                key={k.i}
+                className="dial-trace"
+                style={{ animationDelay: `${430 + k.i * 7}ms`, animationDuration: "200ms" }}
+                x1={k.x1}
+                y1={k.y1}
+                x2={k.x2}
+                y2={k.y2}
+                opacity={k.o}
+                pathLength={1}
+              />
+            ))}
+            {AXIS.map((a, i) => (
+              <line
+                key={a.deg}
+                className="dial-trace"
+                style={{ animationDelay: `${920 + i * 45}ms`, animationDuration: "440ms" }}
+                x1={a.x1}
+                y1={a.y1}
+                x2={a.x2}
+                y2={a.y2}
+                opacity="0.22"
+                pathLength={1}
+              />
+            ))}
+          </g>
+          <circle
+            cx="160"
+            cy="160"
+            r="9"
+            fill="none"
+            stroke={line}
+            strokeWidth="1.2"
+            opacity="0.38"
+          />
+          <path d="M160 0.5 L164 7.5 L156 7.5 Z" fill={line} />
+          <g
+            className={
               searching
                 ? "motion-safe:animate-[spin_1.4s_cubic-bezier(0.45,0,0.55,1)_infinite]"
                 : ""
-            }`}
-            style={
-              searching
-                ? undefined
+            }
+            style={{
+              transformOrigin: "160px 160px",
+              transformBox: "view-box",
+              ...(searching
+                ? {}
                 : {
                     transform: `rotate(${needleAngle + 90}deg)`,
                     transition: "transform 1.1s cubic-bezier(0.22, 1, 0.36, 1)",
-                  }
-            }
-            aria-hidden
+                  }),
+            }}
           >
-            <svg viewBox="0 0 200 200" className="h-full w-full">
-              <defs>
-                <linearGradient id="needleN" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" />
-                  <stop
-                    offset="100%"
-                    stopColor="color-mix(in oklab, var(--primary) 50%, transparent)"
-                  />
-                </linearGradient>
-              </defs>
-              <polygon points="100,38 105,92 95,92" fill="url(#needleN)" />
-              <polygon
-                points="100,162 105,108 95,108"
-                fill="color-mix(in oklab, var(--foreground) 30%, transparent)"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Cardinal letters */}
-        {CARDINALS.map((c) => {
-          const rad = (c.a * Math.PI) / 180;
-          const rPct = 42;
-          return (
-            <div
-              key={c.l}
-              aria-hidden
-              className="absolute -translate-x-1/2 -translate-y-1/2 font-display text-lg tracking-[0.2em] text-primary/70 sm:text-xl"
-              style={{
-                left: `${50 + Math.cos(rad) * rPct}%`,
-                top: `${50 + Math.sin(rad) * rPct}%`,
-              }}
-            >
-              {c.l}
-            </div>
-          );
-        })}
-
-        {/* Directions on the intercardinal points (desktop); listed under the dial on phones */}
-        {DIRECTIONS.map((d) => {
-          const rad = (d.angle * Math.PI) / 180;
-          const rPct = 36;
-          return (
-            <button
-              key={d.key}
-              type="button"
-              disabled={disabled}
-              onClick={() => onPickDirection(d)}
-              className="absolute hidden min-h-11 -translate-x-1/2 -translate-y-1/2 items-center whitespace-nowrap rounded-full border border-primary/30 bg-background/85 px-3.5 py-2 text-xs text-foreground backdrop-blur transition hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 sm:inline-flex"
-              style={{
-                left: `${50 + Math.cos(rad) * rPct}%`,
-                top: `${50 + Math.sin(rad) * rPct}%`,
-              }}
-            >
-              {t(`discover.direction.${d.key}`)}
-            </button>
-          );
-        })}
-
-        {/* Centre: state, microphone, and (from sm up) the text field */}
-        <div className="absolute left-1/2 top-1/2 z-10 flex w-[58%] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
-          <div className="flex items-center justify-center gap-1.5" aria-live="polite">
-            {found && !searching ? (
-              <Sparkles className="h-3 w-3 text-primary" aria-hidden />
-            ) : (
-              <Compass
-                className={`h-3 w-3 text-primary ${searching ? "motion-safe:animate-pulse" : ""}`}
-                aria-hidden
-              />
-            )}
-            <span className="text-[10px] uppercase tracking-[0.3em] text-primary">
-              {stateLabel}
-            </span>
-          </div>
-          <div className="sm:hidden">
-            <MicButton
-              status={speech.status}
-              onClick={onMic}
-              onCancel={speech.cancel}
-              disabled={disabled}
-              size="lg"
+            <path
+              d="M160 160 L165.5 148 L160 42 L154.5 148 Z"
+              fill="none"
+              stroke={line}
+              strokeWidth="1.2"
+              strokeLinejoin="round"
             />
-          </div>
-          <div className="hidden w-full sm:block">
-            <AskBox
-              value={prompt}
-              onChange={setPrompt}
-              onSend={onSubmit}
-              disabled={disabled}
-              variant="compass"
-              inputId="compass-ask"
-              placeholder={t("discover.compassPlaceholderShort", "Tell Agora… or tap the mic")}
+            <path d="M160 42 L162.5 90 L157.5 90 Z" fill={line} />
+            <path
+              d="M160 160 L163.5 171 L160 222 L156.5 171 Z"
+              fill="none"
+              stroke={line}
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+              opacity="0.5"
             />
-          </div>
-        </div>
+            <circle cx="160" cy="160" r="2.8" fill={line} />
+          </g>
+        </svg>
       </div>
 
-      {/* Phones: text field under the dial (never over the directions), then the four directions */}
-      <div className="mx-auto mt-4 w-full max-w-md sm:hidden">
+      <p
+        className="mt-3 flex items-center justify-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-[color:var(--nt-2)]"
+        aria-live="polite"
+      >
+        {found && !searching && (
+          <Sparkles className="h-3 w-3 text-[color:var(--amber)]" aria-hidden />
+        )}
+        {stateLabel}
+      </p>
+
+      <div className="mx-auto mt-4 w-full max-w-md">
         <AskBox
           value={prompt}
           onChange={setPrompt}
           onSend={onSubmit}
           disabled={disabled}
-          inputId="compass-ask-mobile"
-          showMic={false}
-          placeholder={t("discover.compassPlaceholderShort", "Tell Agora… or tap the mic")}
+          variant="night"
+          inputId="compass-ask"
+          placeholder={t("discover.compassPlaceholderNight", "Tell Agora…")}
         />
-        {voiceNote && (
-          <p className="mt-1.5 text-center text-xs text-muted-foreground" role="status">
-            {voiceNote}
-          </p>
-        )}
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {DIRECTIONS.map((d) => (
+      </div>
+
+      <div
+        className="chip-scroll -mx-5 mt-3 flex gap-2 overflow-x-auto px-5 py-0.5 sm:mx-auto sm:max-w-md sm:flex-wrap sm:justify-center sm:px-0"
+        role="group"
+        aria-label={t("discover.directionsLabel", "Directions")}
+      >
+        {DIRECTIONS.map((d) =>
+          d.key === "food" ? (
             <button
               key={d.key}
               type="button"
               disabled={disabled}
               onClick={() => onPickDirection(d)}
-              className="min-h-11 rounded-full border border-primary/30 bg-background px-3 py-2 text-sm text-foreground transition hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-[color:var(--nt)] px-4 text-[14.5px] font-semibold text-[color:var(--nt-ink)] transition hover:shadow-[0_0_0_3px_rgb(232_87_63/0.35)] disabled:opacity-50"
             >
+              <UtensilsCrossed className="h-4 w-4 text-[color:var(--ember)]" aria-hidden />
               {t(`discover.direction.${d.key}`)}
             </button>
-          ))}
-        </div>
+          ) : (
+            <button
+              key={d.key}
+              type="button"
+              disabled={disabled}
+              onClick={() => onPickDirection(d)}
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-[14.5px] font-semibold text-[color:var(--nt)] shadow-[inset_0_0_0_1px_var(--nt-line)] transition hover:shadow-[inset_0_0_0_1px_var(--nt)] disabled:opacity-50"
+            >
+              <i
+                aria-hidden
+                className="h-[7px] w-[7px] rounded-full"
+                style={{ background: DOT[d.key], boxShadow: `0 0 9px ${DOT[d.key]}` }}
+              />
+              {t(`discover.direction.${d.key}`)}
+            </button>
+          ),
+        )}
       </div>
     </div>
   );
