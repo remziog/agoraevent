@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArtBlock, artInk } from "@/components/ArtBlock";
+import { ExperienceButton } from "@/components/bingo/ExperienceButton";
 import {
   Sheet,
   SheetContent,
@@ -660,6 +661,17 @@ export function PlaceSheet({
                   }
                 />
               </div>
+              {/* "I went here" — self-reported, on this device (Bingo, design: Naz). */}
+              <ExperienceButton
+                item={{
+                  kind: "place",
+                  refId: place.qlooEntityId,
+                  name: place.name,
+                  categories: kind && kind !== "place" ? [kind] : [],
+                  tags: place.cuisineTags,
+                  district: place.district,
+                }}
+              />
             </div>
           </>
         )}
@@ -674,18 +686,18 @@ export function DecisionTrace({ trace }: { trace: DiscoverTraceStep[] }) {
   const [open, setOpen] = useState(false);
   if (trace.length === 0) return null;
   return (
-    <div className="rounded-2xl border bg-card/60">
+    <div className="border-t-2 border-foreground">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm"
+        className="flex min-h-12 w-full items-center justify-between gap-2 px-2 py-2 text-left text-[15px] font-semibold"
       >
         <span>{t("discover.howDecided", "How Agora decided")}</span>
         <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} aria-hidden />
       </button>
       {open && (
-        <ol className="space-y-2 border-t px-4 py-3 text-xs">
+        <ol className="space-y-2 px-2 pb-3 text-[12.5px] text-muted-foreground">
           {trace.map((step, i) => (
             <li key={i} className="flex gap-2">
               {step.source === "qloo" ? (

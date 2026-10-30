@@ -186,14 +186,14 @@ export function GettingThere({ destination, destinationLabel, tip, offlineSummar
         <div
           role="group"
           aria-label={t("gettingThere.openIn")}
-          className="inline-flex items-center gap-1 rounded-full border bg-muted/40 p-0.5 text-xs"
+          className="inline-flex flex-wrap items-center gap-1 rounded-full border bg-muted/40 p-0.5 text-xs"
         >
           <span className="px-2 text-muted-foreground">{t("gettingThere.openIn")}:</span>
           <button
             type="button"
             onClick={() => choose("google")}
             aria-pressed={provider === "google"}
-            className={`rounded-full px-3 py-1 font-medium transition ${
+            className={`min-h-9 rounded-full px-3 py-1 font-medium transition ${
               provider === "google"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -205,7 +205,7 @@ export function GettingThere({ destination, destinationLabel, tip, offlineSummar
             type="button"
             onClick={() => choose("yandex")}
             aria-pressed={provider === "yandex"}
-            className={`rounded-full px-3 py-1 font-medium transition ${
+            className={`min-h-9 rounded-full px-3 py-1 font-medium transition ${
               provider === "yandex"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -217,7 +217,7 @@ export function GettingThere({ destination, destinationLabel, tip, offlineSummar
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <Button asChild size="lg" className="flex-1" disabled={!isOnline}>
+        <Button asChild size="lg" className="sm:flex-1" disabled={!isOnline}>
           <a href={primaryHref} target="_blank" rel="noopener noreferrer">
             <Navigation className="mr-2 h-4 w-4" />
             {provider === "yandex"
@@ -228,7 +228,7 @@ export function GettingThere({ destination, destinationLabel, tip, offlineSummar
         <Button
           size="lg"
           variant="outline"
-          className="flex-1"
+          className="sm:flex-1"
           onClick={useMyLocation}
           disabled={loading || !isOnline}
         >

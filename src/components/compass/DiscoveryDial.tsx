@@ -208,6 +208,8 @@ export function DiscoveryDial({
   points,
   searching,
   onPick,
+  districtOptions,
+  onDistrict,
   className = "",
 }: {
   district: string | null | undefined;
@@ -215,14 +217,27 @@ export function DiscoveryDial({
   points: DialPoint[];
   searching: boolean;
   onPick?: (id: string, rank: number) => void;
+  /** Agora's one question, answered on the map: the districts to choose from. */
+  districtOptions?: string[];
+  onDistrict?: (name: string) => void;
   className?: string;
 }) {
   const { t, i18n } = useTranslation();
-  const origin = originFor(district);
+  const asking = Boolean(districtOptions?.length) && points.length === 0;
+  const origin = originFor(asking ? null : district);
   const top = points.slice(0, 3);
+  const choices = asking
+    ? (districtOptions ?? [])
+        .map((n) => DISTRICTS.find((d) => d.name === n))
+        .filter((d): d is (typeof DISTRICTS)[number] => Boolean(d))
+    : [];
 
   const geo = useMemo(() => {
-    const far = Math.max(1.2, ...top.map((p) => distanceKm(origin, p)));
+    const far = Math.max(
+      0.6,
+      ...top.map((p) => distanceKm(origin, p)),
+      ...choices.map((d) => distanceKm(origin, d)),
+    );
     const radiusKm = far * 1.25;
     const proj = projector(origin, radiusKm);
     const km = (arr: [number, number][]) => arr.map(([a, b]) => proj.kmOf(a, b));
@@ -241,18 +256,36 @@ export function DiscoveryDial({
       const s = proj.scr(proj.kmOf(p.lat, p.lng));
       return { ...p, i, x: s.x, y: s.y, b: bearingDeg(origin, p), d: distanceKm(origin, p) };
     });
-    // keep the three name chips from sitting on each other
+    // keep the three name chips from sitting on each other: walk them top to
+    // bottom and open a 26 px gap where two would overlap
     const labels = marks.map((m) => ({ id: m.id, x: m.x, y: m.y }));
-    for (let a = 0; a < labels.length; a++)
+    const order = [...labels].sort((a, b) => a.y - b.y);
+    for (let k = 1; k < order.length; k++)
+      for (let j = 0; j < k; j++) {
+        const a = order[k],
+          b = order[j];
+        if (Math.abs(a.x - b.x) < 120 && a.y - b.y < 26) a.y = b.y + 26;
+      }
+    const asks = choices.map((d) => {
+      const p = proj.scr(proj.kmOf(d.lat, d.lng));
+      return { name: d.name, x: p.x, y: p.y };
+    });
+    for (let a = 0; a < asks.length; a++)
       for (let b = 0; b < a; b++)
-        if (Math.abs(labels[a].y - labels[b].y) < 18 && Math.abs(labels[a].x - labels[b].x) < 90)
-          labels[a].y = labels[b].y + (labels[a].y >= labels[b].y ? 18 : -18);
-    return { land, shore, water, marks, labels };
+        if (Math.abs(asks[a].y - asks[b].y) < 22 && Math.abs(asks[a].x - asks[b].x) < 74)
+          asks[a].y = asks[b].y + (asks[a].y >= asks[b].y ? 22 : -22);
+    return { land, shore, water, marks, labels, asks };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [origin.lat, origin.lng, top.map((p) => `${p.id}:${p.lat},${p.lng}`).join("|")]);
+  }, [
+    origin.lat,
+    origin.lng,
+    top.map((p) => `${p.id}:${p.lat},${p.lng}`).join("|"),
+    choices.map((d) => d.name).join("|"),
+  ]);
 
   const lead = geo.marks[0];
   const needle = lead ? lead.b : 0;
+  const needleOpacity = asking ? 0.3 : 1;
 
   return (
     <div className={className}>
@@ -376,6 +409,7 @@ export function DiscoveryDial({
                 ? "motion-safe:animate-[spin_1.4s_cubic-bezier(0.45,0,0.55,1)_infinite]"
                 : ""
             }
+            opacity={needleOpacity}
             style={{
               transformOrigin: "160px 160px",
               transformBox: "view-box",
@@ -406,6 +440,18 @@ export function DiscoveryDial({
             <circle cx="160" cy="160" r="2.8" fill="var(--nt)" />
           </g>
         </svg>
+        {/* the one question, answered on the map */}
+        {geo.asks.map((q) => (
+          <button
+            key={q.name}
+            type="button"
+            onClick={() => onDistrict?.(q.name)}
+            className="absolute z-[2] inline-flex min-h-[30px] -translate-x-1/2 -translate-y-1/2 items-center rounded-full bg-[rgb(14_11_26/0.62)] px-3 text-[11.5px] font-semibold text-[color:var(--nt)] shadow-[inset_0_0_0_1px_var(--nt-line)] backdrop-blur-sm transition hover:bg-[color:var(--nt)] hover:text-[color:var(--nt-ink)]"
+            style={{ left: `${(q.x / 320) * 100}%`, top: `${(q.y / 320) * 100}%` }}
+          >
+            {q.name}
+          </button>
+        ))}
         {/* name chips over the markers */}
         {geo.marks.map((m, k) => (
           <button
@@ -439,12 +485,14 @@ export function DiscoveryDial({
       </div>
 
       <p className="mt-2 text-center font-mono text-[10.5px] uppercase tracking-[0.1em] text-[color:var(--nt-2)]">
-        {origin.isDistrict
-          ? t("dial.fromDistrict", {
-              district: origin.name,
-              defaultValue: "From the centre of {{district}}",
-            })
-          : t("dial.fromCity", "From the city centre")}
+        {asking
+          ? t("dial.whichDistrict", "One question: which district? Tap it on the map")
+          : origin.isDistrict
+            ? t("dial.fromDistrict", {
+                district: origin.name,
+                defaultValue: "From the centre of {{district}}",
+              })
+            : t("dial.fromCity", "From the city centre")}
       </p>
 
       {geo.marks.length > 0 && (

@@ -143,7 +143,10 @@ function ResultsView() {
 
   // The discovery moment: the top answers with coordinates, in rank order.
   const dialPoints = useMemo<DialPoint[]>(() => {
-    if (!result) return [];
+    // A question is answered on the map; Agora's own gatherings are only an
+    // extra for place requests, never the answer the compass points at.
+    if (!result || state.status === "question") return [];
+    if (result.intent !== "event" && !result.places) return [];
     const raw =
       result.intent !== "event" && result.places
         ? result.places.items.map((p) => ({
@@ -161,7 +164,7 @@ function ResultsView() {
     return raw.filter(
       (x): x is DialPoint => typeof x.lat === "number" && typeof x.lng === "number",
     );
-  }, [result]);
+  }, [result, state.status]);
 
   function focusCard(id: string) {
     const el = document.getElementById(`card-${id}`);
@@ -247,7 +250,9 @@ function ResultsView() {
           </div>
         </header>
 
-        {(dialPoints.length > 0 || (busy && state.turns.length <= 1)) && (
+        {(dialPoints.length > 0 ||
+          (busy && state.turns.length <= 1) ||
+          (state.status === "question" && result?.question?.kind === "district")) && (
           <section
             className="night-field -mx-4 mt-4 px-5 pb-5 pt-6 sm:mx-0 sm:rounded-[28px]"
             aria-label={t("dial.section", "Where they are")}
@@ -259,6 +264,12 @@ function ResultsView() {
               points={dialPoints}
               searching={busy}
               onPick={(id) => focusCard(id)}
+              districtOptions={
+                state.status === "question" && result?.question?.kind === "district"
+                  ? result.question.options
+                  : undefined
+              }
+              onDistrict={(district) => answer({ district, label: district })}
             />
           </section>
         )}

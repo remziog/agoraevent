@@ -3,12 +3,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bookmark, BookmarkCheck, CalendarDays, Coins, Info, MapPin, Users } from "lucide-react";
+import { Bookmark, BookmarkCheck, Check, Info } from "lucide-react";
 import { getEvent, rsvpEvent } from "@/lib/events.functions";
 import { useSaveToggle, useSavedIds } from "@/lib/use-saved";
 import { eventDistrict } from "@/lib/discovery";
 import { AppHeader } from "@/components/AppHeader";
-import { EventVisual } from "@/components/EventVisual";
+import { EventHero } from "@/components/event/EventHero";
+import { AddToCalendar } from "@/components/event/AddToCalendar";
+import { ExperienceButton } from "@/components/bingo/ExperienceButton";
 import { MemorySection } from "@/components/MemorySection";
 import { GettingThere } from "@/components/GettingThere";
 import { Button } from "@/components/ui/button";
@@ -110,134 +112,196 @@ function EventDetail() {
         : `${price} TL`;
   const district = event ? eventDistrict({ ...event, tags: event.tags ?? [] }) : null;
 
+  const goBack = () =>
+    window.history.length > 1 ? window.history.back() : navigate({ to: "/app" });
+  const visibleTags = (event?.tags ?? []).filter(
+    (tag: string) => !tag.includes(":") && tag !== "demo",
+  );
+  const where = event ? [event.venue, district ?? event.city].filter(Boolean).join(" · ") : "";
+  const dt = "pt-0.5 font-mono text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground";
+  const dd = "min-w-0 text-[15px] font-medium tabular-nums [overflow-wrap:anywhere]";
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader variant="member" />
-      <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-        <button
-          onClick={() =>
-            window.history.length > 1 ? window.history.back() : navigate({ to: "/app" })
-          }
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          ← {t("common.back", "Back")}
-        </button>
-
+      <main className="mx-auto max-w-3xl pb-16 sm:px-6 sm:pt-6">
         {q.isLoading && (
-          <div className="mt-6 space-y-3" aria-busy="true" aria-live="polite">
-            <div className="h-56 animate-pulse rounded-3xl bg-muted/60" />
-            <div className="h-8 w-2/3 animate-pulse rounded bg-muted" />
+          <div aria-busy="true" aria-live="polite">
+            <div className="h-[440px] motion-safe:animate-pulse bg-muted/60 sm:rounded-[32px]" />
+            <div className="space-y-3 px-5 pt-6 sm:px-8">
+              <div className="h-4 w-1/3 motion-safe:animate-pulse rounded bg-muted" />
+              <div className="h-4 w-2/3 motion-safe:animate-pulse rounded bg-muted" />
+              <p className="sr-only">{t("common.loading", "Loading…")}</p>
+            </div>
           </div>
         )}
         {!q.isLoading && !event && (
-          <p className="mt-6 rounded-2xl border border-dashed p-6 text-sm text-muted-foreground">
-            {t("event.notFound", "This gathering isn't on Agora (any more).")}
-          </p>
+          <div className="px-4 pt-6 sm:px-0">
+            <button
+              type="button"
+              onClick={goBack}
+              className="min-h-11 text-sm text-muted-foreground hover:text-foreground"
+            >
+              ← {t("common.back", "Back")}
+            </button>
+            <p className="mt-4 rounded-[22px] border-2 border-dashed p-6 text-sm text-muted-foreground">
+              {t("event.notFound", "This gathering isn't on Agora (any more).")}
+            </p>
+          </div>
         )}
 
         {event && (
-          <article className="mt-6 overflow-hidden rounded-3xl border bg-card">
-            <EventVisual
+          <article className="overflow-hidden sm:rounded-[32px]">
+            <EventHero
               title={event.title}
               category={event.category}
               tags={event.tags}
-              size="lg"
+              demo={demo}
+              onBack={goBack}
             />
-            <div className="p-6 sm:p-8">
-              <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                <span lang="en">{event.category}</span>
-                {demo && (
-                  <span className="rounded-full bg-muted px-2 py-0.5">
-                    {t("common.demo", "Demo")}
-                  </span>
+            {/* The paper sheet: overlaps the poster with a rounded top (Naz v3 "d-body"). */}
+            <div className="relative z-10 -mt-7 grid gap-6 rounded-t-[28px] bg-background px-5 pb-2 pt-6 sm:px-8">
+              <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-3 border-t-2 border-foreground pt-3.5">
+                <dt className={dt}>{t("event.when", "When")}</dt>
+                <dd className={dd}>
+                  {formatWhenLocalized(event.starts_at, i18n.language)}
+                  {event.ends_at ? ` – ${formatWhenLocalized(event.ends_at, i18n.language)}` : ""}
+                  <small className="block text-xs font-normal text-muted-foreground">
+                    Europe/Istanbul
+                    {!event.ends_at && ` · ${t("v3paper.detail.noEnd", "no end time given")}`}
+                  </small>
+                </dd>
+                {where && (
+                  <>
+                    <dt className={dt}>{t("event.where", "Where")}</dt>
+                    <dd className={dd}>{where}</dd>
+                  </>
                 )}
-              </div>
-              <h1 className="mt-2 font-display text-4xl leading-tight">{event.title}</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("event.hostedBy", "Hosted by")}{" "}
-                {event.org_id ? (
-                  <Link
-                    to="/app/community/$id"
-                    params={{ id: event.org_id }}
-                    className="text-primary underline-offset-4 hover:underline"
-                  >
-                    {event.organizations?.name}
-                  </Link>
-                ) : (
-                  event.organizations?.name
+                <dt className={dt}>{t("event.price", "Price")}</dt>
+                <dd className={dd}>{priceText}</dd>
+                {typeof event.capacity === "number" && (
+                  <>
+                    <dt className={dt}>{t("event.groupSize", "Group size")}</dt>
+                    <dd className={dd}>
+                      {t("event.capacity", {
+                        n: event.capacity,
+                        defaultValue: "up to {{n}} people",
+                      })}
+                    </dd>
+                  </>
                 )}
-              </p>
-
-              <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-                <div className="flex items-start gap-2">
-                  <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                  <div>
-                    <dt className="text-xs uppercase tracking-widest text-muted-foreground">
-                      {t("event.when", "When")}
-                    </dt>
-                    <dd>
-                      {formatWhenLocalized(event.starts_at, i18n.language)}
-                      {event.ends_at
-                        ? ` – ${formatWhenLocalized(event.ends_at, i18n.language)}`
-                        : ""}
-                      <span className="block text-xs text-muted-foreground">Europe/Istanbul</span>
+                {event.organizations?.name && (
+                  <>
+                    <dt className={dt}>{t("event.hostedBy", "Hosted by")}</dt>
+                    <dd className={dd}>
+                      {event.org_id ? (
+                        <Link
+                          to="/app/community/$id"
+                          params={{ id: event.org_id }}
+                          className="-my-3 inline-block py-3 underline decoration-[#ff5b1f] decoration-2 underline-offset-4 hover:text-brand"
+                        >
+                          {event.organizations.name}
+                        </Link>
+                      ) : (
+                        event.organizations.name
+                      )}
                     </dd>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                  <div>
-                    <dt className="text-xs uppercase tracking-widest text-muted-foreground">
-                      {t("event.where", "Where")}
-                    </dt>
-                    <dd>
-                      {[event.venue, district ?? event.city].filter(Boolean).join(" · ") || "—"}
-                    </dd>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Coins className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                  <div>
-                    <dt className="text-xs uppercase tracking-widest text-muted-foreground">
-                      {t("event.price", "Price")}
-                    </dt>
-                    <dd>{priceText}</dd>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                  <div>
-                    <dt className="text-xs uppercase tracking-widest text-muted-foreground">
-                      {t("event.groupSize", "Group size")}
-                    </dt>
-                    <dd>
-                      {typeof event.capacity === "number"
-                        ? t("event.capacity", {
-                            n: event.capacity,
-                            defaultValue: "up to {{n}} people",
-                          })
-                        : t("event.capacityUnknown", "Not listed")}
-                    </dd>
-                  </div>
-                </div>
+                  </>
+                )}
               </dl>
 
               {event.description && (
-                <p className="mt-6 whitespace-pre-wrap text-base">{event.description}</p>
+                <p className="whitespace-pre-wrap text-base leading-relaxed">{event.description}</p>
               )}
-              {event.tags?.length > 0 && (
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {event.tags
-                    .filter((tag: string) => !tag.includes(":") && tag !== "demo")
-                    .map((tag: string) => (
-                      <span key={tag} className="rounded-full border px-3 py-1 text-xs">
-                        {tag}
-                      </span>
-                    ))}
-                </div>
+              {visibleTags.length > 0 && (
+                <ul
+                  className="flex flex-wrap gap-1.5"
+                  aria-label={t("v3paper.detail.tags", "Tags")}
+                >
+                  {visibleTags.map((tag: string) => (
+                    <li
+                      key={tag}
+                      className="inline-flex h-7 items-center rounded-full bg-muted px-3 text-[13px]"
+                    >
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
               )}
 
-              <p className="mt-6 flex items-start gap-2 rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+              {/* Actions (Naz v3 "d-acts"): RSVP, Save, calendar export. Save ≠ RSVP ≠ calendar. */}
+              <div className="grid gap-2">
+                <Button
+                  size="lg"
+                  variant={going ? "outline" : "default"}
+                  className="min-h-12 w-full text-[15px]"
+                  disabled={mutate.isPending}
+                  aria-busy={mutate.isPending}
+                  onClick={() => setConfirm(going ? "cancel" : "join")}
+                >
+                  {going && !mutate.isPending && <Check aria-hidden />}
+                  {mutate.isPending
+                    ? t("event.saving", "Saving…")
+                    : going
+                      ? t("event.goingCancel", "You're going — cancel?")
+                      : t("event.imGoing", "I'm going")}
+                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="min-h-11 flex-1 basis-44 px-4"
+                    disabled={saveToggle.isPending}
+                    aria-pressed={isSaved}
+                    onClick={() =>
+                      saveToggle.mutate({ target: { kind: "event", refId: id }, saved: isSaved })
+                    }
+                  >
+                    {isSaved ? (
+                      <>
+                        <BookmarkCheck aria-hidden /> {t("save.saved", "Saved to my plans")}
+                      </>
+                    ) : (
+                      <>
+                        <Bookmark aria-hidden /> {t("save.save", "Save to my plans")}
+                      </>
+                    )}
+                  </Button>
+                  {going && (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="lg"
+                      className="min-h-11 flex-1 basis-44 px-4"
+                    >
+                      <Link to="/app/plans">{t("event.seePlans", "See it in my plans")}</Link>
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "save.note",
+                    "Saving is a private bookmark: it doesn't tell the organiser, doesn't count as going and earns no XP.",
+                  )}
+                </p>
+                {/* "I attended" — self-reported, on this device; never for a demo gathering (it did not happen). */}
+                {!demo && (
+                  <ExperienceButton
+                    item={{
+                      kind: "event",
+                      refId: id,
+                      name: event.title,
+                      categories: event.category ? [event.category] : [],
+                      tags: (event.tags ?? []).filter((tag: string) => !tag.includes(":")),
+                      district,
+                    }}
+                    startsAt={event.starts_at}
+                  />
+                )}
+                <AddToCalendar event={event} demo={demo} />
+              </div>
+
+              <p className="flex items-start gap-2 rounded-[18px] border border-dashed p-3 text-xs text-muted-foreground">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
                 <span>
                   {demo
@@ -255,98 +319,52 @@ function EventDetail() {
                   )}
                 </span>
               </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button
-                  size="lg"
-                  variant={going ? "outline" : "default"}
-                  disabled={mutate.isPending}
-                  aria-busy={mutate.isPending}
-                  onClick={() => setConfirm(going ? "cancel" : "join")}
-                >
-                  {mutate.isPending
-                    ? t("event.saving", "Saving…")
-                    : going
-                      ? t("event.goingCancel", "You're going — cancel?")
-                      : t("event.imGoing", "I'm going")}
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  disabled={saveToggle.isPending}
-                  aria-pressed={isSaved}
-                  onClick={() =>
-                    saveToggle.mutate({ target: { kind: "event", refId: id }, saved: isSaved })
-                  }
-                >
-                  {isSaved ? (
-                    <>
-                      <BookmarkCheck className="h-4 w-4" aria-hidden />{" "}
-                      {t("save.saved", "Saved to my plans")}
-                    </>
-                  ) : (
-                    <>
-                      <Bookmark className="h-4 w-4" aria-hidden />{" "}
-                      {t("save.save", "Save to my plans")}
-                    </>
-                  )}
-                </Button>
-                {going && (
-                  <Button asChild variant="ghost" size="lg">
-                    <Link to="/app/plans">{t("event.seePlans", "See it in my plans")}</Link>
-                  </Button>
-                )}
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {t(
-                  "save.note",
-                  "Saving is a private bookmark: it doesn't tell the organiser, doesn't count as going and earns no XP.",
-                )}
-              </p>
             </div>
           </article>
         )}
 
-        {event &&
-          (() => {
-            const tipTag = (event.tags ?? []).find((tag: string) => tag.startsWith("tip:"));
-            const label = [event.venue, event.city].filter(Boolean).join(", ") || event.title;
-            if (event.latitude == null || event.longitude == null) return null;
-            return (
-              <GettingThere
-                destination={{ lat: event.latitude, lng: event.longitude }}
-                destinationLabel={label}
-                tip={tipTag ? tipTag.slice("tip:".length) : undefined}
-                offlineSummary={getOfflineSummary(event.id, i18n.language) ?? undefined}
-              />
-            );
-          })()}
-        {event && (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "Event",
-                name: event.title,
-                startDate: event.starts_at,
-                description: event.description ?? undefined,
-                location: {
-                  "@type": "Place",
-                  name: event.venue ?? event.city ?? "TBD",
-                  address: event.city ?? undefined,
-                },
-                organizer: event.organizations?.name
-                  ? { "@type": "Organization", name: event.organizations.name }
-                  : undefined,
-              })
-                .replace(/<\/(script)/gi, "<\\/$1")
-                .replace(/<!--/g, "<\\!--"),
-            }}
-          />
-        )}
+        <div className="px-4 sm:px-0">
+          {event &&
+            (() => {
+              const tipTag = (event.tags ?? []).find((tag: string) => tag.startsWith("tip:"));
+              const label = [event.venue, event.city].filter(Boolean).join(", ") || event.title;
+              if (event.latitude == null || event.longitude == null) return null;
+              return (
+                <GettingThere
+                  destination={{ lat: event.latitude, lng: event.longitude }}
+                  destinationLabel={label}
+                  tip={tipTag ? tipTag.slice("tip:".length) : undefined}
+                  offlineSummary={getOfflineSummary(event.id, i18n.language) ?? undefined}
+                />
+              );
+            })()}
+          {event && (
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "Event",
+                  name: event.title,
+                  startDate: event.starts_at,
+                  description: event.description ?? undefined,
+                  location: {
+                    "@type": "Place",
+                    name: event.venue ?? event.city ?? "TBD",
+                    address: event.city ?? undefined,
+                  },
+                  organizer: event.organizations?.name
+                    ? { "@type": "Organization", name: event.organizations.name }
+                    : undefined,
+                })
+                  .replace(/<\/(script)/gi, "<\\/$1")
+                  .replace(/<!--/g, "<\\!--"),
+              }}
+            />
+          )}
 
-        {event && <MemorySection eventId={id} canPost={going} />}
+          {event && <MemorySection eventId={id} canPost={going} />}
+        </div>
 
         {/* The person confirms with the real event, date and price in view; nothing joins on its own. */}
         <AlertDialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
