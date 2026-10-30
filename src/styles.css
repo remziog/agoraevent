@@ -117,6 +117,8 @@
     font-stretch: 72%;
     font-weight: 800;
     letter-spacing: -0.015em;
+    /* condensed heavy type closes up word gaps; open them slightly */
+    word-spacing: 0.06em;
   }
   :focus-visible {
     outline-color: var(--ring);

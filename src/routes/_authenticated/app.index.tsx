@@ -111,7 +111,7 @@ function Discover() {
             <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[color:var(--nt-2)]">
               {dateLine}
             </p>
-            <h1 className="mt-1.5 text-[3.375rem] font-[850] leading-[0.86] tracking-[-0.025em] text-balance [font-stretch:64%] sm:text-[4.5rem]">
+            <h1 className="mt-1.5 text-[3.375rem] font-[850] leading-[0.86] tracking-[-0.025em] text-balance [font-stretch:64%] [word-spacing:0.12em] sm:text-[4.5rem]">
               {t("discover.heroTitle", "What do you feel like doing today")}
               <span className="hero-q">?</span>
             </h1>
