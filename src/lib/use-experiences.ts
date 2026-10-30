@@ -47,6 +47,9 @@ export function useSessionUserId() {
   return { userId, ready };
 }
 
+const NO_LINES: LineKey[] = [];
+const NO_SQUARES: ChallengeId[] = [];
+
 export function useExperiences() {
   const { userId, ready } = useSessionUserId();
   const store = useSyncExternalStore(
@@ -63,7 +66,7 @@ export function useExperiences() {
   const period = periodOf(today);
 
   const card = useMemo(
-    () => deriveCard(store.records, period, store.started[period] ?? []),
+    () => deriveCard(store.records, period, store.started[period] ?? NO_SQUARES),
     [store, period],
   );
   const badges = useMemo(() => badgeProgress(store.records), [store]);
@@ -93,7 +96,7 @@ export function useExperiences() {
     today,
     period,
     records: store.records,
-    celebrated: store.celebrated[period] ?? [],
+    celebrated: store.celebrated[period] ?? NO_LINES,
     card,
     badges,
     add,

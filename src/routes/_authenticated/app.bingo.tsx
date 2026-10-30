@@ -69,6 +69,7 @@ function BingoPage() {
   useEffect(
     () => () => {
       if (timer.current !== null) window.clearTimeout(timer.current);
+      timer.current = null;
     },
     [],
   );
