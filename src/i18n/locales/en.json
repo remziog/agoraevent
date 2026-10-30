@@ -595,6 +595,33 @@
       "icsSavedSub": "Open it to add the gathering to your calendar app.",
       "icsFailed": "Couldn't create the calendar file. Try the Google Calendar link.",
       "ended": "This gathering has ended — it can't be added any more."
+    },
+    "cal": {
+      "next7": "The next 7 days",
+      "view": "Calendar view",
+      "tabEvents": "Events",
+      "tabPlans": "My plans",
+      "prevWeek": "Previous week",
+      "nextWeek": "Next week",
+      "pickDay": "Pick a day",
+      "todayShort": "Today",
+      "tomorrow": "Tomorrow",
+      "dayEvents_one": "{{count}} gathering",
+      "dayEvents_other": "{{count}} gatherings",
+      "dayPlans": "you're going",
+      "next": "Your next plan",
+      "eventsCount_one": "{{count}} gathering · Istanbul time",
+      "eventsCount_other": "{{count}} gatherings · Istanbul time",
+      "plansCount_one": "{{count}} plan · Istanbul time",
+      "plansCount_other": "{{count}} plans · Istanbul time",
+      "first50": "first 50 listed",
+      "eventsError": "Couldn't load the gatherings.",
+      "emptyDay": "No gatherings on this day",
+      "emptyWeek": "No gatherings this week",
+      "noPlansDay": "No plans on this day",
+      "noPlansWeek": "No plans this week",
+      "emptyHint": "Pick another day or week. Only gatherings listed on Agora by their organisers appear here.",
+      "footer": "Times are Istanbul time (Europe/Istanbul). Only gatherings listed on Agora by their organisers appear here; demo listings are marked. Qloo taste data is never used as a date."
     }
   }
 }

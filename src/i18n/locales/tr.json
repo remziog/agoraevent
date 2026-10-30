@@ -596,6 +596,33 @@
       "icsSavedSub": "Buluşmayı takvim uygulamana eklemek için dosyayı aç.",
       "icsFailed": "Takvim dosyası oluşturulamadı. Google Takvim bağlantısını dene.",
       "ended": "Bu buluşma sona erdi; artık takvime eklenemez."
+    },
+    "cal": {
+      "next7": "Önümüzdeki 7 gün",
+      "view": "Takvim görünümü",
+      "tabEvents": "Buluşmalar",
+      "tabPlans": "Planlarım",
+      "prevWeek": "Önceki hafta",
+      "nextWeek": "Sonraki hafta",
+      "pickDay": "Gün seç",
+      "todayShort": "Bugün",
+      "tomorrow": "Yarın",
+      "dayEvents_one": "{{count}} buluşma",
+      "dayEvents_other": "{{count}} buluşma",
+      "dayPlans": "katılıyorsun",
+      "next": "Sıradaki planın",
+      "eventsCount_one": "{{count}} buluşma · İstanbul saati",
+      "eventsCount_other": "{{count}} buluşma · İstanbul saati",
+      "plansCount_one": "{{count}} plan · İstanbul saati",
+      "plansCount_other": "{{count}} plan · İstanbul saati",
+      "first50": "ilk 50 kayıt",
+      "eventsError": "Buluşmalar yüklenemedi.",
+      "emptyDay": "Bu gün buluşma yok",
+      "emptyWeek": "Bu hafta buluşma yok",
+      "noPlansDay": "Bu tarihte planın yok",
+      "noPlansWeek": "Bu hafta planın yok",
+      "emptyHint": "Başka bir gün ya da hafta seç. Burada yalnızca organizatörlerin Agora'da listelediği buluşmalar görünür.",
+      "footer": "Saatler İstanbul saatiyle (Europe/Istanbul). Burada yalnızca organizatörlerin Agora'da listelediği buluşmalar görünür; demo kayıtlar işaretlidir. Qloo zevk verisi tarih bilgisi olarak kullanılmaz."
     }
   }
 }
