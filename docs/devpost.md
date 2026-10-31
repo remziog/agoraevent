@@ -56,7 +56,7 @@ Without Qloo there is no ranking, and two different tastes in the same district 
 - **The compass** is a multi-turn assistant. A model reads the intent, favourites and interests in free text (explicit words in the request take precedence); the server then runs the steps — verify with Qloo, ask one question when needed, rank with Qloo, add Agora's gatherings — and carries the conversation's state across turns. Every step is listed under **How Agora decided**, with each Qloo request, its status, its timing and how many results were readable.
 - **The Taste guide** is a Vercel AI SDK `ToolLoopAgent` on Cloudflare Workers with five tools (`rank_landmarks`, `story_outline`, `restaurants_near`, `gatherings_near`, `submit_plan`). The model chooses the calls and writes short notes labelled "AI"; every fact on screen comes from recorded tool results, never from the model's text.
 
-### Design — by Naz Paşalı, Creative Director
+### Product Development and Design — by Naz Paşalı, Creative Director
 
 Agora's identity and interface are by **Naz Paşalı, our Creative Director**. She drew the new geometric AGORA wordmark and the front door of ago-ra.life: Agora's compass draws itself, turns, sheds its detail and settles into the O of the wordmark, then offers three ways in — explore, I have a venue, I organise events. Around it runs a two-sided system: a warm paper-and-ink day side (condensed Archivo headlines, Instrument Sans, DM Mono labels) and a night field for discovery — a living colour field, her own WebGL shader, that gathers light around the compass and quickens while Agora searches (and holds still for anyone who prefers reduced motion). The compass is hers too: ten categories you select, then discover; a location chooser; a needle that turns toward the category and, once the answer arrives, points at the real places around the district on a small map of Istanbul's coastline — true bearings, distances in kilometres. Places and gatherings without a photo get generative posters seeded by their names instead of stock or AI images. She also designed the event page (poster, Add to calendar), the calendar and plans, the bottom navigation, the profile as a personal city archive, and **Bingo** — a monthly 3×3 card of city experiences you fill by marking what you actually did.
 
@@ -80,7 +80,7 @@ His rules for the build:
 ### Team
 
 - **Remzi Osman Gönültaş** — Founder: product and engineering; team representative.
-- **Naz Paşalı** — Creative Director: identity, interface, motion and the Bingo concept.
+- **Naz Paşalı** — Creative Director: product development and design (identity, interface, motion and the Bingo concept).
 
 ### How we built it
 
