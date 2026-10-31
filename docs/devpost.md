@@ -132,6 +132,8 @@ Agora launched in May 2026 as a mobile-first app for small real-world gatherings
 
 Map budgets to Qloo's price levels, tighten district filtering with coordinates, rank Agora's own gatherings by taste too, sync Bingo to the account and verify squares with partner venues (a code at the venue) before any reward exists, build **Agora Pro** — the venue and organiser workspace Naz has already designed (profiles, verification, Connect proposals and messages between venues and organisers, Pulse: aggregated demand by district) — on Agora's backend, native sign-in and push notifications in the iOS and Android apps, and more cities.
 
+**The vision as a deck:** Naz's interactive presentation *Agora — The City Is Alive* — sixteen short chapters, from the compass to explorers, venues, organisers, Connect and Pulse: https://claude.ai/artifact/SLUE2LqGezGp5Vw64VcEge. It shows designs that go beyond today's app; the live product is https://ago-ra.life.
+
 ## Built with
 
 qloo · typescript · react · tanstack-start · vite · tailwindcss · webgl · cloudflare-workers · supabase · postgresql · vercel-ai-sdk · gemini · web-speech-api · capacitor · lovable · zod
@@ -140,6 +142,7 @@ qloo · typescript · react · tanstack-start · vite · tailwindcss · webgl ·
 
 - https://ago-ra.life
 - https://github.com/remziog/agoraevent
+- https://claude.ai/artifact/SLUE2LqGezGp5Vw64VcEge (Naz's vision deck)
 
 ## Additional info (judges only)
 
