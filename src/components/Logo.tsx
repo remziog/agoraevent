@@ -7,7 +7,7 @@ type Props = {
 };
 
 /**
- * Agora's wordmark (design: Naz Paşalı, Creative Director, Oct 2026): AGORA set
+ * Agora's wordmark (design: Naz Paşalı, co-founder, Oct 2026): AGORA set
  * in geometric shapes. Black on transparent; inverted on the night field.
  */
 export function Logo({ className, tone = "ink" }: Props) {

@@ -21,7 +21,7 @@ Taste guide (/app/guide) — Vercel AI SDK ToolLoopAgent: Qloo-ranked landmarks,
 (History vs Legend, narration), Qloo restaurants nearby, Agora gatherings
 ```
 
-Design: **Naz Paşalı** (Creative Director). `/app/qloo-status` shows the live Qloo state. Everything Qloo-related is documented in [`docs/qloo-hackathon.md`](./docs/qloo-hackathon.md): client modules, configuration (`QLOO_API_KEY` is a server-only secret), probe scripts, the Workers-vs-harness decision and the data rules we follow (no personal data to Qloo, no fake "Qloo-powered" labels). The Devpost write-up is [`docs/devpost.md`](./docs/devpost.md). Hackathon work happens on the `hackathon/qloo-agent` branch and reaches `main` through pull requests. Licensed under [MIT](./LICENSE).
+Co-founders: **Remzi Osman Gönültaş** (product engineering, visionary lead) and **Naz Paşalı** (product development and design). `/app/qloo-status` shows the live Qloo state. Everything Qloo-related is documented in [`docs/qloo-hackathon.md`](./docs/qloo-hackathon.md): client modules, configuration (`QLOO_API_KEY` is a server-only secret), probe scripts, the Workers-vs-harness decision and the data rules we follow (no personal data to Qloo, no fake "Qloo-powered" labels). The Devpost write-up is [`docs/devpost.md`](./docs/devpost.md). Hackathon work happens on the `hackathon/qloo-agent` branch and reaches `main` through pull requests. Licensed under [MIT](./LICENSE).
 
 ## Local development
 
