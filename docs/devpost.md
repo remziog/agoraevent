@@ -17,7 +17,7 @@ Your mood is the compass. Tell Agora what you love — by text, voice or a tap �
 
 ### Inspiration
 
-Istanbul has thousands of places, and the question that matters is a simple one: *what do you feel like doing today?* Agora began in May 2026 as an app for small real-world gatherings. For this hackathon, Naz Paşalı, our Creative Director, turned that question into the app's front door — a compass you steer with your mood — and Qloo gave us the missing link between what a person loves and a real place.
+Istanbul has thousands of places, and the question that matters is a simple one: *what do you feel like doing today?* Agora began in May 2026 as an app for small real-world gatherings. For this hackathon, Naz Paşalı, our co-founder, turned that question into the app's front door — a compass you steer with your mood — and Qloo gave us the missing link between what a person loves and a real place.
 
 ### The problem
 
@@ -56,9 +56,9 @@ Without Qloo there is no ranking, and two different tastes in the same district 
 - **The compass** is a multi-turn assistant. A model reads the intent, favourites and interests in free text (explicit words in the request take precedence); the server then runs the steps — verify with Qloo, ask one question when needed, rank with Qloo, add Agora's gatherings — and carries the conversation's state across turns. Every step is listed under **How Agora decided**, with each Qloo request, its status, its timing and how many results were readable.
 - **The Taste guide** is a Vercel AI SDK `ToolLoopAgent` on Cloudflare Workers with five tools (`rank_landmarks`, `story_outline`, `restaurants_near`, `gatherings_near`, `submit_plan`). The model chooses the calls and writes short notes labelled "AI"; every fact on screen comes from recorded tool results, never from the model's text.
 
-### Product Development and Design — by Naz Paşalı, Creative Director
+### Product Development and Design — by Naz Paşalı, Co-Founder
 
-Agora's identity and interface are by **Naz Paşalı, our Creative Director**. She drew the new geometric AGORA wordmark and the front door of ago-ra.life: Agora's compass draws itself, turns, sheds its detail and settles into the O of the wordmark, then offers three ways in — explore, I have a venue, I organise events. Around it runs a two-sided system: a warm paper-and-ink day side (condensed Archivo headlines, Instrument Sans, DM Mono labels) and a night field for discovery — a living colour field, her own WebGL shader, that gathers light around the compass and quickens while Agora searches (and holds still for anyone who prefers reduced motion). The compass is hers too: ten categories you select, then discover; a location chooser; a needle that turns toward the category and, once the answer arrives, points at the real places around the district on a small map of Istanbul's coastline — true bearings, distances in kilometres. Places and gatherings without a photo get generative posters seeded by their names instead of stock or AI images. She also designed the event page (poster, Add to calendar), the calendar and plans, the bottom navigation, the profile as a personal city archive, and **Bingo** — a monthly 3×3 card of city experiences you fill by marking what you actually did.
+Agora's identity and interface are by **Naz Paşalı, our co-founder**. She drew the new geometric AGORA wordmark and the front door of ago-ra.life: Agora's compass draws itself, turns, sheds its detail and settles into the O of the wordmark, then offers three ways in — explore, I have a venue, I organise events. Around it runs a two-sided system: a warm paper-and-ink day side (condensed Archivo headlines, Instrument Sans, DM Mono labels) and a night field for discovery — a living colour field, her own WebGL shader, that gathers light around the compass and quickens while Agora searches (and holds still for anyone who prefers reduced motion). The compass is hers too: ten categories you select, then discover; a location chooser; a needle that turns toward the category and, once the answer arrives, points at the real places around the district on a small map of Istanbul's coastline — true bearings, distances in kilometres. Places and gatherings without a photo get generative posters seeded by their names instead of stock or AI images. She also designed the event page (poster, Add to calendar), the calendar and plans, the bottom navigation, the profile as a personal city archive, and **Bingo** — a monthly 3×3 card of city experiences you fill by marking what you actually did.
 
 Her principles carry through every screen:
 
@@ -66,9 +66,9 @@ Her principles carry through every screen:
 - **No fake pictures.** A real, credited photo or a generative poster — never a stock or AI image.
 - **Phone first.** Layouts from 320 px, 44 px touch targets, reduced motion respected, Turkish and English.
 
-### Product and engineering — by Remzi Osman Gönültaş, Founder
+### Product Engineering — by Remzi Osman Gönültaş, Co-Founder and Visionary Lead
 
-Agora is **Remzi Osman Gönültaş**'s project. He started it in May 2026 as a mobile-first app for small real-world gatherings in Istanbul, and for this hackathon he led its turn into a taste-aware agent — product, architecture and engineering, end to end. By day he is a Salesforce consultant in Istanbul who designs AI agents (Agentforce) for companies; Agora is where he brings that work to his own city. He shaped the one-compass flow — say what you love, answer at most one question, get Qloo-ranked places and the gatherings nearby — and led the build behind it: the server-only Qloo client, the intent and conditions the agent reads, the Taste guide agent and its five tools, Save vs. RSVP, plans and communities, voice input, the records behind Bingo, and the iOS and Android shells.
+**Remzi Osman Gönültaş** is Agora's co-founder and visionary lead. He started it in May 2026 as a mobile-first app for small real-world gatherings in Istanbul, and for this hackathon he led its turn into a taste-aware agent — product, architecture and engineering, end to end. By day he is a Salesforce consultant in Istanbul who designs AI agents (Agentforce) for companies; Agora is where he brings that work to his own city. He shaped the one-compass flow — say what you love, answer at most one question, get Qloo-ranked places and the gatherings nearby — and led the build behind it: the server-only Qloo client, the intent and conditions the agent reads, the Taste guide agent and its five tools, Save vs. RSVP, plans and communities, voice input, the records behind Bingo, and the iOS and Android shells.
 
 His rules for the build:
 
@@ -79,8 +79,8 @@ His rules for the build:
 
 ### Team
 
-- **Remzi Osman Gönültaş** — Founder: product and engineering; team representative.
-- **Naz Paşalı** — Creative Director: product development and design (identity, interface, motion and the Bingo concept).
+- **Remzi Osman Gönültaş** — Co-Founder and Visionary Lead: product engineering; team representative.
+- **Naz Paşalı** — Co-Founder: product development and design (identity, interface, motion and the Bingo concept).
 
 ### How we built it
 
