@@ -66,9 +66,20 @@ Her principles carry through every screen:
 - **No fake pictures.** A real, credited photo or a generative poster — never a stock or AI image.
 - **Phone first.** Layouts from 320 px, 44 px touch targets, reduced motion respected, Turkish and English.
 
+### Product and engineering — by Remzi Osman Gönültaş, Founder
+
+Agora is **Remzi Osman Gönültaş**'s project. He started it in May 2026 as a mobile-first app for small real-world gatherings in Istanbul, and for this hackathon he led its turn into a taste-aware agent — product, architecture and engineering, end to end. By day he is a Salesforce consultant in Istanbul who designs AI agents (Agentforce) for companies; Agora is where he brings that work to his own city. He shaped the one-compass flow — say what you love, answer at most one question, get Qloo-ranked places and the gatherings nearby — and led the build behind it: the server-only Qloo client, the intent and conditions the agent reads, the Taste guide agent and its five tools, Save vs. RSVP, plans and communities, voice input, the records behind Bingo, and the iOS and Android shells.
+
+His rules for the build:
+
+- **Qloo decides taste; nothing pretends to be Qloo.** Every ranking on screen comes from a real Qloo call; when Qloo can't answer, Agora says so instead of guessing.
+- **Show the work.** Every Qloo request is listed under **How Agora decided** with its status, timing and how many results were usable; facts come from tool results, never from the model's text.
+- **Private by default.** The Qloo key never leaves the server, and Qloo never receives a name, an email or a location.
+- **Test it live, then ship.** Changes were tried against real Qloo answers, on phone widths from 320 px, before they went live on ago-ra.life.
+
 ### Team
 
-- **Remzi Osman Gönültaş** — product and engineering; team representative.
+- **Remzi Osman Gönültaş** — Founder: product and engineering; team representative.
 - **Naz Paşalı** — Creative Director: identity, interface, motion and the Bingo concept.
 
 ### How we built it
