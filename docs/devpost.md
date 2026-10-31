@@ -58,7 +58,7 @@ Without Qloo there is no ranking, and two different tastes in the same district 
 
 ### Design — by Naz Paşalı, Creative Director
 
-Agora's identity and interface are by **Naz Paşalı, our Creative Director**. She drew the new geometric AGORA wordmark and a two-sided system: a warm paper-and-ink day side (condensed Archivo headlines, Instrument Sans, DM Mono labels) and a night field for discovery — a living colour field, her own WebGL shader, that gathers light around the compass and quickens while Agora searches (and holds still for anyone who prefers reduced motion). The compass is hers too: ten categories you select, then discover; a location chooser; a needle that turns toward the category and, once the answer arrives, points at the real places around the district on a small map of Istanbul's coastline — true bearings, distances in kilometres. Places and gatherings without a photo get generative posters seeded by their names instead of stock or AI images. She also designed the event page (poster, Add to calendar), the calendar and plans, the bottom navigation, the profile as a personal city archive, and **Bingo** — a monthly 3×3 card of city experiences you fill by marking what you actually did.
+Agora's identity and interface are by **Naz Paşalı, our Creative Director**. She drew the new geometric AGORA wordmark and the front door of ago-ra.life: Agora's compass draws itself, turns, sheds its detail and settles into the O of the wordmark, then offers three ways in — explore, I have a venue, I organise events. Around it runs a two-sided system: a warm paper-and-ink day side (condensed Archivo headlines, Instrument Sans, DM Mono labels) and a night field for discovery — a living colour field, her own WebGL shader, that gathers light around the compass and quickens while Agora searches (and holds still for anyone who prefers reduced motion). The compass is hers too: ten categories you select, then discover; a location chooser; a needle that turns toward the category and, once the answer arrives, points at the real places around the district on a small map of Istanbul's coastline — true bearings, distances in kilometres. Places and gatherings without a photo get generative posters seeded by their names instead of stock or AI images. She also designed the event page (poster, Add to calendar), the calendar and plans, the bottom navigation, the profile as a personal city archive, and **Bingo** — a monthly 3×3 card of city experiences you fill by marking what you actually did.
 
 Her principles carry through every screen:
 
@@ -87,7 +87,7 @@ TanStack Start (SSR) on Cloudflare Workers · React 19 · Tailwind v4 · WebGL (
 
 - Every Qloo call is visible in the product (**How Agora decided**): endpoint, status, timing and how many results were used.
 - Taste really changes the answer: in Kadıköy, *Khruangbin + Amélie* and *Metallica + The Godfather* share only two of six restaurants, and each card names the favourite Qloo credits.
-- Naz's design ships end to end — from the opening animation and the living colour field to the dial, the event poster, the calendar and Bingo — on a phone as small as 320 px.
+- Naz's design ships end to end — from the welcome where the compass becomes the O and the living colour field to the dial, the event poster, the calendar and Bingo — on a phone as small as 320 px.
 - Bingo turns discovery into going out without fake rewards: reward tiers say "not available" until a partner exists.
 
 ### What we learned
@@ -113,13 +113,13 @@ Agora launched in May 2026 as a mobile-first app for small real-world gatherings
 - the one-compass flow: intent, explicit conditions, favourites verified with Qloo, one clarifying question, Qloo-ranked restaurants and places with explainability;
 - the Taste guide agent with its decision trace, landmark stories and narration;
 - voice input, Save vs. RSVP, My plans, My communities and following;
-- Naz Paşalı's redesign: the new identity, the night compass with categories, a location chooser and a map of the answer, generative posters, the event page with Add to calendar, the calendar and plans, and bottom navigation on phones;
+- Naz Paşalı's redesign: the new identity and the welcome where the compass becomes the O, the night compass with categories, a location chooser and a map of the answer, generative posters, the event page with Add to calendar, the calendar and plans, and bottom navigation on phones;
 - Bingo and the city archive: "I went here" / "I attended" records (self-reported, kept on the device) fill a monthly 3×3 card and five badges;
 - Turkish localisation; mobile layouts from 320 px; an MIT licence and a public repository.
 
 ### What's next
 
-Map budgets to Qloo's price levels, tighten district filtering with coordinates, rank Agora's own gatherings by taste too, sync Bingo to the account and verify squares with partner venues (a code at the venue) before any reward exists, native sign-in and push notifications in the iOS and Android apps, and more cities.
+Map budgets to Qloo's price levels, tighten district filtering with coordinates, rank Agora's own gatherings by taste too, sync Bingo to the account and verify squares with partner venues (a code at the venue) before any reward exists, build **Agora Pro** — the venue and organiser workspace Naz has already designed (profiles, verification, Connect proposals and messages between venues and organisers, Pulse: aggregated demand by district) — on Agora's backend, native sign-in and push notifications in the iOS and Android apps, and more cities.
 
 ## Built with
 
@@ -139,7 +139,7 @@ qloo · typescript · react · tanstack-start · vite · tailwindcss · webgl ·
 
 ## Testing instructions (for judges)
 
-1. Open https://ago-ra.life and sign in: create an account with email or Google, or use the test account in the judges' notes.
+1. Open https://ago-ra.life — watch the compass become the O (or press Skip) — choose **I want to explore** and sign in: create an account with email or Google, or use the test account in the judges' notes.
 2. On the compass, type or say *"I love Khruangbin and Amélie. Recommend a restaurant."* and pick a district (for example Kadıköy).
 3. Read the cards — Qloo's rank, "Why it fits you", the rating note — and open **How Agora decided** to see each Qloo request.
 4. Follow up with *"Tomorrow evening in Beşiktaş."* — only the time and the district change.
