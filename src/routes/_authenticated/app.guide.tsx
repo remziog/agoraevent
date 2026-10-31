@@ -378,7 +378,7 @@ function CandidateGroup({
 
   if (total === 0) {
     return (
-      <fieldset>
+      <fieldset className="min-w-0">
         <legend className="font-display text-xl">“{candidate.term}”</legend>
         <p className="mt-2 text-sm text-muted-foreground">
           {t("guide.noneForTerm", "Qloo found nothing for this one; it will be skipped.")}
@@ -431,7 +431,10 @@ function CandidateGroup({
   };
 
   return (
-    <fieldset aria-labelledby={legendId}>
+    // min-w-0: a fieldset is at least as wide as its longest unbroken line, so a
+    // long Qloo name ("Nick Cave - Mick Harvey - Blixa Bargeld") would push the
+    // page sideways on a phone; the rows truncate instead
+    <fieldset aria-labelledby={legendId} className="min-w-0">
       <legend id={legendId} className="font-display text-xl">
         “{candidate.term}”
         {fieldLabel && (
@@ -447,7 +450,7 @@ function CandidateGroup({
           })}
         </p>
       )}
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {candidate.matches.slice(0, 4).map(option)}
         <label
           className={`flex cursor-pointer items-center rounded-2xl border border-dashed p-3 text-left text-sm transition focus-within:ring-2 focus-within:ring-primary/60 ${
@@ -475,7 +478,7 @@ function CandidateGroup({
               defaultValue: "Other kinds ({{count}})",
             })}
           </summary>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {candidate.others.slice(0, 4).map(option)}
           </div>
         </details>

@@ -189,7 +189,7 @@ export function QuestionCard({
       </p>
       <div className="mt-4 space-y-4">
         {question.items.map((item) => (
-          <fieldset key={item.term} className="space-y-1.5">
+          <fieldset key={item.term} className="min-w-0 space-y-1.5">
             <legend className="text-sm font-medium">“{item.term}”</legend>
             {item.candidates.map((c) => (
               <label
