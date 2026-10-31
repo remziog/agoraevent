@@ -1075,5 +1075,19 @@
       "best": "Best",
       "agoraBadges": "Agora badges"
     }
+  },
+  "wl": {
+    "msg": "Discover the city at your own rhythm.",
+    "explorer": "I want to explore",
+    "explorer_sub": "Restaurants, events, exhibitions, matched to your mood.",
+    "venue": "I have a venue",
+    "venue_sub": "Restaurant, café, gallery or event space.",
+    "organizer": "I organise events",
+    "organizer_sub": "Artist, curator, collective or promoter.",
+    "signin": "Sign in",
+    "create": "Create account",
+    "skip": "Skip",
+    "rolesLabel": "Ways in",
+    "powered": "Taste ranking by Qloo · Istanbul"
   }
 }
