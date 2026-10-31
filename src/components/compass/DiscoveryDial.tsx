@@ -178,6 +178,83 @@ function catmull(pts: V[], seg = 6): V[] {
 const pathOf = (pts: V[]) =>
   pts.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join("");
 
+type Box = { x: number; y: number; w: number; h: number };
+// A name chip in dial units (320 across): 11.5 px text, an 18 px badge and the
+// padding, capped like the CSS (8.5rem = 136 px); a little generous so the
+// estimate holds on a 320 px phone too.
+const chipBox = (name: string): Pick<Box, "w" | "h"> => ({
+  w: Math.min(136, 34 + name.length * 6.6) * 1.1,
+  h: 28,
+});
+
+/**
+ * Where each name chip goes: beside its own dot, preferably outward from the
+ * centre (inward near the rim) as in Naz's dial — but never over the needle,
+ * which points at #1 from the centre to the inner ring, nor over another chip
+ * or dot. Sixteen directions on four rings around each dot, scored; the
+ * cheapest wins. Deterministic, so the chips never jump between renders.
+ */
+function placeChips(marks: (V & { name: string })[], bearing: number): Box[] {
+  const a = (bearing * Math.PI) / 180;
+  const ux = Math.sin(a),
+    uy = -Math.cos(a);
+  const hidesNeedle = (c: Box) => {
+    let hit = 0;
+    for (let s = -62; s <= 120; s += 3) {
+      const px = 160 + ux * s,
+        py = 160 + uy * s;
+      if (Math.abs(px - c.x) < c.w / 2 + 8 && Math.abs(py - c.y) < c.h / 2 + 8)
+        hit += s >= 0 ? 1 : 0.6; // the pointer counts fully, the faint tail less
+    }
+    return hit;
+  };
+  const placed: Box[] = [];
+  for (const m of marks) {
+    const { w, h } = chipBox(m.name);
+    const dx = m.x - 160,
+      dy = m.y - 160,
+      r = Math.hypot(dx, dy) || 1,
+      sgn = r > 96 ? -1 : 1;
+    const ox = (dx / r) * sgn,
+      oy = (dy / r) * sgn;
+    let best: Box = { x: m.x, y: m.y, w, h },
+      bestCost = Infinity;
+    for (const ring of [0, 16, 34, 52])
+      for (let k = 0; k < 16; k++) {
+        const t = (k / 16) * Math.PI * 2,
+          cx = Math.cos(t),
+          cy = Math.sin(t);
+        // centre of a box whose nearest edge sits 11 units (+ ring) from the dot
+        const reach = Math.min(
+          Math.abs(cx) > 1e-6 ? w / 2 / Math.abs(cx) : Infinity,
+          Math.abs(cy) > 1e-6 ? h / 2 / Math.abs(cy) : Infinity,
+        );
+        const c: Box = {
+          // may overhang the dial by 16 units: there is page margin around it
+          x: Math.min(336 - w / 2, Math.max(w / 2 - 16, m.x + cx * (reach + 11 + ring))),
+          y: Math.min(306, Math.max(14, m.y + cy * (reach + 11 + ring))),
+          w,
+          h,
+        };
+        let cost = hidesNeedle(c) * 40 + (1 - (cx * ox + cy * oy)) * 4 + ring * 0.6;
+        for (const p of placed)
+          if (
+            Math.abs(p.x - c.x) < (p.w + c.w) / 2 + 3 &&
+            Math.abs(p.y - c.y) < (p.h + c.h) / 2 + 3
+          )
+            cost += 600;
+        for (const o of marks)
+          if (Math.abs(o.x - c.x) < c.w / 2 + 6 && Math.abs(o.y - c.y) < c.h / 2 + 6) cost += 120;
+        if (cost < bestCost) {
+          bestCost = cost;
+          best = c;
+        }
+      }
+    placed.push(best);
+  }
+  return placed;
+}
+
 const DIR_KEYS = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
 export function dir8(deg: number) {
   return DIR_KEYS[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
@@ -256,16 +333,8 @@ export function DiscoveryDial({
       const s = proj.scr(proj.kmOf(p.lat, p.lng));
       return { ...p, i, x: s.x, y: s.y, b: bearingDeg(origin, p), d: distanceKm(origin, p) };
     });
-    // keep the three name chips from sitting on each other: walk them top to
-    // bottom and open a 26 px gap where two would overlap
-    const labels = marks.map((m) => ({ id: m.id, x: m.x, y: m.y }));
-    const order = [...labels].sort((a, b) => a.y - b.y);
-    for (let k = 1; k < order.length; k++)
-      for (let j = 0; j < k; j++) {
-        const a = order[k],
-          b = order[j];
-        if (Math.abs(a.x - b.x) < 120 && a.y - b.y < 26) a.y = b.y + 26;
-      }
+    // name chips beside their dots, clear of the needle (it points at #1)
+    const labels = marks.length ? placeChips(marks, marks[0].b) : [];
     const asks = choices.map((d) => {
       const p = proj.scr(proj.kmOf(d.lat, d.lng));
       return { name: d.name, x: p.x, y: p.y };
@@ -458,7 +527,7 @@ export function DiscoveryDial({
             key={m.id}
             type="button"
             onClick={() => onPick?.(m.id, m.i + 1)}
-            className="absolute z-[2] inline-flex max-w-[9.5rem] -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-full bg-[rgb(14_11_26/0.68)] py-1 pl-1 pr-2.5 text-[11.5px] font-semibold text-[color:var(--nt)] backdrop-blur-sm transition hover:bg-[color:var(--c)] hover:text-[color:var(--nt-ink)] focus-visible:outline-2"
+            className="absolute z-[2] inline-flex max-w-[8.5rem] -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-full bg-[rgb(14_11_26/0.68)] py-1 pl-1 pr-2.5 text-[11.5px] font-semibold text-[color:var(--nt)] backdrop-blur-sm transition hover:bg-[color:var(--c)] hover:text-[color:var(--nt-ink)] focus-visible:outline-2"
             style={
               {
                 left: `${(geo.labels[k].x / 320) * 100}%`,
