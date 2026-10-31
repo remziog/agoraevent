@@ -502,3 +502,278 @@
 .night-field:has(> .living-canvas[data-on])::after {
   display: none;
 }
+
+/* ---------- Welcome (design: Naz Paşalı) ----------
+   The compass draws itself, turns, sheds its detail and settles into the O of the
+   wordmark (the O sits at 601/1200, 129/313 of agora-wordmark.png; compass and
+   logo are both 220 px wide, so the condense scale is fixed: 0.2213 × 0.2089);
+   the word unmasks outward; then the slogan and the ways in. CSS only — it plays
+   from the first paint, ends readable without JavaScript, and holds still under
+   reduced motion. */
+.wl {
+  --wl-ink: #f5f0e8;
+  --wl-dy: calc(50dvh - 56px - env(safe-area-inset-top, 0px) - clamp(85px, 13.5vh, 118px));
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 28px) 22px calc(env(safe-area-inset-bottom, 0px) + 22px);
+  color: var(--wl-ink);
+  text-align: center;
+}
+.wl-top {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  inset-inline: 14px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.wl-skip {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0;
+  background: rgb(245 240 232 / 0.08);
+  color: rgb(245 240 232 / 0.72);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  animation: wl-skip-out 1ms linear 4750ms both;
+}
+.wl-stage {
+  position: relative;
+  flex: none;
+  width: 100%;
+  max-width: 420px;
+  height: clamp(170px, 27vh, 236px);
+  margin-top: 28px;
+  animation: wl-rise 2700ms cubic-bezier(0.6, 0, 0.2, 1) both;
+}
+.wl-compass {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220px;
+  height: 220px;
+  margin: -110px 0 0 -110px;
+  overflow: visible;
+  transform-origin: 50% 50%;
+  animation:
+    wl-condense 950ms cubic-bezier(0.7, 0, 0.2, 1) 1750ms both,
+    wl-handover 120ms linear 2800ms both;
+}
+.wl-compass .wl-line,
+.wl-compass .wl-needle-s {
+  fill: none;
+  stroke: var(--wl-ink);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  stroke-dasharray: 1 1;
+}
+.wl-compass .wl-faint { opacity: 0.38; }
+.wl-compass .wl-tail { opacity: 0.5; }
+.wl-compass .wl-tick,
+.wl-compass .wl-axis {
+  stroke: var(--wl-ink);
+  stroke-width: 1.1;
+  stroke-dasharray: 1 1;
+  animation: wl-draw 260ms ease-out both;
+}
+.wl-compass .wl-tick { opacity: 0.42; }
+.wl-compass .wl-tick.mid { opacity: 0.7; }
+.wl-compass .wl-tick.major { opacity: 1; }
+.wl-compass .wl-axis { opacity: 0.22; animation-duration: 380ms; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+.wl-compass .wl-fill { fill: var(--wl-ink); }
+.wl-outer { animation: wl-draw 1000ms cubic-bezier(0.55, 0, 0.25, 1) 150ms both; }
+.wl-inner { animation: wl-draw-back 700ms cubic-bezier(0.65, 0, 0.35, 1) 500ms both; }
+.wl-needle .wl-needle-s { animation: wl-draw 420ms cubic-bezier(0.65, 0, 0.35, 1) 1150ms both; }
+.wl-dot { animation: wl-in 260ms ease 1450ms both; }
+.wl-needle {
+  transform-box: view-box;
+  transform-origin: 160px 160px;
+  animation: wl-settle 900ms cubic-bezier(0.22, 1, 0.36, 1) 1150ms both;
+}
+.wl-detail { animation: wl-out 520ms ease-in 1750ms both; }
+.wl-disc { fill: #fff; animation: wl-in 220ms ease-in 2540ms both; }
+.wl-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220px;
+  margin: calc(-220px * 129 / 1200) 0 0 -110px;
+  animation: wl-unmask 1050ms cubic-bezier(0.5, 0, 0.15, 1) 2680ms both;
+}
+.wl-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: invert(1);
+}
+.wl-slogan {
+  margin: 2px 0 0;
+  padding-inline-start: 0.32em;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #e9a23b;
+  animation: wl-rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) 3550ms both;
+}
+.wl-msg {
+  margin: 30px 0 0;
+  max-width: 320px;
+  font-family: var(--font-display);
+  font-stretch: 70%;
+  font-weight: 850;
+  font-size: 30px;
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  color: var(--wl-ink);
+  animation: wl-rise-in 560ms cubic-bezier(0.22, 1, 0.36, 1) 3950ms both;
+}
+.wl-roles {
+  width: 100%;
+  max-width: 380px;
+  margin-top: 22px;
+  display: grid;
+  gap: 8px;
+}
+.wl-role {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 66px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  text-align: start;
+  color: var(--wl-ink);
+  background: rgb(16 11 20 / 0.42);
+  box-shadow: inset 0 0 0 1px rgb(245 240 232 / 0.16);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
+  transition: box-shadow 200ms ease, background 200ms ease, transform 200ms ease;
+  animation: wl-rise-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.wl-role:hover {
+  background: rgb(16 11 20 / 0.58);
+  box-shadow: inset 0 0 0 1px rgb(233 162 59 / 0.75);
+}
+.wl-role:active { transform: scale(0.985); }
+.wl-role:focus-visible,
+.wl-auth a:focus-visible,
+.wl-skip:focus-visible {
+  outline: 2px solid #e9a23b;
+  outline-offset: 2px;
+}
+.wl-role b { display: block; font-size: 16px; font-weight: 650; }
+.wl-role small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: rgb(245 240 232 / 0.68);
+}
+.wl-ri {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: var(--wl-ink);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}
+.wl-go {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #e9a23b;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wl-auth {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  color: rgb(245 240 232 / 0.5);
+  font-size: 14px;
+  animation: wl-rise-in 560ms cubic-bezier(0.22, 1, 0.36, 1) 4310ms both;
+}
+.wl-auth a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 6px;
+  color: var(--wl-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgb(233 162 59 / 0.7);
+  text-underline-offset: 4px;
+}
+.wl-powered {
+  margin: auto 0 0;
+  padding-top: 18px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(245 240 232 / 0.5);
+  animation: wl-rise-in 560ms ease 4400ms both;
+}
+@keyframes wl-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes wl-draw-back { from { stroke-dashoffset: -1; } to { stroke-dashoffset: 0; } }
+@keyframes wl-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wl-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes wl-settle {
+  0% { transform: rotate(-24deg); }
+  70% { transform: rotate(6deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes wl-condense {
+  from { transform: scale(1, 1) rotate(0deg); }
+  to { transform: scale(0.2213, 0.2089) rotate(-28deg); }
+}
+@keyframes wl-handover { from { opacity: 1; } to { opacity: 0; } }
+@keyframes wl-rise {
+  0%, 62% { transform: translateY(var(--wl-dy)); }
+  100% { transform: translateY(0); }
+}
+@keyframes wl-unmask {
+  0% { opacity: 0; clip-path: inset(0 39.54% 0 39.71%); }
+  12% { opacity: 1; clip-path: inset(0 39.54% 0 39.71%); }
+  100% { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+@keyframes wl-rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes wl-skip-out { to { opacity: 0; visibility: hidden; } }
+/* Skip, or reduced motion: the end state at once */
+.wl.is-done *,
+.wl.is-done .wl-stage {
+  animation: none !important;
+}
+.wl.is-done .wl-compass { opacity: 0; }
+.wl.is-done .wl-skip { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .wl *,
+  .wl .wl-stage {
+    animation: none !important;
+  }
+  .wl .wl-compass { opacity: 0; }
+  .wl .wl-skip { visibility: hidden; }
+}
+@media (max-height: 700px) {
+  .wl-msg { margin-top: 18px; font-size: 26px; }
+  .wl-role { min-height: 58px; }
+}

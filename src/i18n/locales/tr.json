@@ -1076,5 +1076,19 @@
       "best": "En iyi",
       "agoraBadges": "Agora rozetleri"
     }
+  },
+  "wl": {
+    "msg": "Şehri kendi ritminde keşfet.",
+    "explorer": "Keşfetmek İstiyorum",
+    "explorer_sub": "Restoranlar, etkinlikler, sergiler; ruh haline göre.",
+    "venue": "Mekanım Var",
+    "venue_sub": "Restoran, kafe, galeri ya da etkinlik alanı.",
+    "organizer": "Etkinlik Düzenliyorum",
+    "organizer_sub": "Sanatçı, küratör, kolektif ya da organizatör.",
+    "signin": "Giriş Yap",
+    "create": "Hesap Oluştur",
+    "skip": "Geç",
+    "rolesLabel": "Giriş yolları",
+    "powered": "Zevk sıralaması Qloo'dan · İstanbul"
   }
 }

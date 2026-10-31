@@ -117,5 +117,19 @@
     "deniedNote": "Standort nicht verfügbar. Nutze die Schaltfläche „Route öffnen“ und gib deinen Startpunkt in Google Maps ein.",
     "offlineTitle": "Offline-Wegbeschreibung",
     "offlineHint": "Live-Routing braucht Internet — lade vorab im WLAN Offline-Karten von Google oder Yandex herunter."
+  },
+  "wl": {
+    "msg": "Entdecke die Stadt in deinem eigenen Rhythmus.",
+    "explorer": "Ich will entdecken",
+    "explorer_sub": "Restaurants, Events, Ausstellungen nach deiner Stimmung.",
+    "venue": "Ich habe einen Ort",
+    "venue_sub": "Restaurant, Café, Galerie oder Eventfläche.",
+    "organizer": "Ich organisiere Events",
+    "organizer_sub": "Künstler:in, Kurator:in, Kollektiv oder Veranstalter.",
+    "signin": "Anmelden",
+    "create": "Konto erstellen",
+    "skip": "Überspringen",
+    "rolesLabel": "Wege hinein",
+    "powered": "Geschmacks-Ranking von Qloo · Istanbul"
   }
 }
